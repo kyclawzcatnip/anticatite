@@ -51,7 +51,7 @@
             "            CC                        C C   Q              C                     L                       CCC               |       ",
             "          QBBBBQ        W     R    BBBBBBBBB         R          R  BBB    BBZ       BBBBBBB                                 |       ",
             "                           GGGGG              GGGGG      GGGGG              GG           R      Q  BBBBBB              |       ",
-            "  S        R    V      GG  V    GG  H R    V  GG     V GG    V         GGGGG     V  GGGGG       GG          GGGG          |       ",
+            "  S        R    V      GG  V    GG  H R    V  GG     V GG    V    A    GGGGG     V  GGGGG    A  GG          GGGG          |       ",
             "GGGGG   GGGGG   GG  GGGG        GGGGGGGG  GGGGG          GGG    GGGG         GGG          GGG       GGGGG       GGGGGGGGGGGGGGGGGGG",
             "GGGGG   GGGGG   GGGGGGGG        GGGGGGGG  GGGGG          GGG    GGGG         GGG          GGG       GGGGG       GGGGGGGGGGGGGGGGGGG",
             "GGGGG   GGGGG   GGGGGGGG        GGGGGGGG  GGGGG          GGG    GGGG         GGG          GGG       GGGGG       GGGGGGGGGGGGGGGGGGG",
@@ -67,7 +67,7 @@
             "         C C C  BBQ           CCC   BBBBB     C           CCC              H                         C                            KKKKKKKKK                ",
             "        BBBBBBB          W                       Q BBBBB                BBBBB                    BBBZBBB   C                     K KKKKKKK K               ",
             "                    GGGGG    V GGGGG     R     V  GGGGG    R   V  GGG    R  GGG V GGGGG    V        BBB                         KKKKKKKKKKK               ",
-            "  S     V        GG      GG     V    GGG   GGGGG  GGG    V  GG    GG    V  GGG    V  GG     GG   V  GG     GGGGGF|GGGGGGGGGGGGGKKKK  D  KKKK              ",
+            "  S     V        GG      GG     V    GGG   GGGGG  GGG    V  GG    GG    V  GGG    V  GG  A  GG   V  GG     GGGGGF|GGGGGGGGGGGGGKKKK  D  KKKK              ",
             "GGGGG  GGG  GG    R  R        GGG                                                                     R    GGGGG||GGGGGGGGGGGGGKKKKKKKKKKKKK              ",
             "GGGGG  GGG  GGG    GGGGG   GGGGG   GGGGG    GGGG   GGGGG    GGG   GGGGG   GGG    GGGGG   GGG    GGG   GGGGGGGGGGGGGGGGGGGGGKK D KKK D KKK D KK           ",
             "GGGGG  GGG  GGG    GGGGG   GGGGG   GGGGG    GGGG   GGGGG    GGG   GGGGG   GGG    GGGGG   GGG    GGG   GGGGGGGGGGGGGGGGGGGGGKKKKKKKKKKKKKKKKKKKKK          ",
@@ -398,6 +398,7 @@
                 else if (ch === 'F') { grid[r][c] = 10; flagX = c; flagY = r; }
                 else if (ch === '|') { grid[r][c] = 10; }
                 else if (ch === 'R') { grid[r][c] = 0; enemies.push({ x: c * T, y: r * T, w: T, h: T, vx: ENEMY_SPEED, type: 'rat', alive: true, frame: 0 }); }
+                else if (ch === 'A') { grid[r][c] = 0; enemies.push({ x: c * T, y: r * T, w: T, h: T, vx: 0, type: 'archer', alive: true, frame: 0, shootTimer: 60 + Math.floor(Math.random() * 60), shootCooldown: 120, dir: -1 }); }
                 else if (ch === 'V') { grid[r][c] = 0; enemies.push({ x: c * T, y: r * T - 8, w: T, h: 40, vx: ENEMY_SPEED * 0.7, type: 'ratter', alive: true, frame: 0, shell: false, shellVx: 0 }); }
                 else if (ch === 'Y') { grid[r][c] = 0; enemies.push({ x: c * T, y: r * T - 8, w: T, h: 40, vx: ENEMY_SPEED * 0.5, type: 'flyratter', alive: true, frame: 0, shell: false, shellVx: 0, baseY: r * T - 8, flyAmp: 40 + Math.random() * 20 }); }
                 else if (ch === 'C') { grid[r][c] = 0; coins.push({ x: c * T + 8, y: r * T + 4, w: 16, h: 24, collected: false, anim: Math.random() * Math.PI * 2 }); }
@@ -423,6 +424,7 @@
     let hasFire = false, fireCooldown = 0;
     let activeCheckpoint = null; // { x, y } of the last activated checkpoint
     let fireballs = [];
+    let arrows = []; // enemy archer arrows
     let speedBoost = 0; // extra walk speed from shop
     let shieldHits = 0; // shield hits remaining
     let shopSelection = 0; // currently highlighted shop item
@@ -607,15 +609,17 @@
                 startScratch2();
             }
         }
-        // Hotbar: number keys 1-5 to use stored power-ups
-        if (state === 'playing' && !cat.dead) {
+        // Hotbar: number keys 1-5 to use stored power-ups (P1 or P2)
+        if (state === 'playing' && (!cat.dead || (coopMode && !cat2.dead))) {
             const slotKeys = ['Digit1', 'Digit2', 'Digit3', 'Digit4', 'Digit5'];
             const slotIdx = slotKeys.indexOf(e.code);
             if (slotIdx >= 0 && slotIdx < inventory.length) {
                 const item = inventory[slotIdx];
                 item.apply();
                 hotbarFlash = slotIdx; hotbarFlashTimer = 15;
-                addParticle(cat.x + cat.w / 2, cat.y, item.color, 10, 5);
+                // Center particles on whichever cat is alive
+                const activeCat = !cat.dead ? cat : cat2;
+                addParticle(activeCat.x + activeCat.w / 2, activeCat.y, item.color, 10, 5);
                 inventory.splice(slotIdx, 1);
             }
         }
@@ -1117,6 +1121,43 @@
             // Remove if fallen off map
             if (e.y > level.rows * T + 100) { e.alive = false; return; }
 
+            // Archer AI: stationary, face cat, shoot arrows
+            if (e.type === 'archer') {
+                e.vx = 0; // archers don't walk
+                // Face nearest cat
+                let targetCat = cat;
+                if (coopMode && !cat2.dead && !cat.dead) {
+                    const d1 = Math.abs(cat.x - e.x), d2 = Math.abs(cat2.x - e.x);
+                    targetCat = d2 < d1 ? cat2 : cat;
+                } else if (coopMode && cat.dead && !cat2.dead) {
+                    targetCat = cat2;
+                }
+                e.dir = targetCat.x < e.x ? -1 : 1;
+                // Shoot when cat in range
+                const dist = Math.abs(targetCat.x - e.x);
+                if (dist < 280 && !targetCat.dead) {
+                    e.shootTimer--;
+                    if (e.shootTimer <= 0) {
+                        e.shootTimer = e.shootCooldown;
+                        // Calculate arrow direction toward cat
+                        const dx = (targetCat.x + targetCat.w / 2) - (e.x + e.w / 2);
+                        const dy = (targetCat.y + targetCat.h / 2) - (e.y + e.h / 2);
+                        const len = Math.sqrt(dx * dx + dy * dy) || 1;
+                        const speed = 3.5;
+                        arrows.push({
+                            x: e.x + e.w / 2 + e.dir * 10,
+                            y: e.y + 8,
+                            w: 12, h: 4,
+                            vx: (dx / len) * speed,
+                            vy: (dy / len) * speed,
+                            life: 180,
+                            trail: []
+                        });
+                        addParticle(e.x + e.w / 2 + e.dir * 10, e.y + 8, '#8B4513', 3, 2);
+                    }
+                }
+            }
+
             // Reverse at walls or edges
             let frontC = Math.floor((e.vx > 0 ? e.x + e.w : e.x) / T);
             let fR = Math.floor((e.y + e.h) / T);
@@ -1128,78 +1169,80 @@
             if (solid(headR, frontC)) e.vx *= -1;
             else if (!isShell && !isFlying && !solid(fR, frontC)) e.vx *= -1;
 
-            // Cat collision
-            if (cat.dead) return;
-            let ox = cat.x + 4, oy = cat.y + 2, ow = cat.w - 8, oh = cat.h - 4;
-            if (ox < e.x + e.w && ox + ow > e.x && oy < e.y + e.h && oy + oh > e.y) {
-                // Star power: instant kill
-                if (starPowerTimer > 0) {
-                    e.alive = false; score += 500;
-                    shakeTimer = 4; shakeAmt = 4;
-                    addParticle(e.x + e.w / 2, e.y + e.h / 2, '#FFD700', 15, 6);
-                    addParticle(e.x + e.w / 2, e.y + e.h / 2, '#FFF', 10, 4);
-                    return;
-                }
-                if (invincibleTimer > 0) return;
-                // Ratter/Flyratter shell behavior
-                if (e.type === 'ratter' || e.type === 'flyratter') {
-                    if (e.shell) {
-                        // Shell is stationary or moving
-                        if (cat.vy > 0 && cat.y + cat.h - 8 < e.y + e.h / 2) {
-                            // Stomp shell: if moving → stop, if stopped → kick
-                            if (e.shellVx !== 0) {
-                                e.shellVx = 0; e.vx = 0;
-                                cat.vy = JUMP * 0.5; score += 100;
-                            } else {
-                                e.shellVx = cat.x < e.x ? 3 : -3;
-                                e.vx = e.shellVx;
-                                cat.vy = JUMP * 0.5; score += 100;
-                            }
-                            shakeTimer = 4; shakeAmt = 2;
-                            addParticle(e.x + e.w / 2, e.y + e.h / 2, '#44AA44', 8, 4);
-                        } else if (e.shellVx !== 0) {
-                            // Moving shell hits cat
-                            killCat();
-                        } else {
-                            // Pick up stationary shell
-                            heldShell = e;
-                            e.vx = 0; e.shellVx = 0;
-                            invincibleTimer = 10;
-                        }
-                    } else {
-                        // Stomp ratter/flyratter
-                        if (cat.vy > 0 && cat.y + cat.h - 8 < e.y + e.h / 2) {
-                            if (e.type === 'flyratter') {
-                                // Lose wings, become grounded ratter
-                                e.type = 'ratter';
-                                e.vy = 0;
-                                cat.vy = JUMP * 0.6; score += 200;
-                                shakeTimer = 6; shakeAmt = 3;
-                                addParticle(e.x + e.w / 2, e.y, '#FFF', 8, 6);
-                                addParticle(e.x - 8, e.y, '#FFF', 4, 3);
-                                addParticle(e.x + e.w + 8, e.y, '#FFF', 4, 3);
-                            } else {
-                                e.shell = true; e.vx = 0; e.shellVx = 0;
-                                e.h = T; e.y = e.y + 8;
-                                cat.vy = JUMP * 0.6; score += 200;
-                                shakeTimer = 6; shakeAmt = 3;
-                                addParticle(e.x + e.w / 2, e.y + e.h / 2, '#44AA44', 12, 5);
-                            }
-                        } else {
-                            killCat();
-                        }
+            // Cat collision (P1)
+            if (!cat.dead) {
+                let ox = cat.x + 4, oy = cat.y + 2, ow = cat.w - 8, oh = cat.h - 4;
+                if (ox < e.x + e.w && ox + ow > e.x && oy < e.y + e.h && oy + oh > e.y) {
+                    // Star power: instant kill
+                    if (starPowerTimer > 0) {
+                        e.alive = false; score += 500;
+                        shakeTimer = 4; shakeAmt = 4;
+                        addParticle(e.x + e.w / 2, e.y + e.h / 2, '#FFD700', 15, 6);
+                        addParticle(e.x + e.w / 2, e.y + e.h / 2, '#FFF', 10, 4);
+                        return;
                     }
-                    return;
+                    if (invincibleTimer <= 0) {
+                        // Ratter/Flyratter shell behavior
+                        if (e.type === 'ratter' || e.type === 'flyratter') {
+                            if (e.shell) {
+                                // Shell is stationary or moving
+                                if (cat.vy > 0 && cat.y + cat.h - 8 < e.y + e.h / 2) {
+                                    // Stomp shell: if moving → stop, if stopped → kick
+                                    if (e.shellVx !== 0) {
+                                        e.shellVx = 0; e.vx = 0;
+                                        cat.vy = JUMP * 0.5; score += 100;
+                                    } else {
+                                        e.shellVx = cat.x < e.x ? 3 : -3;
+                                        e.vx = e.shellVx;
+                                        cat.vy = JUMP * 0.5; score += 100;
+                                    }
+                                    shakeTimer = 4; shakeAmt = 2;
+                                    addParticle(e.x + e.w / 2, e.y + e.h / 2, '#44AA44', 8, 4);
+                                } else if (e.shellVx !== 0) {
+                                    // Moving shell hits cat
+                                    killCat();
+                                } else {
+                                    // Pick up stationary shell
+                                    heldShell = e;
+                                    e.vx = 0; e.shellVx = 0;
+                                    invincibleTimer = 10;
+                                }
+                            } else {
+                                // Stomp ratter/flyratter
+                                if (cat.vy > 0 && cat.y + cat.h - 8 < e.y + e.h / 2) {
+                                    if (e.type === 'flyratter') {
+                                        // Lose wings, become grounded ratter
+                                        e.type = 'ratter';
+                                        e.vy = 0;
+                                        cat.vy = JUMP * 0.6; score += 200;
+                                        shakeTimer = 6; shakeAmt = 3;
+                                        addParticle(e.x + e.w / 2, e.y, '#FFF', 8, 6);
+                                        addParticle(e.x - 8, e.y, '#FFF', 4, 3);
+                                        addParticle(e.x + e.w + 8, e.y, '#FFF', 4, 3);
+                                    } else {
+                                        e.shell = true; e.vx = 0; e.shellVx = 0;
+                                        e.h = T; e.y = e.y + 8;
+                                        cat.vy = JUMP * 0.6; score += 200;
+                                        shakeTimer = 6; shakeAmt = 3;
+                                        addParticle(e.x + e.w / 2, e.y + e.h / 2, '#44AA44', 12, 5);
+                                    }
+                                } else {
+                                    killCat();
+                                }
+                            }
+                            return;
+                        }
+                        // Stomp regular rat/archer
+                        if (cat.vy > 0 && cat.y + cat.h - 8 < e.y + e.h / 2) {
+                            e.alive = false; cat.vy = JUMP * 0.6; score += 200;
+                            shakeTimer = 6; shakeAmt = 3;
+                            addParticle(e.x + e.w / 2, e.y + e.h / 2, '#ff4444', 12, 5);
+                        } else {
+                            killCat();
+                        }
+                    } // end invincibleTimer check
                 }
-                // Stomp regular rat
-                if (cat.vy > 0 && cat.y + cat.h - 8 < e.y + e.h / 2) {
-                    e.alive = false; cat.vy = JUMP * 0.6; score += 200;
-                    shakeTimer = 6; shakeAmt = 3;
-                    addParticle(e.x + e.w / 2, e.y + e.h / 2, '#ff4444', 12, 5);
-                } else {
-                    killCat();
-                }
-            }
+            } // end !cat.dead
 
             // P2 Cat collision (co-op)
             if (coopMode && !cat2.dead) {
@@ -1761,6 +1804,133 @@
         ctx.arc(sx + fb.w / 2, sy + fb.h / 2, fb.w, 0, Math.PI * 2);
         ctx.fill();
         ctx.globalAlpha = 1;
+    }
+
+    // ENEMY ARROWS
+    function updateArrows() {
+        for (let i = arrows.length - 1; i >= 0; i--) {
+            const a = arrows[i];
+            a.life--;
+            if (a.life <= 0) { arrows.splice(i, 1); continue; }
+
+            // Store trail
+            a.trail.push({ x: a.x, y: a.y });
+            if (a.trail.length > 4) a.trail.shift();
+
+            // Move
+            a.x += a.vx;
+            a.y += a.vy;
+            // Slight gravity on arrows
+            a.vy += 0.02;
+
+            // Wall collision — destroy arrow
+            let wallC = Math.floor((a.vx > 0 ? a.x + a.w : a.x) / T);
+            let wallR = Math.floor((a.y + a.h / 2) / T);
+            if (solid(wallR, wallC)) {
+                addParticle(a.x + a.w / 2, a.y + a.h / 2, '#8B4513', 4, 3);
+                arrows.splice(i, 1);
+                continue;
+            }
+
+            // Ground/ceiling collision
+            let floorR = Math.floor((a.y + a.h) / T);
+            let ceilR = Math.floor(a.y / T);
+            let ac1 = Math.floor(a.x / T), ac2 = Math.floor((a.x + a.w) / T);
+            let hitTile = false;
+            for (let c = ac1; c <= ac2 && !hitTile; c++) {
+                if (solid(floorR, c) || solid(ceilR, c)) {
+                    addParticle(a.x + a.w / 2, a.y + a.h / 2, '#8B4513', 4, 3);
+                    arrows.splice(i, 1);
+                    hitTile = true;
+                }
+            }
+            if (hitTile) continue;
+
+            // Off screen
+            if (a.y > level.rows * T + 50 || a.x < cam.x - 100 || a.x > cam.x + W + 100) {
+                arrows.splice(i, 1);
+                continue;
+            }
+
+            // Hit P1 cat
+            if (!cat.dead && invincibleTimer <= 0) {
+                let ox = cat.x + 4, oy = cat.y + 2, ow = cat.w - 8, oh = cat.h - 4;
+                if (ox < a.x + a.w && ox + ow > a.x && oy < a.y + a.h && oy + oh > a.y) {
+                    if (starPowerTimer > 0) {
+                        // Star power destroys arrows
+                        addParticle(a.x + a.w / 2, a.y + a.h / 2, '#FFD700', 6, 4);
+                        arrows.splice(i, 1);
+                        continue;
+                    }
+                    if (shieldHits > 0) {
+                        shieldHits--;
+                        addParticle(a.x + a.w / 2, a.y + a.h / 2, '#4488FF', 6, 4);
+                        arrows.splice(i, 1);
+                        continue;
+                    }
+                    killCat();
+                    arrows.splice(i, 1);
+                    continue;
+                }
+            }
+
+            // Hit P2 cat (co-op)
+            if (coopMode && !cat2.dead && invincibleTimer2 <= 0) {
+                let ox2 = cat2.x + 4, oy2 = cat2.y + 2, ow2 = cat2.w - 8, oh2 = cat2.h - 4;
+                if (ox2 < a.x + a.w && ox2 + ow2 > a.x && oy2 < a.y + a.h && oy2 + oh2 > a.y) {
+                    if (starPowerTimer > 0) {
+                        addParticle(a.x + a.w / 2, a.y + a.h / 2, '#FFD700', 6, 4);
+                        arrows.splice(i, 1);
+                        continue;
+                    }
+                    killCat2();
+                    arrows.splice(i, 1);
+                    continue;
+                }
+            }
+
+            // Fireballs destroy arrows
+            for (let j = fireballs.length - 1; j >= 0; j--) {
+                const fb = fireballs[j];
+                if (fb.x < a.x + a.w && fb.x + fb.w > a.x && fb.y < a.y + a.h && fb.y + fb.h > a.y) {
+                    addParticle(a.x + a.w / 2, a.y + a.h / 2, '#FF6600', 8, 4);
+                    addParticle(a.x + a.w / 2, a.y + a.h / 2, '#8B4513', 4, 3);
+                    arrows.splice(i, 1);
+                    fireballs.splice(j, 1);
+                    break;
+                }
+            }
+        }
+    }
+
+    function drawArrow(a) {
+        const sx = Math.round(a.x - cam.x), sy = Math.round(a.y);
+        if (sx < -20 || sx > W + 20) return;
+        const angle = Math.atan2(a.vy, a.vx);
+        ctx.save();
+        ctx.translate(sx + a.w / 2, sy + a.h / 2);
+        ctx.rotate(angle);
+        // Shaft
+        ctx.fillStyle = '#8B6914';
+        ctx.fillRect(-8, -1, 16, 2);
+        // Arrowhead
+        ctx.fillStyle = '#555';
+        ctx.beginPath();
+        ctx.moveTo(8, 0);
+        ctx.lineTo(5, -3);
+        ctx.lineTo(5, 3);
+        ctx.closePath();
+        ctx.fill();
+        // Fletching
+        ctx.fillStyle = '#CC3333';
+        ctx.beginPath();
+        ctx.moveTo(-8, 0);
+        ctx.lineTo(-11, -3);
+        ctx.lineTo(-9, 0);
+        ctx.lineTo(-11, 3);
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
     }
 
     // BOSS AI
@@ -2571,6 +2741,91 @@
             return;
         }
 
+        // === RAT ARCHER ===
+        if (e.type === 'archer') {
+            const dir = e.dir || 1;
+            const bobArm = Math.sin(e.frame * 3) * 1.5;
+            // Body
+            ctx.fillStyle = isCave ? '#3a3a3a' : '#6B4226';
+            ctx.fillRect(ex + 6, ey + 8, 20, 18);
+            ctx.fillStyle = isCave ? '#4a4a4a' : '#8B5A3C';
+            ctx.fillRect(ex + 8, ey + 10, 16, 14);
+            // Head
+            ctx.fillStyle = isCave ? '#3a3a3a' : '#6B4226';
+            ctx.fillRect(ex + 10 + dir * 4, ey + 2, 12, 12);
+            // Snout
+            ctx.fillStyle = isCave ? '#555' : '#A07050';
+            ctx.fillRect(ex + 12 + dir * 8, ey + 6, 6, 5);
+            // Nose
+            ctx.fillStyle = '#FF6B8A';
+            ctx.fillRect(ex + 14 + dir * 9, ey + 7, 3, 3);
+            // Eyes
+            ctx.fillStyle = isCave ? '#00FF66' : '#FF0000';
+            ctx.fillRect(ex + 13 + dir * 5, ey + 5, 3, 3);
+            // Ears
+            ctx.fillStyle = isCave ? '#2a2a2a' : '#5A3418';
+            ctx.fillRect(ex + 10, ey - 1, 4, 5);
+            ctx.fillRect(ex + 18, ey - 1, 4, 5);
+            ctx.fillStyle = '#FF8FAB';
+            ctx.fillRect(ex + 11, ey, 2, 3);
+            ctx.fillRect(ex + 19, ey, 2, 3);
+            // Legs
+            ctx.fillStyle = isCave ? '#2a2a2a' : '#5A3418';
+            ctx.fillRect(ex + 10, ey + 26, 4, 5);
+            ctx.fillRect(ex + 18, ey + 26, 4, 5);
+            // Tail
+            const tw = Math.sin(e.frame * 3) * 3;
+            ctx.fillStyle = isCave ? '#2a2a2a' : '#5A3418';
+            ctx.fillRect(ex + (dir === 1 ? -2 : 26), ey + 16 + tw, 6, 2);
+            // Bow (arc on the side they're facing)
+            ctx.save();
+            ctx.translate(ex + 16 + dir * 12, ey + 14 + bobArm);
+            ctx.strokeStyle = '#A0522D';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(0, 0, 10, -Math.PI * 0.6, Math.PI * 0.6, dir === -1);
+            ctx.stroke();
+            // Bowstring
+            ctx.strokeStyle = '#DDD';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            const bx1 = 10 * Math.cos(-Math.PI * 0.6);
+            const by1 = 10 * Math.sin(-Math.PI * 0.6);
+            const bx2 = 10 * Math.cos(Math.PI * 0.6);
+            const by2 = 10 * Math.sin(Math.PI * 0.6);
+            if (dir === -1) {
+                ctx.moveTo(-bx1, by1); ctx.lineTo(-bx2, by2);
+            } else {
+                ctx.moveTo(bx1, by1); ctx.lineTo(bx2, by2);
+            }
+            ctx.stroke();
+            // Arrow nocked
+            if (e.shootTimer < 30) {
+                ctx.fillStyle = '#8B6914';
+                ctx.fillRect(dir === 1 ? -2 : -10, -1, 12, 2);
+                ctx.fillStyle = '#555';
+                ctx.beginPath();
+                ctx.moveTo(dir === 1 ? 10 : -10, 0);
+                ctx.lineTo(dir === 1 ? 7 : -7, -2);
+                ctx.lineTo(dir === 1 ? 7 : -7, 2);
+                ctx.closePath(); ctx.fill();
+            }
+            ctx.restore();
+            ctx.lineWidth = 1;
+            // Glowing eye effect for cave
+            if (isCave) {
+                ctx.globalAlpha = 0.3; ctx.fillStyle = '#00FF66';
+                ctx.beginPath(); ctx.arc(ex + 14.5 + dir * 5, ey + 6.5, 5, 0, Math.PI * 2); ctx.fill();
+                ctx.globalAlpha = 1;
+            }
+            // Bandana / headband
+            ctx.fillStyle = '#CC2222';
+            ctx.fillRect(ex + 9 + dir * 4, ey + 1, 14, 3);
+            // Bandana tail
+            ctx.fillRect(ex + (dir === 1 ? 8 : 20), ey + 2, 3, 5);
+            return;
+        }
+
         // Rat body (darker for cave rats)
         ctx.fillStyle = isCave ? '#3a3a3a' : '#8B4513'; ctx.fillRect(ex + 4, ey + 8, 24, 18);
         ctx.fillStyle = isCave ? '#4a4a4a' : '#A0522D'; ctx.fillRect(ex + 6, ey + 10, 20, 14);
@@ -3181,7 +3436,7 @@
         cat.x = level.spawnX * T; cat.y = level.spawnY * T - cat.h;
         cat.vx = 0; cat.vy = 0; cat.grounded = false; cat.dead = false;
         cam.x = Math.max(0, cat.x - W / 3);
-        particles = []; questionHits = []; invincibleTimer = 0; fireballs = []; activeCheckpoint = null; stars = []; powerUps = []; heldShell = null;
+        particles = []; questionHits = []; invincibleTimer = 0; fireballs = []; arrows = []; activeCheckpoint = null; stars = []; powerUps = []; heldShell = null;
         isBig = false; cat.h = 32;
         // Reset P2
         if (coopMode) {
@@ -3495,7 +3750,7 @@
         if (hotbarFlashTimer > 0) hotbarFlashTimer--;
         if (cat2ScratchTimer > 0) cat2ScratchTimer--;
         if (cat2ScratchCooldown > 0) cat2ScratchCooldown--;
-        updateCat(); updateCat2(); updateEnemies(); updateCoins(); updateOneUps(); updateFireFlowers(); updateFireballs(); updateBoss(); updateCheckpoints(); checkFlag();
+        updateCat(); updateCat2(); updateEnemies(); updateCoins(); updateOneUps(); updateFireFlowers(); updateFireballs(); updateArrows(); updateBoss(); updateCheckpoints(); checkFlag();
         updateStars();
         updatePowerUps();
         if (starPowerTimer > 0) starPowerTimer--;
@@ -3552,6 +3807,7 @@
             level.enemies.forEach(drawEnemy);
             // Fireballs
             fireballs.forEach(drawFireball);
+            arrows.forEach(drawArrow);
             // Boss
             drawBoss();
             drawBossHP();
