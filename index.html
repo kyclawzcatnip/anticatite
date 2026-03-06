@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Super Cat World</title>
+  <meta name="description"
+    content="A retro 2D platformer starring a brave cat on an adventure through worlds, castles, and sky islands!">
+  <link rel="stylesheet" href="style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+</head>
+
+<body>
+  <div id="game-container">
+    <canvas id="gameCanvas" width="800" height="448"></canvas>
+    <div id="hud">
+      <span id="lives-display">🐱 × 3</span>
+      <span id="coin-display">🪙 × 0</span>
+      <span id="score-display">SCORE: 0</span>
+      <span id="level-display">WORLD 1</span>
+    </div>
+    <div id="overlay" class="visible">
+      <div id="overlay-title">SUPER CAT WORLD</div>
+      <div id="overlay-sub">PRESS SPACE TO START<br>PRESS 2 FOR CO-OP</div>
+    </div>
+    <div id="mobile-controls">
+      <button id="btn-left" aria-label="Move Left">◀</button>
+      <button id="btn-right" aria-label="Move Right">▶</button>
+      <button id="btn-jump" aria-label="Jump">▲</button>
+    </div>
+  </div>
+  <script src="game.js"></script>
+</body>
+
+</html>
