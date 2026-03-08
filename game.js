@@ -520,25 +520,25 @@
 
     // INPUT
     function setKey(code, val) {
-        if (code === 'ArrowLeft' || code === 'KeyA') keys.left = val;
-        if (code === 'ArrowRight' || code === 'KeyD') keys.right = val;
-        if (code === 'ArrowUp' || code === 'Space' || code === 'KeyW') {
+        if (code === 'KeyA') keys.left = val;
+        if (code === 'KeyD') keys.right = val;
+        if (code === 'Space' || code === 'KeyW') {
             if (val && !keys.jump) keys.jumpPressed = true;
             keys.jump = val;
         }
         if (code === 'KeyQ') keys.glide = val;
     }
     function setKey2(code, val) {
-        if (code === 'KeyJ') keys2.left = val;
-        if (code === 'KeyL') keys2.right = val;
-        if (code === 'KeyI') {
+        if (code === 'ArrowLeft') keys2.left = val;
+        if (code === 'ArrowRight') keys2.right = val;
+        if (code === 'ArrowUp') {
             if (val && !keys2.jump) keys2.jumpPressed = true;
             keys2.jump = val;
         }
-        if (code === 'Semicolon') keys2.glide = val;
+        if (code === 'ArrowDown') keys2.glide = val;
     }
     document.addEventListener('keydown', e => {
-        if (['Space', 'ArrowUp', 'ArrowLeft', 'ArrowRight', 'KeyA', 'KeyD', 'KeyW', 'KeyI', 'KeyJ', 'KeyL'].includes(e.code)) e.preventDefault();
+        if (['Space', 'ArrowUp', 'ArrowLeft', 'ArrowRight', 'ArrowDown', 'KeyA', 'KeyD', 'KeyW'].includes(e.code)) e.preventDefault();
         if (state === 'start' || state === 'over' || state === 'win') {
             if (e.code === 'Space' || e.code === 'Digit1') { coopMode = false; startGame(); return; }
             if (e.code === 'Digit2') { coopMode = true; startGame(); return; }
