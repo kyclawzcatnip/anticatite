@@ -439,6 +439,19 @@
     let hotbarFlash = -1; // slot index that was just used (for flash effect)
     let hotbarFlashTimer = 0;
 
+    // ONLINE MULTIPLAYER STATE
+    let onlineMode = false;   // true when playing online
+    let isOnlineHost = false;  // true if this player is the host
+    let isOnlineGuest = false; // true if this player is the guest
+    let netSendTimer = 0;      // throttle sending
+    const NET_SEND_INTERVAL = 2; // send every N frames
+    let guestState = null;     // received game state for guest rendering
+    let remoteInputs = { left: false, right: false, jump: false, jumpPressed: false, glide: false, scratch: false, fireball: false, throwShell: false };
+    let guestScratchFlag = false; // set when guest presses scratch, sent to host
+    let guestFireballFlag = false; // set when guest presses fireball, sent to host
+    let netDisconnectMsg = '';
+    let netDisconnectTimer = 0;
+
     // CAT SKINS
     let selectedSkin = 0, closetSelection = 0;
     let unlockedSkins = [true, false, false, false, false, false, false, false];
@@ -542,6 +555,7 @@
         if (state === 'start' || state === 'over' || state === 'win') {
             if (e.code === 'Space' || e.code === 'Digit1') { coopMode = false; startGame(); return; }
             if (e.code === 'Digit2') { coopMode = true; startGame(); return; }
+            if (e.code === 'Digit3') { openLobby(); return; }
         }
         if (state === 'levelcomplete' && e.code === 'Space') { openShop(); return; }
         if (state === 'shop') {
@@ -573,9 +587,12 @@
             return;
         }
         if (e.code === 'KeyP') keys2._pHeld = true;
-        if (state === 'playing' && e.code === 'KeyE' && hasFire && fireCooldown <= 0) { shootFireball(); }
+        if (state === 'playing' && e.code === 'KeyE' && hasFire && fireCooldown <= 0) {
+            if (isOnlineGuest) { guestFireballFlag = true; } else { shootFireball(); }
+        }
         if (state === 'playing' && (e.code === 'KeyF' || e.code === 'KeyX') && scratchCooldown <= 0 && !cat.dead) {
-            if (heldShell) {
+            if (isOnlineGuest) { guestScratchFlag = true; }
+            else if (heldShell) {
                 // Throw held shell
                 heldShell.shellVx = cat.dir * 4;
                 heldShell.vx = heldShell.shellVx;
@@ -3466,6 +3483,304 @@
         loadLevel(0); overlay.classList.remove('visible');
     }
 
+    // ONLINE MULTIPLAYER — Lobby & Networking
+    const lobbyOverlay = document.getElementById('lobby-overlay');
+    const lobbyMenu = document.getElementById('lobby-menu');
+    const lobbyWaiting = document.getElementById('lobby-waiting');
+    const lobbyRoomCode = document.getElementById('lobby-room-code');
+    const lobbyStatus = document.getElementById('lobby-status');
+    const lobbyDot = document.getElementById('lobby-dot');
+    const lobbyConnText = document.getElementById('lobby-connection-text');
+    const joinCodeInput = document.getElementById('join-code-input');
+
+    function openLobby() {
+        state = 'lobby';
+        overlay.classList.remove('visible');
+        lobbyOverlay.classList.remove('hidden');
+        lobbyMenu.style.display = '';
+        lobbyWaiting.classList.add('hidden');
+        lobbyStatus.textContent = '';
+        if (joinCodeInput) joinCodeInput.value = '';
+    }
+
+    function closeLobby() {
+        lobbyOverlay.classList.add('hidden');
+        NetworkManager.disconnect();
+        onlineMode = false; isOnlineHost = false; isOnlineGuest = false;
+        state = 'start';
+        showOverlay('SUPER CAT WORLD', 'PRESS SPACE TO START\nPRESS 2 FOR CO-OP\nPRESS 3 FOR ONLINE');
+    }
+
+    function startOnlineGame() {
+        coopMode = true;
+        onlineMode = true;
+        cat2SelectedSkin = selectedSkin === 1 ? 0 : 1;
+        p1HP = 3; p2HP = 3;
+        lobbyOverlay.classList.add('hidden');
+        state = 'playing'; score = 0; lives = 3; coinCount = 0; currentLevel = 0;
+        hasFire = false; fireCooldown = 0; fireballs = []; activeCheckpoint = null;
+        speedBoost = 0; shieldHits = 0; inventory = [];
+        loadLevel(0); overlay.classList.remove('visible');
+    }
+
+    // Lobby button callbacks (exposed on window for onclick)
+    window._lobbyHost = async function () {
+        lobbyStatus.textContent = '';
+        lobbyMenu.style.display = 'none';
+        lobbyWaiting.classList.remove('hidden');
+        lobbyConnText.textContent = 'Creating room...';
+        lobbyDot.classList.remove('connected');
+        try {
+            const code = await NetworkManager.host({
+                onConnect: () => {
+                    lobbyDot.classList.add('connected');
+                    lobbyConnText.textContent = 'Player joined! Starting...';
+                    isOnlineHost = true;
+                    isOnlineGuest = false;
+                    setTimeout(() => startOnlineGame(), 1000);
+                },
+                onDisconnect: () => {
+                    if (state === 'playing') {
+                        netDisconnectMsg = 'PARTNER DISCONNECTED';
+                        netDisconnectTimer = 180;
+                        onlineMode = false; isOnlineHost = false;
+                    }
+                },
+                onData: (data) => {
+                    // Host receives guest inputs
+                    if (data && data.type === 'input') {
+                        remoteInputs = data.keys;
+                    }
+                },
+                onError: (err) => {
+                    lobbyStatus.textContent = 'Error: ' + (err.message || err.type);
+                }
+            });
+            lobbyRoomCode.textContent = code;
+            lobbyConnText.textContent = 'Waiting for player...';
+            // Click to copy
+            lobbyRoomCode.onclick = () => {
+                navigator.clipboard.writeText(code).then(() => {
+                    lobbyConnText.textContent = 'Code copied!';
+                    setTimeout(() => { lobbyConnText.textContent = 'Waiting for player...'; }, 1500);
+                }).catch(() => {});
+            };
+        } catch (err) {
+            lobbyStatus.textContent = 'Failed to host: ' + (err.message || err.type);
+            lobbyMenu.style.display = '';
+            lobbyWaiting.classList.add('hidden');
+        }
+    };
+
+    window._lobbyJoin = async function () {
+        const code = joinCodeInput ? joinCodeInput.value.trim() : '';
+        if (code.length !== 4) {
+            lobbyStatus.textContent = 'Enter a 4-character room code';
+            return;
+        }
+        lobbyStatus.textContent = '';
+        lobbyMenu.style.display = 'none';
+        lobbyWaiting.classList.remove('hidden');
+        lobbyRoomCode.textContent = code.toUpperCase();
+        lobbyConnText.textContent = 'Connecting...';
+        lobbyDot.classList.remove('connected');
+        try {
+            await NetworkManager.join(code, {
+                onConnect: () => {
+                    lobbyDot.classList.add('connected');
+                    lobbyConnText.textContent = 'Connected! Waiting for host...';
+                    isOnlineGuest = true;
+                    isOnlineHost = false;
+                },
+                onDisconnect: () => {
+                    if (state === 'playing') {
+                        netDisconnectMsg = 'HOST DISCONNECTED';
+                        netDisconnectTimer = 180;
+                        onlineMode = false; isOnlineGuest = false;
+                    }
+                },
+                onData: (data) => {
+                    // Guest receives game state from host
+                    if (data && data.type === 'state') {
+                        applyHostState(data);
+                    }
+                    if (data && data.type === 'start') {
+                        // Host tells guest to start the game
+                        startOnlineGame();
+                    }
+                },
+                onError: (err) => {
+                    lobbyStatus.textContent = 'Error: ' + (err.message || err.type);
+                }
+            });
+        } catch (err) {
+            lobbyStatus.textContent = 'Failed to join: ' + (err.message || err.type);
+            lobbyMenu.style.display = '';
+            lobbyWaiting.classList.add('hidden');
+        }
+    };
+
+    window._lobbyBack = function () {
+        closeLobby();
+    };
+
+    // Apply host state on guest side
+    function applyHostState(data) {
+        if (!level && data.level !== undefined) {
+            currentLevel = data.level;
+            loadLevel(currentLevel);
+        }
+        if (data.level !== undefined && data.level !== currentLevel) {
+            currentLevel = data.level;
+            loadLevel(currentLevel);
+        }
+        // Apply cat positions
+        if (data.cat) {
+            cat.x = data.cat.x; cat.y = data.cat.y;
+            cat.vx = data.cat.vx; cat.vy = data.cat.vy;
+            cat.dir = data.cat.dir; cat.grounded = data.cat.grounded;
+            cat.dead = data.cat.dead; cat.h = data.cat.h;
+        }
+        if (data.cat2) {
+            cat2.x = data.cat2.x; cat2.y = data.cat2.y;
+            cat2.vx = data.cat2.vx; cat2.vy = data.cat2.vy;
+            cat2.dir = data.cat2.dir; cat2.grounded = data.cat2.grounded;
+            cat2.dead = data.cat2.dead; cat2.h = data.cat2.h;
+        }
+        if (data.cam !== undefined) cam.x = data.cam;
+        if (data.score !== undefined) score = data.score;
+        if (data.coinCount !== undefined) coinCount = data.coinCount;
+        if (data.lives !== undefined) lives = data.lives;
+        if (data.p1HP !== undefined) p1HP = data.p1HP;
+        if (data.p2HP !== undefined) p2HP = data.p2HP;
+        if (data.hasFire !== undefined) hasFire = data.hasFire;
+        if (data.state) state = data.state;
+        if (data.shakeTimer) { shakeTimer = data.shakeTimer; shakeAmt = data.shakeAmt || 3; }
+        // Sync enemy alive states
+        if (data.enemies && level) {
+            for (let i = 0; i < Math.min(data.enemies.length, level.enemies.length); i++) {
+                level.enemies[i].x = data.enemies[i].x;
+                level.enemies[i].y = data.enemies[i].y;
+                level.enemies[i].alive = data.enemies[i].alive;
+                level.enemies[i].vx = data.enemies[i].vx;
+                if (data.enemies[i].shell !== undefined) level.enemies[i].shell = data.enemies[i].shell;
+            }
+        }
+        // Sync coins
+        if (data.coins && level) {
+            for (let i = 0; i < Math.min(data.coins.length, level.coins.length); i++) {
+                level.coins[i].collected = data.coins[i];
+            }
+        }
+        // Sync fireballs count (just show particles on guest)
+        if (data.fireballs !== undefined && level) {
+            // Sync fireball positions for rendering
+            fireballs = data.fireballs.map(fb => ({ x: fb.x, y: fb.y, w: 10, h: 10, vx: fb.vx, vy: fb.vy, life: fb.life, trail: [] }));
+        }
+        // Boss
+        if (data.boss) {
+            if (!boss) boss = createBoss(data.boss.x, data.boss.y, data.boss.pirate);
+            boss.x = data.boss.x; boss.y = data.boss.y;
+            boss.hp = data.boss.hp; boss.alive = data.boss.alive;
+            boss.dir = data.boss.dir; boss.phase = data.boss.phase;
+        } else { boss = null; }
+        // Grid changes (question blocks hit)
+        if (data.gridChanges && level) {
+            data.gridChanges.forEach(gc => {
+                if (level.grid[gc.r] && level.grid[gc.r][gc.c] !== undefined) {
+                    level.grid[gc.r][gc.c] = gc.v;
+                }
+            });
+        }
+    }
+
+    // Network sync in game loop (called from update)
+    function networkSync() {
+        if (!onlineMode || !NetworkManager.isConnected) return;
+        netSendTimer++;
+        if (netSendTimer < NET_SEND_INTERVAL) return;
+        netSendTimer = 0;
+
+        if (isOnlineHost) {
+            // Apply remote inputs to keys2
+            keys2.left = remoteInputs.left;
+            keys2.right = remoteInputs.right;
+            keys2.jump = remoteInputs.jump;
+            if (remoteInputs.jumpPressed) {
+                keys2.jumpPressed = true;
+                remoteInputs.jumpPressed = false;
+            }
+            keys2.glide = remoteInputs.glide;
+            // Handle remote scratch
+            if (remoteInputs.scratch && cat2ScratchCooldown <= 0 && !cat2.dead) {
+                if (heldShell2) {
+                    heldShell2.shellVx = cat2.dir * 4;
+                    heldShell2.vx = heldShell2.shellVx;
+                    heldShell2.vy = -3;
+                    heldShell2.x = cat2.x + (cat2.dir === 1 ? cat2.w + 4 : -heldShell2.w - 4);
+                    heldShell2.y = cat2.y;
+                    heldShell2 = null;
+                } else {
+                    startScratch2();
+                }
+                remoteInputs.scratch = false;
+            }
+            if (remoteInputs.fireball && hasFire && fireCooldown <= 0 && !cat2.dead) {
+                shootFireball2();
+                remoteInputs.fireball = false;
+            }
+
+            // Build compact state to send to guest
+            const enemyData = level ? level.enemies.map(e => ({
+                x: Math.round(e.x), y: Math.round(e.y), alive: e.alive, vx: e.vx,
+                shell: e.shell || false
+            })) : [];
+            const coinData = level ? level.coins.map(c => c.collected) : [];
+            const fbData = fireballs.map(fb => ({ x: Math.round(fb.x), y: Math.round(fb.y), vx: fb.vx, vy: fb.vy, life: fb.life }));
+
+            const stateData = {
+                type: 'state',
+                level: currentLevel,
+                state: state,
+                cat: { x: Math.round(cat.x), y: Math.round(cat.y), vx: cat.vx, vy: cat.vy, dir: cat.dir, grounded: cat.grounded, dead: cat.dead, h: cat.h },
+                cat2: { x: Math.round(cat2.x), y: Math.round(cat2.y), vx: cat2.vx, vy: cat2.vy, dir: cat2.dir, grounded: cat2.grounded, dead: cat2.dead, h: cat2.h },
+                cam: Math.round(cam.x),
+                score: score,
+                coinCount: coinCount,
+                lives: lives,
+                p1HP: p1HP, p2HP: p2HP,
+                hasFire: hasFire,
+                enemies: enemyData,
+                coins: coinData,
+                fireballs: fbData,
+                boss: boss ? { x: Math.round(boss.x), y: Math.round(boss.y), hp: boss.hp, alive: boss.alive, dir: boss.dir, phase: boss.phase, pirate: boss.pirate } : null,
+                shakeTimer: shakeTimer, shakeAmt: shakeAmt
+            };
+            NetworkManager.send(stateData);
+        }
+
+        if (isOnlineGuest) {
+            // Send local inputs to host
+            const inputData = {
+                type: 'input',
+                keys: {
+                    left: keys.left,
+                    right: keys.right,
+                    jump: keys.jump,
+                    jumpPressed: keys.jumpPressed,
+                    glide: keys.glide,
+                    scratch: guestScratchFlag,
+                    fireball: guestFireballFlag
+                }
+            };
+            NetworkManager.send(inputData);
+            keys.jumpPressed = false;
+            guestScratchFlag = false;
+            guestFireballFlag = false;
+            // Guest doesn't run game logic — host sends state
+        }
+    }
+
     function nextLevel() {
         currentLevel++;
         if (currentLevel >= LEVEL_DATA.length) { state = 'win'; return; }
@@ -3742,6 +4057,9 @@
 
     // UPDATE
     function update() {
+        // Network disconnect message
+        if (netDisconnectTimer > 0) netDisconnectTimer--;
+
         if (state !== 'playing') return;
         frameCount++;
         if (shakeTimer > 0) shakeTimer--;
@@ -3750,6 +4068,32 @@
         if (hotbarFlashTimer > 0) hotbarFlashTimer--;
         if (cat2ScratchTimer > 0) cat2ScratchTimer--;
         if (cat2ScratchCooldown > 0) cat2ScratchCooldown--;
+
+        // Online guest: skip local game logic, just render from host state
+        if (isOnlineGuest) {
+            frameCount++;
+            // Still update particles/void for visual polish
+            if (frameCount % 2 === 0) spawnVoidParticles();
+            updateVoidParticles();
+            // Send inputs to host
+            networkSync();
+            // Update HUD
+            if (coopMode) {
+                let p1Str = 'P1 ';
+                for (let i = 0; i < 3; i++) p1Str += i < p1HP ? '❤️' : '🖤';
+                let p2Str = ' P2 ';
+                for (let i = 0; i < 3; i++) p2Str += i < p2HP ? '❤️' : '🖤';
+                livesEl.textContent = p1Str + p2Str + (hasFire ? ' 🔥' : '');
+            }
+            coinEl.textContent = '🪙 × ' + coinCount;
+            scoreEl.textContent = 'SCORE: ' + score;
+            levelEl.textContent = boss ? (boss.pirate ? 'SKY BOSS' : 'BOSS') : (currentLevel >= 11 ? 'CAVE ' + (currentLevel - 10) : currentLevel >= 5 ? 'SKY ' + (currentLevel - 4) : 'WORLD ' + (currentLevel + 1));
+            if (state === 'over') { showOverlay('GAME OVER', 'SCORE: ' + score + '\n\nPRESS SPACE TO RETRY'); }
+            if (state === 'levelcomplete') { showOverlay('LEVEL COMPLETE!', 'SCORE: ' + score + '\n\nWAITING FOR HOST...'); }
+            if (state === 'win') { showOverlay('YOU WIN! 🎉', 'FINAL SCORE: ' + score); }
+            return;
+        }
+
         updateCat(); updateCat2(); updateEnemies(); updateCoins(); updateOneUps(); updateFireFlowers(); updateFireballs(); updateArrows(); updateBoss(); updateCheckpoints(); checkFlag();
         updateStars();
         updatePowerUps();
@@ -3757,13 +4101,17 @@
         // Void
         if (frameCount % 2 === 0) spawnVoidParticles();
         updateVoidParticles();
+
+        // Network sync (host sends state)
+        if (isOnlineHost) networkSync();
+
         // HUD
         if (coopMode) {
             let p1Str = 'P1 ';
             for (let i = 0; i < 3; i++) p1Str += i < p1HP ? '❤️' : '🖤';
             let p2Str = ' P2 ';
             for (let i = 0; i < 3; i++) p2Str += i < p2HP ? '❤️' : '🖤';
-            livesEl.textContent = p1Str + p2Str + (hasFire ? ' 🔥' : '');
+            livesEl.textContent = p1Str + p2Str + (hasFire ? ' 🔥' : '') + (onlineMode ? ' 🌐' : '');
         } else {
             livesEl.textContent = '🐱 × ' + Math.max(0, lives) + (hasFire ? ' 🔥' : '');
         }
@@ -3820,6 +4168,25 @@
             drawHotbar();
             // Co-op HP bars
             if (coopMode) drawCoopHP();
+            // Online disconnect message
+            if (netDisconnectTimer > 0) {
+                const alpha = Math.min(1, netDisconnectTimer / 30);
+                ctx.globalAlpha = alpha;
+                ctx.fillStyle = 'rgba(0,0,0,0.7)';
+                ctx.fillRect(W / 2 - 160, H / 2 - 20, 320, 40);
+                ctx.fillStyle = '#FF4444';
+                ctx.font = 'bold 12px "Press Start 2P", monospace';
+                ctx.textAlign = 'center';
+                ctx.fillText(netDisconnectMsg, W / 2, H / 2 + 5);
+                ctx.textAlign = 'left';
+                ctx.globalAlpha = 1;
+            }
+            // Online mode indicator
+            if (onlineMode && NetworkManager.isConnected) {
+                ctx.fillStyle = '#00FF88';
+                ctx.font = '7px "Press Start 2P", monospace';
+                ctx.fillText('🌐 ONLINE', W - 90, H - 8);
+            }
         }
         // Shop overlay
         if (state === 'shop') { drawShop(); }
@@ -3929,6 +4296,6 @@
     function loop() { update(); draw(); requestAnimationFrame(loop); }
 
     // INIT
-    showOverlay('SUPER CAT WORLD', 'PRESS SPACE TO START');
+    showOverlay('SUPER CAT WORLD', 'PRESS SPACE TO START\nPRESS 2 FOR CO-OP\nPRESS 3 FOR ONLINE');
     loop();
 })();

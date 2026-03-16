@@ -7,7 +7,7 @@
   <title>Super Cat World</title>
   <meta name="description"
     content="A retro 2D platformer starring a brave cat on an adventure through worlds, castles, and sky islands!">
-  <link rel="stylesheet" href="style.css?v=20260308a">
+  <link rel="stylesheet" href="style.css?v=20260316a">
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 </head>
 
@@ -24,13 +24,56 @@
       <div id="overlay-title">SUPER CAT WORLD</div>
       <div id="overlay-sub">PRESS SPACE TO START<br>PRESS 2 FOR CO-OP</div>
     </div>
+
+    <!-- ONLINE MULTIPLAYER LOBBY -->
+    <div id="lobby-overlay" class="hidden">
+      <div id="lobby-panel">
+        <div id="lobby-title">🌐 ONLINE CO-OP</div>
+        <div id="lobby-status"></div>
+
+        <div id="lobby-menu">
+          <button id="btn-host" class="lobby-btn" onclick="window._lobbyHost()">
+            <span class="lobby-btn-icon">📡</span>
+            HOST GAME
+          </button>
+          <div id="lobby-divider">— OR —</div>
+          <div id="join-section">
+            <input id="join-code-input" type="text" maxlength="4" placeholder="ROOM CODE"
+              spellcheck="false" autocomplete="off">
+            <button id="btn-join" class="lobby-btn lobby-btn-join" onclick="window._lobbyJoin()">
+              <span class="lobby-btn-icon">🔗</span>
+              JOIN GAME
+            </button>
+          </div>
+        </div>
+
+        <div id="lobby-waiting" class="hidden">
+          <div id="lobby-room-code-display">
+            <div id="lobby-room-label">ROOM CODE</div>
+            <div id="lobby-room-code">----</div>
+            <div id="lobby-room-hint">Share this code with your friend</div>
+          </div>
+          <div id="lobby-connection-status">
+            <span id="lobby-dot" class="pulse-dot"></span>
+            <span id="lobby-connection-text">Waiting for player...</span>
+          </div>
+        </div>
+
+        <button id="btn-lobby-back" class="lobby-btn lobby-btn-back" onclick="window._lobbyBack()">
+          ◀ BACK
+        </button>
+      </div>
+    </div>
+
     <div id="mobile-controls">
       <button id="btn-left" aria-label="Move Left">◀</button>
       <button id="btn-right" aria-label="Move Right">▶</button>
       <button id="btn-jump" aria-label="Jump">▲</button>
     </div>
   </div>
-  <script src="game.js?v=20260308a"></script>
+  <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+  <script src="network.js?v=20260316a"></script>
+  <script src="game.js?v=20260316a"></script>
 </body>
 
 </html>
