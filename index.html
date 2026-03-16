@@ -32,6 +32,17 @@
         <div id="lobby-status"></div>
 
         <div id="lobby-menu">
+          <!-- Room mode toggle -->
+          <div id="room-mode-toggle">
+            <button id="btn-mode-private" class="mode-btn mode-btn-active" onclick="window._setRoomMode(false)">
+              🔒 PRIVATE
+            </button>
+            <button id="btn-mode-public" class="mode-btn" onclick="window._setRoomMode(true)">
+              🌍 PUBLIC
+            </button>
+          </div>
+          <div id="room-mode-desc">Code required, auto-join</div>
+
           <button id="btn-host" class="lobby-btn" onclick="window._lobbyHost()">
             <span class="lobby-btn-icon">📡</span>
             HOST GAME
@@ -53,9 +64,24 @@
             <div id="lobby-room-code">----</div>
             <div id="lobby-room-hint">Share this code with your friend</div>
           </div>
+          <div id="lobby-room-mode-badge"></div>
           <div id="lobby-connection-status">
             <span id="lobby-dot" class="pulse-dot"></span>
             <span id="lobby-connection-text">Waiting for player...</span>
+          </div>
+        </div>
+
+        <!-- Join request approval (public rooms) -->
+        <div id="lobby-approval" class="hidden">
+          <div id="approval-title">⚡ JOIN REQUEST</div>
+          <div id="approval-text">A player wants to join your game</div>
+          <div id="approval-buttons">
+            <button class="lobby-btn lobby-btn-approve" onclick="window._approveJoin()">
+              ✅ ACCEPT
+            </button>
+            <button class="lobby-btn lobby-btn-deny" onclick="window._denyJoin()">
+              ❌ DENY
+            </button>
           </div>
         </div>
 
@@ -72,8 +98,8 @@
     </div>
   </div>
   <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
-  <script src="network.js?v=20260316a"></script>
-  <script src="game.js?v=20260316a"></script>
+  <script src="network.js?v=20260316b"></script>
+  <script src="game.js?v=20260316b"></script>
 </body>
 
 </html>

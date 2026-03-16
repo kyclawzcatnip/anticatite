@@ -3494,6 +3494,26 @@
     const lobbyDot = document.getElementById('lobby-dot');
     const lobbyConnText = document.getElementById('lobby-connection-text');
     const joinCodeInput = document.getElementById('join-code-input');
+    const lobbyApproval = document.getElementById('lobby-approval');
+    const lobbyModeBadge = document.getElementById('lobby-room-mode-badge');
+    const roomModeDesc = document.getElementById('room-mode-desc');
+    let roomIsPublic = false; // false = private, true = public
+
+    // Room mode toggle
+    window._setRoomMode = function (isPublic) {
+        roomIsPublic = isPublic;
+        const btnPrivate = document.getElementById('btn-mode-private');
+        const btnPublic = document.getElementById('btn-mode-public');
+        if (isPublic) {
+            btnPublic.classList.add('mode-btn-active');
+            btnPrivate.classList.remove('mode-btn-active');
+            roomModeDesc.textContent = 'Code required, host approves join';
+        } else {
+            btnPrivate.classList.add('mode-btn-active');
+            btnPublic.classList.remove('mode-btn-active');
+            roomModeDesc.textContent = 'Code required, auto-join';
+        }
+    };
 
     function openLobby() {
         state = 'lobby';
@@ -3501,12 +3521,16 @@
         lobbyOverlay.classList.remove('hidden');
         lobbyMenu.style.display = '';
         lobbyWaiting.classList.add('hidden');
+        if (lobbyApproval) lobbyApproval.classList.add('hidden');
         lobbyStatus.textContent = '';
         if (joinCodeInput) joinCodeInput.value = '';
+        // Reset toggle to private
+        window._setRoomMode(false);
     }
 
     function closeLobby() {
         lobbyOverlay.classList.add('hidden');
+        if (lobbyApproval) lobbyApproval.classList.add('hidden');
         NetworkManager.disconnect();
         onlineMode = false; isOnlineHost = false; isOnlineGuest = false;
         state = 'start';
@@ -3519,11 +3543,26 @@
         cat2SelectedSkin = selectedSkin === 1 ? 0 : 1;
         p1HP = 3; p2HP = 3;
         lobbyOverlay.classList.add('hidden');
+        if (lobbyApproval) lobbyApproval.classList.add('hidden');
         state = 'playing'; score = 0; lives = 3; coinCount = 0; currentLevel = 0;
         hasFire = false; fireCooldown = 0; fireballs = []; activeCheckpoint = null;
         speedBoost = 0; shieldHits = 0; inventory = [];
         loadLevel(0); overlay.classList.remove('visible');
     }
+
+    // Approval callbacks (public rooms)
+    window._approveJoin = function () {
+        if (lobbyApproval) lobbyApproval.classList.add('hidden');
+        NetworkManager.acceptPending();
+        // onConnect will fire after acceptance, which starts the game
+    };
+
+    window._denyJoin = function () {
+        if (lobbyApproval) lobbyApproval.classList.add('hidden');
+        NetworkManager.denyPending();
+        lobbyConnText.textContent = 'Request denied. Waiting for player...';
+        lobbyDot.classList.remove('connected');
+    };
 
     // Lobby button callbacks (exposed on window for onclick)
     window._lobbyHost = async function () {
@@ -3532,6 +3571,7 @@
         lobbyWaiting.classList.remove('hidden');
         lobbyConnText.textContent = 'Creating room...';
         lobbyDot.classList.remove('connected');
+        if (lobbyApproval) lobbyApproval.classList.add('hidden');
         try {
             const code = await NetworkManager.host({
                 onConnect: () => {
@@ -3539,6 +3579,7 @@
                     lobbyConnText.textContent = 'Player joined! Starting...';
                     isOnlineHost = true;
                     isOnlineGuest = false;
+                    if (lobbyApproval) lobbyApproval.classList.add('hidden');
                     setTimeout(() => {
                         NetworkManager.send({ type: 'start' });
                         startOnlineGame();
@@ -3557,12 +3598,29 @@
                         remoteInputs = data.keys;
                     }
                 },
+                onConnectionRequest: (peerId) => {
+                    // Public mode: show approval dialog
+                    lobbyConnText.textContent = 'Join request received!';
+                    if (lobbyApproval) lobbyApproval.classList.remove('hidden');
+                },
                 onError: (err) => {
                     lobbyStatus.textContent = 'Error: ' + (err.message || err.type);
                 }
-            });
+            }, roomIsPublic);
             lobbyRoomCode.textContent = code;
             lobbyConnText.textContent = 'Waiting for player...';
+            // Show mode badge
+            if (lobbyModeBadge) {
+                if (roomIsPublic) {
+                    lobbyModeBadge.textContent = '🌍 PUBLIC — You approve joins';
+                    lobbyModeBadge.style.color = '#FFD700';
+                    lobbyModeBadge.style.background = 'rgba(255,215,0,0.1)';
+                } else {
+                    lobbyModeBadge.textContent = '🔒 PRIVATE — Auto-join';
+                    lobbyModeBadge.style.color = '#00FF88';
+                    lobbyModeBadge.style.background = 'rgba(0,255,136,0.1)';
+                }
+            }
             // Click to copy
             lobbyRoomCode.onclick = () => {
                 navigator.clipboard.writeText(code).then(() => {
