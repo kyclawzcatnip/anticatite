@@ -657,9 +657,9 @@
             return;
         }
         setKey(e.code, true);
-        if (coopMode) setKey2(e.code, true);
+        if (coopMode && !onlineMode) setKey2(e.code, true);
     });
-    document.addEventListener('keyup', e => { setKey(e.code, false); if (coopMode) setKey2(e.code, false); if (e.code === 'KeyP') keys2._pHeld = false; });
+    document.addEventListener('keyup', e => { setKey(e.code, false); if (coopMode && !onlineMode) setKey2(e.code, false); if (e.code === 'KeyP') keys2._pHeld = false; });
     canvas.addEventListener('click', (e) => {
         if (state === 'start' || state === 'over' || state === 'win') startGame();
         else if (state === 'levelcomplete') openShop();
