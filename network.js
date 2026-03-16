@@ -189,37 +189,62 @@ const NetworkManager = (function () {
         });
     }
 
-    // List public rooms using PeerJS listAllPeers
-    function listPublicRooms() {
-        return new Promise((resolve, reject) => {
-            // Create a temporary peer just to list all peers
-            const tempPeer = new Peer({
-                debug: 0,
-                config: {
-                    iceServers: [
-                        { urls: 'stun:stun.l.google.com:19302' }
-                    ]
+    // List public rooms — tries HTTP fetch, then peer-based fallback
+    async function listPublicRooms() {
+        // Try direct HTTP fetch to PeerJS cloud server API
+        const urls = [
+            'https://0.peerjs.com/peerjs/peers',
+            'https://0.peerjs.com/peers',
+            'https://0.peerjs.com/peerjs/peers?key=peerjs'
+        ];
+        for (const url of urls) {
+            try {
+                const resp = await fetch(url, { signal: AbortSignal.timeout(4000) });
+                if (resp.ok) {
+                    const peers = await resp.json();
+                    if (Array.isArray(peers)) {
+                        return peers
+                            .filter(id => typeof id === 'string' && id.startsWith(PREFIX_PUBLIC) && !id.includes('-g-'))
+                            .map(id => id.replace(PREFIX_PUBLIC, ''));
+                    }
                 }
-            });
-            tempPeer.on('open', () => {
-                tempPeer.listAllPeers((peers) => {
-                    const publicRooms = peers
-                        .filter(id => id.startsWith(PREFIX_PUBLIC) && !id.includes('-g-'))
-                        .map(id => id.replace(PREFIX_PUBLIC, ''));
-                    tempPeer.destroy();
-                    resolve(publicRooms);
+            } catch (e) { /* try next URL */ }
+        }
+
+        // Fallback: use PeerJS peer object
+        try {
+            return await new Promise((resolve) => {
+                const tempPeer = new Peer({ debug: 0 });
+                const timer = setTimeout(() => {
+                    try { tempPeer.destroy(); } catch (e) { }
+                    resolve([]);
+                }, 5000);
+
+                tempPeer.on('open', () => {
+                    try {
+                        tempPeer.listAllPeers((peers) => {
+                            clearTimeout(timer);
+                            const rooms = (peers || [])
+                                .filter(id => id.startsWith(PREFIX_PUBLIC) && !id.includes('-g-'))
+                                .map(id => id.replace(PREFIX_PUBLIC, ''));
+                            try { tempPeer.destroy(); } catch (e) { }
+                            resolve(rooms);
+                        });
+                    } catch (e) {
+                        clearTimeout(timer);
+                        try { tempPeer.destroy(); } catch (e2) { }
+                        resolve([]);
+                    }
+                });
+                tempPeer.on('error', () => {
+                    clearTimeout(timer);
+                    try { tempPeer.destroy(); } catch (e) { }
+                    resolve([]);
                 });
             });
-            tempPeer.on('error', (err) => {
-                try { tempPeer.destroy(); } catch (e) { }
-                reject(err);
-            });
-            // Timeout
-            setTimeout(() => {
-                try { tempPeer.destroy(); } catch (e) { }
-                resolve([]);
-            }, 5000);
-        });
+        } catch (e) {
+            return [];
+        }
     }
 
     function send(data) {
