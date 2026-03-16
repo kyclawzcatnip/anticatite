@@ -1,14 +1,14 @@
 // ===== SUPER CAT WORLD — Network Manager (PeerJS WebRTC) =====
 // Handles peer-to-peer online multiplayer via PeerJS.
-// Host creates a room code, guest joins with it.
-// Supports public (approval) and private (auto-join) rooms.
+// Public rooms use 'scw-pub-' prefix (discoverable via listAllPeers).
+// Private rooms use 'scw-mp-' prefix (need code to join).
 
 const NetworkManager = (function () {
     'use strict';
 
     let peer = null;
     let conn = null;
-    let pendingConn = null; // pending connection waiting for host approval (public mode)
+    let pendingConn = null;
     let isHost = false;
     let isConnected = false;
     let isPublic = false;
@@ -17,9 +17,10 @@ const NetworkManager = (function () {
     let onDisconnectCallback = null;
     let onDataCallback = null;
     let onErrorCallback = null;
-    let onConnectionRequestCallback = null; // public mode: host gets notified of join request
+    let onConnectionRequestCallback = null;
 
-    const ROOM_PREFIX = 'scw-mp-';
+    const PREFIX_PRIVATE = 'scw-mp-';
+    const PREFIX_PUBLIC = 'scw-pub-';
 
     function generateCode() {
         const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -30,10 +31,16 @@ const NetworkManager = (function () {
 
     function setupConnection(connection) {
         conn = connection;
-        conn.on('open', () => {
+        // If connection is already open, fire callback immediately
+        if (conn.open) {
             isConnected = true;
             if (onConnectCallback) onConnectCallback();
-        });
+        } else {
+            conn.on('open', () => {
+                isConnected = true;
+                if (onConnectCallback) onConnectCallback();
+            });
+        }
         conn.on('data', (data) => {
             if (onDataCallback) onDataCallback(data);
         });
@@ -56,9 +63,10 @@ const NetworkManager = (function () {
         onConnectionRequestCallback = callbacks.onConnectionRequest || null;
 
         roomCode = generateCode();
-        const peerId = ROOM_PREFIX + roomCode;
         isHost = true;
         isPublic = publicMode || false;
+        const prefix = isPublic ? PREFIX_PUBLIC : PREFIX_PRIVATE;
+        const peerId = prefix + roomCode;
 
         return new Promise((resolve, reject) => {
             peer = new Peer(peerId, {
@@ -72,19 +80,19 @@ const NetworkManager = (function () {
             });
 
             peer.on('open', (id) => {
-                console.log('Hosting room:', roomCode, publicMode ? '(public)' : '(private)');
+                console.log('Hosting room:', roomCode, isPublic ? '(public)' : '(private)');
                 resolve(roomCode);
             });
 
             peer.on('connection', (connection) => {
                 if (isPublic) {
-                    // Public mode: hold connection and ask host for approval
+                    // Public: hold connection, ask host for approval
                     pendingConn = connection;
                     if (onConnectionRequestCallback) {
                         onConnectionRequestCallback(connection.peer);
                     }
                 } else {
-                    // Private mode: auto-accept
+                    // Private: auto-accept
                     setupConnection(connection);
                 }
             });
@@ -94,7 +102,7 @@ const NetworkManager = (function () {
                 if (err.type === 'unavailable-id') {
                     peer.destroy();
                     roomCode = generateCode();
-                    const newId = ROOM_PREFIX + roomCode;
+                    const newId = prefix + roomCode;
                     peer = new Peer(newId, { debug: 0 });
                     peer.on('open', () => resolve(roomCode));
                     peer.on('connection', (c) => {
@@ -131,15 +139,16 @@ const NetworkManager = (function () {
         }
     }
 
-    function join(code, callbacks) {
+    function join(code, callbacks, isPublicRoom) {
         onConnectCallback = callbacks.onConnect || null;
         onDisconnectCallback = callbacks.onDisconnect || null;
         onDataCallback = callbacks.onData || null;
         onErrorCallback = callbacks.onError || null;
 
         roomCode = code.toUpperCase().trim();
-        const peerId = ROOM_PREFIX + 'g-' + roomCode + '-' + Math.floor(Math.random() * 10000);
-        const hostId = ROOM_PREFIX + roomCode;
+        const prefix = isPublicRoom ? PREFIX_PUBLIC : PREFIX_PRIVATE;
+        const peerId = prefix + 'g-' + roomCode + '-' + Math.floor(Math.random() * 10000);
+        const hostId = prefix + roomCode;
         isHost = false;
 
         return new Promise((resolve, reject) => {
@@ -159,10 +168,10 @@ const NetworkManager = (function () {
 
                 const timeout = setTimeout(() => {
                     if (!isConnected) {
-                        reject(new Error('Connection timed out. Check the room code.'));
-                        disconnect();
+                        reject(new Error(isPublicRoom ? 'Waiting for host approval...' : 'Connection timed out. Check the room code.'));
+                        if (!isPublicRoom) disconnect();
                     }
-                }, 15000);
+                }, isPublicRoom ? 30000 : 15000); // Longer timeout for public (waiting for approval)
 
                 const origConnect = onConnectCallback;
                 onConnectCallback = () => {
@@ -177,6 +186,39 @@ const NetworkManager = (function () {
                 if (onErrorCallback) onErrorCallback(err);
                 reject(err);
             });
+        });
+    }
+
+    // List public rooms using PeerJS listAllPeers
+    function listPublicRooms() {
+        return new Promise((resolve, reject) => {
+            // Create a temporary peer just to list all peers
+            const tempPeer = new Peer({
+                debug: 0,
+                config: {
+                    iceServers: [
+                        { urls: 'stun:stun.l.google.com:19302' }
+                    ]
+                }
+            });
+            tempPeer.on('open', () => {
+                tempPeer.listAllPeers((peers) => {
+                    const publicRooms = peers
+                        .filter(id => id.startsWith(PREFIX_PUBLIC) && !id.includes('-g-'))
+                        .map(id => id.replace(PREFIX_PUBLIC, ''));
+                    tempPeer.destroy();
+                    resolve(publicRooms);
+                });
+            });
+            tempPeer.on('error', (err) => {
+                try { tempPeer.destroy(); } catch (e) { }
+                reject(err);
+            });
+            // Timeout
+            setTimeout(() => {
+                try { tempPeer.destroy(); } catch (e) { }
+                resolve([]);
+            }, 5000);
         });
     }
 
@@ -207,6 +249,7 @@ const NetworkManager = (function () {
         disconnect,
         acceptPending,
         denyPending,
+        listPublicRooms,
         get isHost() { return isHost; },
         get isConnected() { return isConnected; },
         get isPublic() { return isPublic; },

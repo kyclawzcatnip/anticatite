@@ -3526,6 +3526,10 @@
         if (joinCodeInput) joinCodeInput.value = '';
         // Reset toggle to private
         window._setRoomMode(false);
+        // Show room browser and auto-refresh
+        const browser = document.getElementById('room-browser');
+        if (browser) browser.style.display = '';
+        window._refreshRooms();
     }
 
     function closeLobby() {
@@ -3685,6 +3689,75 @@
 
     window._lobbyBack = function () {
         closeLobby();
+    };
+
+    // Room browser: refresh public rooms
+    window._refreshRooms = async function () {
+        const roomList = document.getElementById('room-list');
+        roomList.innerHTML = '<div id="room-list-loading">Searching...</div>';
+        try {
+            const rooms = await NetworkManager.listPublicRooms();
+            roomList.innerHTML = '';
+            if (rooms.length === 0) {
+                roomList.innerHTML = '<div id="room-list-empty">No public rooms found.<br>Click 🔄 to refresh.</div>';
+            } else {
+                rooms.forEach(code => {
+                    const item = document.createElement('div');
+                    item.className = 'room-item';
+                    item.innerHTML = '<span class="room-item-code">' + code + '</span><button class="room-item-join" onclick="window._joinPublicRoom(\'' + code + '\')">JOIN</button>';
+                    roomList.appendChild(item);
+                });
+            }
+        } catch (err) {
+            roomList.innerHTML = '<div id="room-list-empty">Error loading rooms.</div>';
+        }
+    };
+
+    // Join a public room from the browser
+    window._joinPublicRoom = async function (code) {
+        lobbyStatus.textContent = '';
+        lobbyMenu.style.display = 'none';
+        lobbyWaiting.classList.remove('hidden');
+        lobbyRoomCode.textContent = code;
+        lobbyConnText.textContent = 'Requesting to join...';
+        lobbyDot.classList.remove('connected');
+        if (lobbyModeBadge) {
+            lobbyModeBadge.textContent = '🌍 PUBLIC — Waiting for host approval';
+            lobbyModeBadge.style.color = '#FFD700';
+            lobbyModeBadge.style.background = 'rgba(255,215,0,0.1)';
+        }
+        // Hide room browser during connection
+        const browser = document.getElementById('room-browser');
+        if (browser) browser.style.display = 'none';
+        try {
+            await NetworkManager.join(code, {
+                onConnect: () => {
+                    lobbyDot.classList.add('connected');
+                    lobbyConnText.textContent = 'Approved! Waiting for game start...';
+                    isOnlineGuest = true;
+                    isOnlineHost = false;
+                },
+                onDisconnect: () => {
+                    if (state === 'playing') {
+                        netDisconnectMsg = 'HOST DISCONNECTED';
+                        netDisconnectTimer = 180;
+                        onlineMode = false; isOnlineGuest = false;
+                    }
+                },
+                onData: (data) => {
+                    if (data && data.type === 'state') applyHostState(data);
+                    if (data && data.type === 'start') startOnlineGame();
+                },
+                onError: (err) => {
+                    lobbyStatus.textContent = 'Error: ' + (err.message || err.type);
+                }
+            }, true); // true = public room
+        } catch (err) {
+            lobbyStatus.textContent = err.message || 'Failed to join';
+            lobbyMenu.style.display = '';
+            lobbyWaiting.classList.add('hidden');
+            if (browser) browser.style.display = '';
+        }
     };
 
     // Apply host state on guest side

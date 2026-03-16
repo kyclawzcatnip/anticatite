@@ -7,7 +7,7 @@
   <title>Super Cat World</title>
   <meta name="description"
     content="A retro 2D platformer starring a brave cat on an adventure through worlds, castles, and sky islands!">
-  <link rel="stylesheet" href="style.css?v=20260316a">
+  <link rel="stylesheet" href="style.css?v=20260316c">
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 </head>
 
@@ -27,67 +27,85 @@
 
     <!-- ONLINE MULTIPLAYER LOBBY -->
     <div id="lobby-overlay" class="hidden">
-      <div id="lobby-panel">
-        <div id="lobby-title">🌐 ONLINE CO-OP</div>
-        <div id="lobby-status"></div>
+      <div id="lobby-layout">
 
-        <div id="lobby-menu">
-          <!-- Room mode toggle -->
-          <div id="room-mode-toggle">
-            <button id="btn-mode-private" class="mode-btn mode-btn-active" onclick="window._setRoomMode(false)">
-              🔒 PRIVATE
+        <!-- LEFT: Host/Join controls -->
+        <div id="lobby-panel">
+          <div id="lobby-title">🌐 ONLINE CO-OP</div>
+          <div id="lobby-status"></div>
+
+          <div id="lobby-menu">
+            <!-- Room mode toggle -->
+            <div id="room-mode-toggle">
+              <button id="btn-mode-private" class="mode-btn mode-btn-active" onclick="window._setRoomMode(false)">
+                🔒 PRIVATE
+              </button>
+              <button id="btn-mode-public" class="mode-btn" onclick="window._setRoomMode(true)">
+                🌍 PUBLIC
+              </button>
+            </div>
+            <div id="room-mode-desc">Code required, auto-join</div>
+
+            <button id="btn-host" class="lobby-btn" onclick="window._lobbyHost()">
+              <span class="lobby-btn-icon">📡</span>
+              HOST GAME
             </button>
-            <button id="btn-mode-public" class="mode-btn" onclick="window._setRoomMode(true)">
-              🌍 PUBLIC
-            </button>
+            <div id="lobby-divider">— OR —</div>
+            <div id="join-section">
+              <input id="join-code-input" type="text" maxlength="4" placeholder="ROOM CODE"
+                spellcheck="false" autocomplete="off">
+              <button id="btn-join" class="lobby-btn lobby-btn-join" onclick="window._lobbyJoin()">
+                <span class="lobby-btn-icon">🔗</span>
+                JOIN GAME
+              </button>
+            </div>
           </div>
-          <div id="room-mode-desc">Code required, auto-join</div>
 
-          <button id="btn-host" class="lobby-btn" onclick="window._lobbyHost()">
-            <span class="lobby-btn-icon">📡</span>
-            HOST GAME
+          <div id="lobby-waiting" class="hidden">
+            <div id="lobby-room-code-display">
+              <div id="lobby-room-label">ROOM CODE</div>
+              <div id="lobby-room-code">----</div>
+              <div id="lobby-room-hint">Share this code with your friend</div>
+            </div>
+            <div id="lobby-room-mode-badge"></div>
+            <div id="lobby-connection-status">
+              <span id="lobby-dot" class="pulse-dot"></span>
+              <span id="lobby-connection-text">Waiting for player...</span>
+            </div>
+          </div>
+
+          <!-- Join request approval (public rooms) -->
+          <div id="lobby-approval" class="hidden">
+            <div id="approval-title">⚡ JOIN REQUEST</div>
+            <div id="approval-text">A player wants to join!</div>
+            <div id="approval-buttons">
+              <button class="lobby-btn lobby-btn-approve" onclick="window._approveJoin()">
+                ✅ ACCEPT
+              </button>
+              <button class="lobby-btn lobby-btn-deny" onclick="window._denyJoin()">
+                ❌ DENY
+              </button>
+            </div>
+          </div>
+
+          <button id="btn-lobby-back" class="lobby-btn lobby-btn-back" onclick="window._lobbyBack()">
+            ◀ BACK
           </button>
-          <div id="lobby-divider">— OR —</div>
-          <div id="join-section">
-            <input id="join-code-input" type="text" maxlength="4" placeholder="ROOM CODE"
-              spellcheck="false" autocomplete="off">
-            <button id="btn-join" class="lobby-btn lobby-btn-join" onclick="window._lobbyJoin()">
-              <span class="lobby-btn-icon">🔗</span>
-              JOIN GAME
+        </div>
+
+        <!-- RIGHT: Public room browser -->
+        <div id="room-browser">
+          <div id="browser-header">
+            <span>🌍 PUBLIC ROOMS</span>
+            <button id="btn-refresh" class="lobby-btn lobby-btn-refresh" onclick="window._refreshRooms()">
+              🔄
             </button>
+          </div>
+          <div id="room-list">
+            <div id="room-list-empty">No public rooms found.<br>Click 🔄 to refresh.</div>
           </div>
         </div>
 
-        <div id="lobby-waiting" class="hidden">
-          <div id="lobby-room-code-display">
-            <div id="lobby-room-label">ROOM CODE</div>
-            <div id="lobby-room-code">----</div>
-            <div id="lobby-room-hint">Share this code with your friend</div>
-          </div>
-          <div id="lobby-room-mode-badge"></div>
-          <div id="lobby-connection-status">
-            <span id="lobby-dot" class="pulse-dot"></span>
-            <span id="lobby-connection-text">Waiting for player...</span>
-          </div>
-        </div>
-
-        <!-- Join request approval (public rooms) -->
-        <div id="lobby-approval" class="hidden">
-          <div id="approval-title">⚡ JOIN REQUEST</div>
-          <div id="approval-text">A player wants to join your game</div>
-          <div id="approval-buttons">
-            <button class="lobby-btn lobby-btn-approve" onclick="window._approveJoin()">
-              ✅ ACCEPT
-            </button>
-            <button class="lobby-btn lobby-btn-deny" onclick="window._denyJoin()">
-              ❌ DENY
-            </button>
-          </div>
-        </div>
-
-        <button id="btn-lobby-back" class="lobby-btn lobby-btn-back" onclick="window._lobbyBack()">
-          ◀ BACK
-        </button>
       </div>
     </div>
 
@@ -98,8 +116,8 @@
     </div>
   </div>
   <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
-  <script src="network.js?v=20260316b"></script>
-  <script src="game.js?v=20260316b"></script>
+  <script src="network.js?v=20260316c"></script>
+  <script src="game.js?v=20260316c"></script>
 </body>
 
 </html>
