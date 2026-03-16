@@ -551,6 +551,8 @@
         if (code === 'ArrowDown') keys2.glide = val;
     }
     document.addEventListener('keydown', e => {
+        // Allow typing in lobby input
+        if (document.activeElement && document.activeElement.id === 'join-code-input') return;
         if (['Space', 'ArrowUp', 'ArrowLeft', 'ArrowRight', 'ArrowDown', 'KeyA', 'KeyD', 'KeyW'].includes(e.code)) e.preventDefault();
         if (state === 'start' || state === 'over' || state === 'win') {
             if (e.code === 'Space' || e.code === 'Digit1') { coopMode = false; startGame(); return; }
