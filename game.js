@@ -3537,7 +3537,10 @@
                     lobbyConnText.textContent = 'Player joined! Starting...';
                     isOnlineHost = true;
                     isOnlineGuest = false;
-                    setTimeout(() => startOnlineGame(), 1000);
+                    setTimeout(() => {
+                        NetworkManager.send({ type: 'start' });
+                        startOnlineGame();
+                    }, 1000);
                 },
                 onDisconnect: () => {
                     if (state === 'playing') {
