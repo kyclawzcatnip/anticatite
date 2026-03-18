@@ -3991,12 +3991,10 @@
     // Network sync in game loop (called from update)
     function networkSync() {
         if (!onlineMode || !NetworkManager.isConnected) return;
-        netSendTimer++;
-        if (netSendTimer < NET_SEND_INTERVAL) return;
-        netSendTimer = 0;
 
+        // Apply remote inputs EVERY FRAME (not throttled)
         if (isOnlineHost) {
-            // Apply remote inputs to keys2 (guest slot 0 = P2)
+            // Guest slot 0 → P2
             keys2.left = remoteInputs.left;
             keys2.right = remoteInputs.right;
             keys2.jump = remoteInputs.jump;
@@ -4008,7 +4006,7 @@
             }
             if (remoteInputs.fireball && hasFire && fireCooldown <= 0 && !cat2.dead) { shootFireball2(); remoteInputs.fireball = false; }
 
-            // Apply remote inputs to keys3 (guest slot 1 = P3)
+            // Guest slot 1 → P3, Guest slot 2 → P4
             if (fourPlayerMode) {
                 keys3.left = remoteInputs2.left; keys3.right = remoteInputs2.right;
                 keys3.jump = remoteInputs2.jump; keys3.glide = remoteInputs2.glide;
@@ -4018,7 +4016,6 @@
                     fireballs.push({ x: cat3.x + (cat3.dir === 1 ? cat3.w : -10), y: cat3.y + cat3.h / 2 - 5, w: 10, h: 10, vx: cat3.dir * 7, vy: -2, bounces: 0, life: 120, trail: [] });
                     fireCooldown = 20; remoteInputs2.fireball = false;
                 }
-                // Apply remote inputs to keys4 (guest slot 2 = P4)
                 keys4.left = remoteInputs3.left; keys4.right = remoteInputs3.right;
                 keys4.jump = remoteInputs3.jump; keys4.glide = remoteInputs3.glide;
                 if (remoteInputs3.jumpPressed) { keys4.jumpPressed = true; remoteInputs3.jumpPressed = false; }
@@ -4028,6 +4025,14 @@
                     fireCooldown = 20; remoteInputs3.fireball = false;
                 }
             }
+        }
+
+        // Throttled: only send data every N frames
+        netSendTimer++;
+        if (netSendTimer < NET_SEND_INTERVAL) return;
+        netSendTimer = 0;
+
+        if (isOnlineHost) {
 
             // Build compact state to send to all guests
             const enemyData = level ? level.enemies.map(e => ({
@@ -4494,40 +4499,30 @@
             if (coopMode) drawCat2Sprite();
             // Draw P3/P4 in 4-player mode
             if (fourPlayerMode) {
-                // P3 — draw with green tint
+                // P3
                 if (!cat3.dead) {
-                    const sx = Math.round(cat3.x - cam.x), sy = Math.round(cat3.y);
-                    const flash3 = invincibleTimer3 > 0 && Math.floor(frameCount / 3) % 2 === 0;
-                    if (!flash3) {
-                        ctx.save();
-                        ctx.globalAlpha = 0.9;
-                        ctx.fillStyle = '#00CC66';
-                        ctx.fillRect(sx, sy, cat3.w, cat3.h);
-                        // Simple face
-                        ctx.fillStyle = '#000'; ctx.fillRect(sx + 6, sy + 8, 4, 4); ctx.fillRect(sx + 14, sy + 8, 4, 4);
-                        ctx.fillStyle = '#FF69B4'; ctx.fillRect(sx + 9, sy + 14, 6, 3);
+                    if (!(invincibleTimer3 > 0 && frameCount % 4 < 2)) {
+                        const savedDir = cat.dir, savedSkin = selectedSkin, savedW = cat.w, savedH = cat.h;
+                        cat.dir = cat3.dir; selectedSkin = cat3SelectedSkin; cat.w = cat3.w; cat.h = cat3.h;
+                        drawCatBody(cat3.x - cam.x, cat3.y);
+                        cat.dir = savedDir; selectedSkin = savedSkin; cat.w = savedW; cat.h = savedH;
                         // P3 label
-                        ctx.fillStyle = '#00FF88'; ctx.font = 'bold 7px monospace'; ctx.textAlign = 'center';
-                        ctx.fillText('P3', sx + cat3.w / 2, sy - 4);
+                        ctx.fillStyle = '#88FF88'; ctx.font = 'bold 7px monospace'; ctx.textAlign = 'center';
+                        ctx.fillText('P3', Math.round(cat3.x - cam.x) + cat3.w / 2, Math.round(cat3.y) - 6);
                         ctx.textAlign = 'left';
-                        ctx.restore();
                     }
                 }
-                // P4 — draw with purple tint
+                // P4
                 if (!cat4.dead) {
-                    const sx = Math.round(cat4.x - cam.x), sy = Math.round(cat4.y);
-                    const flash4 = invincibleTimer4 > 0 && Math.floor(frameCount / 3) % 2 === 0;
-                    if (!flash4) {
-                        ctx.save();
-                        ctx.globalAlpha = 0.9;
-                        ctx.fillStyle = '#9966FF';
-                        ctx.fillRect(sx, sy, cat4.w, cat4.h);
-                        ctx.fillStyle = '#000'; ctx.fillRect(sx + 6, sy + 8, 4, 4); ctx.fillRect(sx + 14, sy + 8, 4, 4);
-                        ctx.fillStyle = '#FF69B4'; ctx.fillRect(sx + 9, sy + 14, 6, 3);
+                    if (!(invincibleTimer4 > 0 && frameCount % 4 < 2)) {
+                        const savedDir = cat.dir, savedSkin = selectedSkin, savedW = cat.w, savedH = cat.h;
+                        cat.dir = cat4.dir; selectedSkin = cat4SelectedSkin; cat.w = cat4.w; cat.h = cat4.h;
+                        drawCatBody(cat4.x - cam.x, cat4.y);
+                        cat.dir = savedDir; selectedSkin = savedSkin; cat.w = savedW; cat.h = savedH;
+                        // P4 label
                         ctx.fillStyle = '#CC99FF'; ctx.font = 'bold 7px monospace'; ctx.textAlign = 'center';
-                        ctx.fillText('P4', sx + cat4.w / 2, sy - 4);
+                        ctx.fillText('P4', Math.round(cat4.x - cam.x) + cat4.w / 2, Math.round(cat4.y) - 6);
                         ctx.textAlign = 'left';
-                        ctx.restore();
                     }
                 }
             }
