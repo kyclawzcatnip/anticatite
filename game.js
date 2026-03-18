@@ -51,7 +51,7 @@
             "            CC                        C C   Q              C                     L                       CCC               |       ",
             "          QBBBBQ        W     R    BBBBBBBBB         R          R  BBB    BBZ       BBBBBBB                                 |       ",
             "                           GGGGG              GGGGG      GGGGG              GG           R      Q  BBBBBB              |       ",
-            "  S        R    V      GG  V    GG  H R    V  GG     V GG    V    A    GGGGG     V  GGGGG    A  GG          GGGG          |       ",
+            "  S        R    V      GG  V    GG  H R    V  GG     V GG    V  A A    GGGGG   A V  GGGGG    A  GG  A       GGGG          |       ",
             "GGGGG   GGGGG   GG  GGGG        GGGGGGGG  GGGGG          GGG    GGGG         GGG          GGG       GGGGG       GGGGGGGGGGGGGGGGGGG",
             "GGGGG   GGGGG   GGGGGGGG        GGGGGGGG  GGGGG          GGG    GGGG         GGG          GGG       GGGGG       GGGGGGGGGGGGGGGGGGG",
             "GGGGG   GGGGG   GGGGGGGG        GGGGGGGG  GGGGG          GGG    GGGG         GGG          GGG       GGGGG       GGGGGGGGGGGGGGGGGGG",
@@ -67,7 +67,7 @@
             "         C C C  BBQ           CCC   BBBBB     C           CCC              H                         C                            KKKKKKKKK                ",
             "        BBBBBBB          W                       Q BBBBB                BBBBB                    BBBZBBB   C                     K KKKKKKK K               ",
             "                    GGGGG    V GGGGG     R     V  GGGGG    R   V  GGG    R  GGG V GGGGG    V        BBB                         KKKKKKKKKKK               ",
-            "  S     V        GG      GG     V    GGG   GGGGG  GGG    V  GG    GG    V  GGG    V  GG  A  GG   V  GG     GGGGGF|GGGGGGGGGGGGGKKKK  D  KKKK              ",
+            "  S     V        GG      GG  A  V    GGG   GGGGG  GGG  A V  GG    GG    V  GGG  A V  GG  A  GG   V  GG     GGGGGF|GGGGGGGGGGGGGKKKK  D  KKKK              ",
             "GGGGG  GGG  GG    R  R        GGG                                                                     R    GGGGG||GGGGGGGGGGGGGKKKKKKKKKKKKK              ",
             "GGGGG  GGG  GGG    GGGGG   GGGGG   GGGGG    GGGG   GGGGG    GGG   GGGGG   GGG    GGGGG   GGG    GGG   GGGGGGGGGGGGGGGGGGGGGKK D KKK D KKK D KK           ",
             "GGGGG  GGG  GGG    GGGGG   GGGGG   GGGGG    GGGG   GGGGG    GGG   GGGGG   GGG    GGGGG   GGG    GGG   GGGGGGGGGGGGGGGGGGGGGKKKKKKKKKKKKKKKKKKKKK          ",
@@ -83,8 +83,8 @@
             "K                                           KKKKKKKK        C  C           KKKKKKKK   C        K",
             "K  C  C   KKKK   V         C  C        V           KKK             C C    V        KKK       K",
             "K        R    R       KKK   KKKKKK     R    V    KKKK   R    H   KKKKKKKK   V   R              K",
-            "K    KKKKKKKKKK     V    R        KKKKKKKK   KKKK    V    KKKK          KKKK    KKKK    V      K",
-            "K                KKKK                           R                  R                    DDDDDDDK",
+            "K    KKKKKKKKKK   A V    R        KKKKKKKK   KKKK  A V    KKKK          KKKK    KKKK    V      K",
+            "K                KKKK                           R                  R              A     DDDDDDDK",
             "K           R        KKKK    C  L     KKK   KKKKKKKK        KKKK      KKKK    W    KKKKDDDDDDDK",
             "K S      KKKKKK          KKKKKKKKK        R                     KKKK       KKKKKKKKKKKKDDDDDDDK",
             "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
@@ -118,7 +118,7 @@
             "                                                                    BBBBBBB                   C C                         |         ",
             "                       C C C      Y        C C           Y                    C C C       BBBBB         Y                  |         ",
             "             C C      BBBBBBB             BBBBB      C  C          BBBBB         BBBBBBB                                   |         ",
-            "            BBBBB       V        R    V  R      R   BBBBBBB  V R         V                           C C C                |         ",
+            "            BBBBB     A V        R    V  R      R   BBBBBBB  V R         V  A                        C C C                |         ",
             "                          BBB        BBB                             BBB     BBB              BBB    BBBBBBB               |         ",
             "  S      BBBBB                                        BBBBB                              BBB                        BBBBBBBBBBBBBBBBBBBB",
             "BBBBB                  BBB        BBB                          BBB       BBBBB                   BBBB                              ",
@@ -134,7 +134,7 @@
             "                                              C C C                     B   B BBBBB                                       |         ",
             "                     C C          Y       BBBBBBB                    BBBBB            Y     C C C                       |         ",
             "            C C     BBBBB        C C                      BBBBB                    BBBBB      BBBBBBB     C   C           |         ",
-            "           BBBBB     V    R     BBBBB   V R     V    R     V    R  C C    V    R              R       R  BBBBB            |         ",
+            "           BBBBB   A V    R     BBBBB   V R     V    R     V    R  C C  A V    R              R       R  BBBBB            |         ",
             "                     BBB             BBB       BBB          BBB      BBBBB         BBB    BBB                    BBBBBBBBBBBBBBBBBBB",
             "  S      BBBBB                                                        H                             BBBB                            ",
             "BBBBB                  BBB        BBB        BBB        BBB         BBBBB       BBB                                                  ",
@@ -151,7 +151,7 @@
             "                 B   B BBBBB              C C C                       B   B  BBBBB                                         |         ",
             "                 BBBBB             R     BBBBBBB    W                 BBBBB                    C C C                       |         ",
             "          C C        Y     BBB               Y          BBBBB            Y        BBBBB       BBBBBBB     C C              |         ",
-            "         BBBBB    V  R     V    R   BBB    V  R       V       R  BBB    V  R           R              BBBBB               |         ",
+            "         BBBBB    V  R   A V    R   BBB    V  R       V     A R  BBB    V  R           R              BBBBB               |         ",
             "                 BBB     BBB                BBB     BBB                 BBB      BBB              BBB           BBBBBBBBBBBBBBBBBBBBB",
             "  S     BBBBB                                                  H                                            BBBB                    ",
             "BBBBB                BBB       BBB       BBB       BBB       BBBBB     BBB       BBB       BBB                                      ",
@@ -168,7 +168,7 @@
             "            C  B   B               B   B                    B   B                B   B   BBBBB                             |         ",
             "               B   B     R         BBBBB     R          C   B   B   R            BBBBB                  C C C              |         ",
             "               BBBBB    Y   BBB               Y   BBB   C   BBBBB    Y  BBB                BBBBB      BBBBBBB             |         ",
-            "         R     V     R       V          R BBB    V        W         V            R     V   R          R         |         ",
+            "         R     V     R       V        A R BBB    V        W       A V            R     V   R          R         |         ",
             "            BBB          BBB       BBB             BBB        BBB        BBB       BBB       BBB       BBB        BBBBBBBBBBBBBBBBBBB",
             "  S     BBBBB                                                   H                                             BBBB                  ",
             "BBBBB              BBB        BBB        BBB        BBB        BBBBB      BBB        BBB        BBB                                  ",
@@ -185,7 +185,7 @@
             "                                   C  C  C            BBBBBBB      L                   C C C              C  B   B        |         ",
             "             C C C                BBBBBBB        R               BBBBB                BBBBBBB    C C         B   B        |         ",
             "     C C    BBBBBBB     Y    W               Y       BBBBB                  Y    R               BBBBB       BBBBB        |         ",
-            "    BBBBB        V     R     V  BBBBB    V  R          V     BBB     V  R   BBB      V    R                               |         ",
+            "    BBBBB      A V     R     V  BBBBB  A V  R          V     BBB     V  R   BBB      V    R                               |         ",
             "                  BBB       BBB                  BBB              BBB             BBB          BBB        BBBBBBBBBBBBBBBBBBBBBBBBBBB",
             "  S     BBBBB                                                  H                                      BBBB                         ",
             "BBBBB              BBB        BBB        BBB        BBB        BBBBB      BBB        BBB        BBB                                  ",
@@ -217,7 +217,7 @@
             "G                                                                                                   G",
             "G  S         C C C              C C             R                    C C C                           G",
             "G          GGGGGGG         R   GGGGG          GGGGG      C C        GGGGGGG         C C C       F    G",
-            "G     R    V                  GG    V     GG     V   GG  GGGGG    V         R   V  GGGGGGG         C C C       F    G",
+            "G     R  A V                  GG  A V     GG     V   GG  GGGGG    V         R   V  GGGGGGG         C C C       F    G",
             "G   GGGGG        GGG     GGG      GGG          GGG          GGG     GGG       GGG                   G",
             "G                                                                                               |    G",
             "G         GG           GG          GG   H       GG           GG          GG          GG         |    G",
@@ -234,7 +234,7 @@
             "G  S       C     C C      R        C C C        W                C C         R                G",
             "G        GGGGG  GGGGG         GGGGGGGGG      GGGGG      Q     GGGGGGG       GGG              G",
             "G   R          GG       GGG             GGG        GGGGGGG              GGG       C C    F    G",
-            "G GGGGG    V           V    R       V              V                     V    R    GGGGG   |    G",
+            "G GGGGG  A V           V    R     A V              V                     V    R    GGGGG   |    G",
             "G            GGG      GGG     GGGGG     GGG     GGG      GGG     H   GGG              GGGG   G",
             "G                                                                                             G",
             "G      GG          GG      R      GG          GG          GG          GG          GG          G",
@@ -250,7 +250,7 @@
             "G                                                                                               G",
             "G  S                 C C C         C  C  C         C C           R                               G",
             "G         R        GGGGGGG       GGGGGGGGG       GGGGG       GGGGG     C C C            F       G",
-            "G       GGGGG    V          R       V         R     V   GGG    V  R   GGGGGGG    V      F       G",
+            "G       GGGGG  A V          R     A V         R     V   GGG    V  R   GGGGGGG    V      F       G",
             "G                        GGGGG          GGGGG      GGGGG    GGGGG         C      GGGGG  |       G",
             "G   GGG       GGG              GGG            GGG               GGG     GGGGG          |       G",
             "G                    Q               H                                                  |       G",
@@ -267,7 +267,7 @@
             "G                          G           G              G                               G",
             "G  S      C C    G    R    G   C C C   G     W        G    C C C        R             G",
             "G       GGGGG   GG  GGGGG GG GGGGGGG  GG  GGGGG      G  GGGGGGG     GGGGG       F    G",
-            "G  R   V                  V                       V               G       V              V      |    G",
+            "G  R A V                  V           A           V               G       V              V      |    G",
             "GGGGGGG   GGG   GG   GGG  GG   GGG   GGG   GGG      G   GGG   GGG   GGG        |    G",
             "G                          G           G              G                H         |    G",
             "G    GGG        GGG        G   GGG     G    GGG   GGGGG  GGG       GGG  GGGGGGGGGGG  G",
@@ -284,7 +284,7 @@
             "G                                                                                         G",
             "G  S      C C C        L        C C C              C C            C C C                    G",
             "G        GGGGGGG    GGGGG      GGGGGGG    R       GGGGG      R   GGGGGGG        C    F    G",
-            "G   R    V          V   R    V    GGGGG    V        GGGGG    V         GGG  GGG  |    G",
+            "G   R  A V          V   R    V    GGGGG  A V        GGGGG    V         GGG  GGG  |    G",
             "G GGGGG    GGG     GGG  GGGGG    GGG          GGG            GGG     GGG          GGGGG  G",
             "G                                                  H                                      G",
             "G      GG      GG      GG   Q  GG      GG      GGGGG    GG      GG      GG      GG       G",
@@ -302,7 +302,7 @@
             "G  S                    C C C               C C C                   C C C            R           G",
             "G           R         GGGGGGG         R    GGGGGGG        W        GGGGGGG        GGGGG     F   G",
             "G  C C   GGGGG   GGG             GGGGG            GGGGG GGGGG              GGG            GGGG  G",
-            "G GGGGG      V              GGG    V       GGG    V          GGG   V GGG      GGG V GGG         G",
+            "G GGGGG    A V              GGG  A V       GGG    V          GGG   V GGG      GGG V GGG         G",
             "G            GG      R  GG       GG    H      GG       GG       GG       GG      GG  GG        G",
             "G                 GGGGG       GGGGG        GGGGG                                                G",
             "G     GGG    GGG        GGG         GGG          GGG    GGG         GGG    GGG    GGG    GGG    G",
@@ -318,7 +318,7 @@
             "G  S     C C       R                    C C C            L               R                  G",
             "G       GGGGG   GGGGG       C C C      GGGGGGG       GGGGG    C C C   GGGGG    C C     F    G",
             "G                      R   GGGGGGG               R             GGGGG           GGGGG   |    G",
-            "G  GGG   V  GGG   GGGGG    V    GGG    GGG  V GGGGG   GGG    V         GGG    V   GGG |    G",
+            "G  GGG A V  GGG   GGGGG    V    GGG    GGG  V GGGGG   GGG  A V         GGG    V   GGG |    G",
             "G                                                                  H                   |    G",
             "G     GG       GG      GG      GG      GG      GG    GGGGG  GG      GG      GGGGGGGGGGG    G",
             "G                                                                                           G",
@@ -335,7 +335,7 @@
             "G                                                                                               G",
             "G  S       C C C        C C        R    C C C       C C C        W         C C         R         G",
             "G  R      GGGGGGG     GGGGG     GGGGG GGGGGGG      GGGGGGG    GGGGG      GGGGG     GGGGG   F    G",
-            "GGGGGG    V          GGG    V        GGG    V  R     V   GGG    V   GGG    V   GGG       GGGGG  G",
+            "GGGGGG  A V          GGG    V        GGG    V  R     V   GGG    V   GGG  A V   GGG       GGGGG  G",
             "G         GGG   GGG       GGG             GGG GGGGG GGG      GGG        GGG        GGG         G",
             "G                              H                                                                G",
             "G    GG      GG   Q  GG      GGGGG    GG      GG      GG      GG      GG      GG      GG       G",
@@ -351,7 +351,7 @@
             "GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG",
             "G                                                                                         G",
             "G  S       R            C C C        C C          R     C C C          L                   G",
-            "G       V   GGGGG     R  V GGGGGGG   V GGGGG    C  GGGGG  GGGGGGG   V  GGGGG    C C  V   F    G",
+            "G       V   GGGGG  A  R  V GGGGGGG   V GGGGG    C  GGGGG  GGGGGGG   V  GGGGG  A C C  V   F    G",
             "G              GGGGG           R         GGGGG             R             R  GGGGG    |    G",
             "GG GGG     GGG       GGG  GGGGG    GGG       GGG    GGG GGGGG GGG    GGG       GGG |    G",
             "G                                       H                                          |    G",
@@ -369,7 +369,7 @@
             "G                                                                                                   G",
             "G  S      C C C       L       C C C        C C C                C C C         W        C C       F   G",
             "G   R    GGGGGGG   GGGGG     GGGGGGG  R   GGGGGGG     C C     GGGGGGG      GGGGG     GGGGG      |   G",
-            "GGGGGGG    V      GGG    V  GGG   V  GGGGG    V   R  GGGGG    V      R  GGG   V  GGG    V   GGG |   G",
+            "GGGGGGG  A V      GGG    V  GGG   V  GGGGG    V   R  GGGGG  A V      R  GGG   V  GGG    V   GGG |   G",
             "G        GGG  GGG     GGG        GGG       GGG GGGGG     GGG  GGG GGGGG    GGG       GGG       |   G",
             "G                                                                H                              |   G",
             "G   GG      GG      GG   Q  GG      GG Q    GG      GG      GGGGG   GG      GG      GG   GGGGGG   G",
@@ -438,6 +438,7 @@
     const MAX_INVENTORY = 5;
     let hotbarFlash = -1; // slot index that was just used (for flash effect)
     let hotbarFlashTimer = 0;
+    let tutorialPrevState = 'start'; // state to return to when closing tutorial
 
     // ONLINE MULTIPLAYER STATE
     let onlineMode = false;   // true when playing online
@@ -451,6 +452,7 @@
     let guestFireballFlag = false; // set when guest presses fireball, sent to host
     let netDisconnectMsg = '';
     let netDisconnectTimer = 0;
+    let netGridChanges = []; // track grid modifications for network sync
 
     // CAT SKINS
     let selectedSkin = 0, closetSelection = 0;
@@ -558,6 +560,17 @@
             if (e.code === 'Space' || e.code === 'Digit1') { coopMode = false; startGame(); return; }
             if (e.code === 'Digit2') { coopMode = true; startGame(); return; }
             if (e.code === 'Digit3') { openLobby(); return; }
+            if (e.code === 'KeyH') { tutorialPrevState = state; state = 'tutorial'; overlay.classList.remove('visible'); return; }
+        }
+        if (state === 'tutorial') {
+            if (e.code === 'KeyH' || e.code === 'Escape') {
+                state = tutorialPrevState;
+                if (state === 'start' || state === 'over' || state === 'win') {
+                    showOverlay('SUPER CAT WORLD', 'PRESS SPACE TO START\nPRESS 2 FOR CO-OP\nPRESS 3 FOR ONLINE\nPRESS H FOR HOW TO PLAY');
+                }
+                return;
+            }
+            return;
         }
         if (state === 'levelcomplete' && e.code === 'Space') { openShop(); return; }
         if (state === 'shop') {
@@ -610,6 +623,7 @@
             }
         }
         if (state === 'playing' && e.code === 'KeyT') { state = 'closet'; closetSelection = selectedSkin; return; }
+        if (state === 'playing' && e.code === 'KeyH') { tutorialPrevState = 'playing'; state = 'tutorial'; return; }
         // P2 fireball
         if (state === 'playing' && coopMode && e.code === 'KeyP' && hasFire && fireCooldown <= 0 && !cat2.dead) { shootFireball2(); }
         // P2 scratch/throw
@@ -658,6 +672,7 @@
             if (e.code === 'Escape' || e.code === 'KeyT') { state = 'playing'; return; }
             return;
         }
+
         setKey(e.code, true);
         if (coopMode && !onlineMode) setKey2(e.code, true);
     });
@@ -794,6 +809,7 @@
                     // Break bricks when big
                     else if (isBig && level.grid[tr][c] === 2) {
                         level.grid[tr][c] = 0;
+                        if (onlineMode && isOnlineHost) netGridChanges.push({ r: tr, c, v: 0 });
                         shakeTimer = 4; shakeAmt = 3;
                         addParticle(c * T + T / 2, tr * T + T / 2, '#8B4513', 12, 6);
                         addParticle(c * T + T / 2, tr * T + T / 2, '#A0522D', 8, 4);
@@ -832,6 +848,7 @@
             addParticle(c * T + T / 2, r * T - 16, '#FFFFFF', 15, 6);
         }
         level.grid[r][c] = 8;
+        if (onlineMode && isOnlineHost) netGridChanges.push({ r, c, v: 8 });
         questionHits.push({ r, c, timer: 8 });
         // Random 1-5 coins
         const numCoins = Math.floor(Math.random() * 5) + 1;
@@ -963,6 +980,7 @@
                     if (level.grid[tr][c] === 3 || level.grid[tr][c] === 13) { hitQuestion(tr, c); }
                     else if (isBig2 && level.grid[tr][c] === 2) {
                         level.grid[tr][c] = 0; shakeTimer = 4; shakeAmt = 3;
+                        if (onlineMode && isOnlineHost) netGridChanges.push({ r: tr, c, v: 0 });
                         addParticle(c * T + T / 2, tr * T + T / 2, '#8B4513', 12, 6);
                         score += 50;
                     }
@@ -3538,7 +3556,7 @@
         NetworkManager.disconnect();
         onlineMode = false; isOnlineHost = false; isOnlineGuest = false;
         state = 'start';
-        showOverlay('SUPER CAT WORLD', 'PRESS SPACE TO START\nPRESS 2 FOR CO-OP\nPRESS 3 FOR ONLINE');
+        showOverlay('SUPER CAT WORLD', 'PRESS SPACE TO START\nPRESS 2 FOR CO-OP\nPRESS 3 FOR ONLINE\nPRESS H FOR HOW TO PLAY');
     }
 
     function startOnlineGame() {
@@ -3800,6 +3818,8 @@
                 level.enemies[i].alive = data.enemies[i].alive;
                 level.enemies[i].vx = data.enemies[i].vx;
                 if (data.enemies[i].shell !== undefined) level.enemies[i].shell = data.enemies[i].shell;
+                if (data.enemies[i].frame !== undefined) level.enemies[i].frame = data.enemies[i].frame;
+                if (data.enemies[i].type !== undefined) level.enemies[i].type = data.enemies[i].type;
             }
         }
         // Sync coins
@@ -3828,6 +3848,8 @@
                 }
             });
         }
+        // Sync frameCount so animations match host
+        if (data.frameCount !== undefined) frameCount = data.frameCount;
     }
 
     // Network sync in game loop (called from update)
@@ -3869,7 +3891,7 @@
             // Build compact state to send to guest
             const enemyData = level ? level.enemies.map(e => ({
                 x: Math.round(e.x), y: Math.round(e.y), alive: e.alive, vx: e.vx,
-                shell: e.shell || false
+                shell: e.shell || false, frame: e.frame || 0, type: e.type
             })) : [];
             const coinData = level ? level.coins.map(c => c.collected) : [];
             const fbData = fireballs.map(fb => ({ x: Math.round(fb.x), y: Math.round(fb.y), vx: fb.vx, vy: fb.vy, life: fb.life }));
@@ -3890,8 +3912,11 @@
                 coins: coinData,
                 fireballs: fbData,
                 boss: boss ? { x: Math.round(boss.x), y: Math.round(boss.y), hp: boss.hp, alive: boss.alive, dir: boss.dir, phase: boss.phase, pirate: boss.pirate } : null,
-                shakeTimer: shakeTimer, shakeAmt: shakeAmt
+                shakeTimer: shakeTimer, shakeAmt: shakeAmt,
+                gridChanges: netGridChanges.length > 0 ? netGridChanges.slice() : undefined,
+                frameCount: frameCount
             };
+            netGridChanges.length = 0; // clear after sending
             NetworkManager.send(stateData);
         }
 
@@ -4207,7 +4232,7 @@
 
         // Online guest: skip local game logic, just render from host state
         if (isOnlineGuest) {
-            frameCount++;
+            // frameCount is synced from host via applyHostState — don't double-increment
             // Still update particles/void for visual polish
             if (frameCount % 2 === 0) spawnVoidParticles();
             updateVoidParticles();
@@ -4328,6 +4353,8 @@
         if (state === 'shop') { drawShop(); }
         // Closet overlay
         if (state === 'closet') { drawCloset(); }
+        // Tutorial overlay
+        if (state === 'tutorial') { drawTutorial(); }
         ctx.restore();
     }
 
@@ -4429,9 +4456,106 @@
         ctx.textAlign = 'left';
     }
 
+    function drawTutorial() {
+        // Dark overlay
+        ctx.fillStyle = 'rgba(0,0,0,0.92)';
+        ctx.fillRect(0, 0, W, H);
+
+        // Title
+        ctx.fillStyle = '#FFD700';
+        ctx.font = 'bold 22px "Press Start 2P", monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText('🎮 HOW TO PLAY', W / 2, 36);
+
+        ctx.font = '8px "Press Start 2P", monospace';
+        ctx.fillStyle = '#888';
+        ctx.fillText('Press H or ESC to close', W / 2, 54);
+
+        // Helper to draw a key badge
+        function drawKey(x, y, label, w) {
+            const kw = w || (label.length * 8 + 12);
+            ctx.fillStyle = 'rgba(255,255,255,0.12)';
+            ctx.strokeStyle = '#888';
+            ctx.lineWidth = 1;
+            ctx.beginPath(); ctx.roundRect(x, y, kw, 18, 4); ctx.fill(); ctx.stroke();
+            ctx.fillStyle = '#FFF';
+            ctx.font = 'bold 9px monospace';
+            ctx.textAlign = 'center';
+            ctx.fillText(label, x + kw / 2, y + 13);
+        }
+        function drawRow(x, y, keyLabel, desc, keyWidth) {
+            drawKey(x, y, keyLabel, keyWidth);
+            const kw = keyWidth || (keyLabel.length * 8 + 12);
+            ctx.fillStyle = '#CCC';
+            ctx.font = '10px monospace';
+            ctx.textAlign = 'left';
+            ctx.fillText(desc, x + kw + 10, y + 13);
+        }
+
+        // === COLUMN 1: Player 1 Controls ===
+        const col1 = 30, col2 = W / 2 + 20;
+        let y1 = 72;
+
+        ctx.fillStyle = '#00CCFF';
+        ctx.font = 'bold 11px monospace';
+        ctx.textAlign = 'left';
+        ctx.fillText('PLAYER 1 CONTROLS', col1, y1);
+        y1 += 22;
+
+        drawRow(col1, y1, 'A / D', 'Move left / right'); y1 += 26;
+        drawRow(col1, y1, 'W / SPACE', 'Jump (press again for double jump)', 90); y1 += 26;
+        drawRow(col1, y1, 'Q', 'Glide (when purchased)'); y1 += 26;
+        drawRow(col1, y1, 'F / X', 'Scratch attack / Throw shell'); y1 += 26;
+        drawRow(col1, y1, 'E', 'Fireball (need fire power)'); y1 += 26;
+        drawRow(col1, y1, '1-5', 'Use inventory items'); y1 += 26;
+        drawRow(col1, y1, 'T', 'Open Cat Closet (skins)'); y1 += 26;
+
+        // === COLUMN 2: P2 & System ===
+        let y2 = 72;
+
+        ctx.fillStyle = '#FF88CC';
+        ctx.font = 'bold 11px monospace';
+        ctx.textAlign = 'left';
+        ctx.fillText('CO-OP PLAYER 2', col2, y2);
+        y2 += 22;
+
+        drawRow(col2, y2, '← →', 'Move left / right'); y2 += 26;
+        drawRow(col2, y2, '↑', 'Jump (double jump too)'); y2 += 26;
+        drawRow(col2, y2, '↓', 'Glide'); y2 += 26;
+        drawRow(col2, y2, 'O', 'Scratch / Throw shell'); y2 += 26;
+        drawRow(col2, y2, 'P', 'Fireball'); y2 += 26;
+
+        y2 += 10;
+        ctx.fillStyle = '#AAFFAA';
+        ctx.font = 'bold 11px monospace';
+        ctx.textAlign = 'left';
+        ctx.fillText('SYSTEM', col2, y2);
+        y2 += 22;
+
+        drawRow(col2, y2, 'N', 'Skip to next level'); y2 += 26;
+        drawRow(col2, y2, 'H', 'Toggle this tutorial'); y2 += 26;
+
+        // === TIPS ===
+        const tipY = Math.max(y1, y2) + 16;
+        ctx.fillStyle = '#FFD700';
+        ctx.font = 'bold 11px monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText('💡 TIPS', W / 2, tipY);
+
+        ctx.fillStyle = '#AAA';
+        ctx.font = '9px monospace';
+        ctx.fillText('• Jump on enemies to stomp them! Stomp turtles twice to get shells.', W / 2, tipY + 18);
+        ctx.fillText('• Hit ? blocks from below to get coins, power-ups, and sometimes stars!', W / 2, tipY + 32);
+        ctx.fillText('• Between levels, visit the SHOP to buy upgrades with coins.', W / 2, tipY + 46);
+        ctx.fillText('• Watch out for rat archers — they shoot arrows at you!', W / 2, tipY + 60);
+
+        ctx.textAlign = 'left';
+        ctx.lineWidth = 1;
+    }
+
     function loop() { update(); draw(); requestAnimationFrame(loop); }
 
     // INIT
-    showOverlay('SUPER CAT WORLD', 'PRESS SPACE TO START\nPRESS 2 FOR CO-OP\nPRESS 3 FOR ONLINE');
+    showOverlay('SUPER CAT WORLD', 'PRESS SPACE TO START\nPRESS 2 FOR CO-OP\nPRESS 3 FOR ONLINE\nPRESS H FOR HOW TO PLAY');
     loop();
 })();
