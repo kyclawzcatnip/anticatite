@@ -1,18 +1,17 @@
 // ===== SUPER CAT WORLD — Network Manager (PeerJS WebRTC) =====
-// Handles peer-to-peer online multiplayer via PeerJS.
-// Public rooms use 'scw-pub-' prefix (discoverable via listAllPeers).
-// Private rooms use 'scw-mp-' prefix (need code to join).
+// Supports up to 4 players (1 host + 3 guests).
+// Host manages multiple connections, each guest gets a slot (0=P2, 1=P3, 2=P4).
 
 const NetworkManager = (function () {
     'use strict';
 
     let peer = null;
-    let conn = null;
+    let conns = [];            // array of connections (host: up to 3, guest: 1)
     let pendingConn = null;
     let isHost = false;
-    let isConnected = false;
     let isPublic = false;
     let roomCode = '';
+    let maxSlots = 1;          // max guest slots (1 for 2-player, 3 for 4-player)
     let onConnectCallback = null;
     let onDisconnectCallback = null;
     let onDataCallback = null;
@@ -29,33 +28,79 @@ const NetworkManager = (function () {
         return code;
     }
 
-    function setupConnection(connection) {
-        conn = connection;
-        // If connection is already open, fire callback immediately
-        if (conn.open) {
-            isConnected = true;
-            if (onConnectCallback) onConnectCallback();
+    // Host: set up a connection in a specific slot
+    function setupHostConnection(connection, slot) {
+        conns[slot] = connection;
+        if (connection.open) {
+            if (onConnectCallback) onConnectCallback(slot);
         } else {
-            conn.on('open', () => {
-                isConnected = true;
-                if (onConnectCallback) onConnectCallback();
+            connection.on('open', () => {
+                if (onConnectCallback) onConnectCallback(slot);
             });
         }
-        conn.on('data', (data) => {
-            if (onDataCallback) onDataCallback(data);
+        connection.on('data', (data) => {
+            if (onDataCallback) onDataCallback(data, slot);
         });
-        conn.on('close', () => {
-            isConnected = false;
-            conn = null;
-            if (onDisconnectCallback) onDisconnectCallback();
+        connection.on('close', () => {
+            conns[slot] = null;
+            if (onDisconnectCallback) onDisconnectCallback(slot);
         });
-        conn.on('error', (err) => {
+        connection.on('error', (err) => {
+            console.error('Connection error (slot ' + slot + '):', err);
+            if (onErrorCallback) onErrorCallback(err);
+        });
+    }
+
+    // Guest: set up single connection to host
+    function setupGuestConnection(connection) {
+        conns[0] = connection;
+        if (connection.open) {
+            if (onConnectCallback) onConnectCallback(0);
+        } else {
+            connection.on('open', () => {
+                if (onConnectCallback) onConnectCallback(0);
+            });
+        }
+        connection.on('data', (data) => {
+            if (onDataCallback) onDataCallback(data, 0);
+        });
+        connection.on('close', () => {
+            conns[0] = null;
+            if (onDisconnectCallback) onDisconnectCallback(0);
+        });
+        connection.on('error', (err) => {
             console.error('Connection error:', err);
             if (onErrorCallback) onErrorCallback(err);
         });
     }
 
-    function host(callbacks, publicMode) {
+    // Find next available slot for a new guest
+    function nextFreeSlot() {
+        for (let i = 0; i < maxSlots; i++) {
+            if (!conns[i]) return i;
+        }
+        return -1;
+    }
+
+    function handleIncomingConnection(connection) {
+        const slot = nextFreeSlot();
+        if (slot === -1) {
+            // No slots available
+            try { connection.close(); } catch (e) { }
+            return;
+        }
+        if (isPublic) {
+            pendingConn = connection;
+            pendingConn._slot = slot;
+            if (onConnectionRequestCallback) {
+                onConnectionRequestCallback(connection.peer, slot);
+            }
+        } else {
+            setupHostConnection(connection, slot);
+        }
+    }
+
+    function host(callbacks, publicMode, maxPlayers) {
         onConnectCallback = callbacks.onConnect || null;
         onDisconnectCallback = callbacks.onDisconnect || null;
         onDataCallback = callbacks.onData || null;
@@ -65,6 +110,9 @@ const NetworkManager = (function () {
         roomCode = generateCode();
         isHost = true;
         isPublic = publicMode || false;
+        maxSlots = (maxPlayers || 2) - 1; // 2-player = 1 slot, 4-player = 3 slots
+        conns = new Array(maxSlots).fill(null);
+
         const prefix = isPublic ? PREFIX_PUBLIC : PREFIX_PRIVATE;
         const peerId = prefix + roomCode;
 
@@ -80,21 +128,12 @@ const NetworkManager = (function () {
             });
 
             peer.on('open', (id) => {
-                console.log('Hosting room:', roomCode, isPublic ? '(public)' : '(private)');
+                console.log('Hosting room:', roomCode, isPublic ? '(public)' : '(private)', 'max:', maxPlayers);
                 resolve(roomCode);
             });
 
             peer.on('connection', (connection) => {
-                if (isPublic) {
-                    // Public: hold connection, ask host for approval
-                    pendingConn = connection;
-                    if (onConnectionRequestCallback) {
-                        onConnectionRequestCallback(connection.peer);
-                    }
-                } else {
-                    // Private: auto-accept
-                    setupConnection(connection);
-                }
+                handleIncomingConnection(connection);
             });
 
             peer.on('error', (err) => {
@@ -105,14 +144,7 @@ const NetworkManager = (function () {
                     const newId = prefix + roomCode;
                     peer = new Peer(newId, { debug: 0 });
                     peer.on('open', () => resolve(roomCode));
-                    peer.on('connection', (c) => {
-                        if (isPublic) {
-                            pendingConn = c;
-                            if (onConnectionRequestCallback) onConnectionRequestCallback(c.peer);
-                        } else {
-                            setupConnection(c);
-                        }
-                    });
+                    peer.on('connection', (c) => handleIncomingConnection(c));
                     peer.on('error', (e) => {
                         if (onErrorCallback) onErrorCallback(e);
                         reject(e);
@@ -127,7 +159,10 @@ const NetworkManager = (function () {
 
     function acceptPending() {
         if (pendingConn) {
-            setupConnection(pendingConn);
+            const slot = pendingConn._slot !== undefined ? pendingConn._slot : nextFreeSlot();
+            if (slot >= 0) {
+                setupHostConnection(pendingConn, slot);
+            }
             pendingConn = null;
         }
     }
@@ -150,6 +185,7 @@ const NetworkManager = (function () {
         const peerId = prefix + 'g-' + roomCode + '-' + Math.floor(Math.random() * 10000);
         const hostId = prefix + roomCode;
         isHost = false;
+        conns = [null];
 
         return new Promise((resolve, reject) => {
             peer = new Peer(peerId, {
@@ -164,19 +200,19 @@ const NetworkManager = (function () {
 
             peer.on('open', () => {
                 const connection = peer.connect(hostId, { reliable: true });
-                setupConnection(connection);
+                setupGuestConnection(connection);
 
                 const timeout = setTimeout(() => {
-                    if (!isConnected) {
+                    if (!conns[0] || !conns[0].open) {
                         reject(new Error(isPublicRoom ? 'Waiting for host approval...' : 'Connection timed out. Check the room code.'));
                         if (!isPublicRoom) disconnect();
                     }
-                }, isPublicRoom ? 30000 : 15000); // Longer timeout for public (waiting for approval)
+                }, isPublicRoom ? 30000 : 15000);
 
                 const origConnect = onConnectCallback;
-                onConnectCallback = () => {
+                onConnectCallback = (slot) => {
                     clearTimeout(timeout);
-                    if (origConnect) origConnect();
+                    if (origConnect) origConnect(slot);
                     resolve();
                 };
             });
@@ -189,9 +225,8 @@ const NetworkManager = (function () {
         });
     }
 
-    // List public rooms — tries HTTP fetch, then peer-based fallback
+    // List public rooms via HTTP fetch
     async function listPublicRooms() {
-        // Try direct HTTP fetch to PeerJS cloud server API
         const urls = [
             'https://0.peerjs.com/peerjs/peers',
             'https://0.peerjs.com/peers',
@@ -208,18 +243,13 @@ const NetworkManager = (function () {
                             .map(id => id.replace(PREFIX_PUBLIC, ''));
                     }
                 }
-            } catch (e) { /* try next URL */ }
+            } catch (e) { }
         }
-
-        // Fallback: use PeerJS peer object
+        // Fallback
         try {
             return await new Promise((resolve) => {
                 const tempPeer = new Peer({ debug: 0 });
-                const timer = setTimeout(() => {
-                    try { tempPeer.destroy(); } catch (e) { }
-                    resolve([]);
-                }, 5000);
-
+                const timer = setTimeout(() => { try { tempPeer.destroy(); } catch (e) { } resolve([]); }, 5000);
                 tempPeer.on('open', () => {
                     try {
                         tempPeer.listAllPeers((peers) => {
@@ -230,56 +260,66 @@ const NetworkManager = (function () {
                             try { tempPeer.destroy(); } catch (e) { }
                             resolve(rooms);
                         });
-                    } catch (e) {
-                        clearTimeout(timer);
-                        try { tempPeer.destroy(); } catch (e2) { }
-                        resolve([]);
-                    }
+                    } catch (e) { clearTimeout(timer); try { tempPeer.destroy(); } catch (e2) { } resolve([]); }
                 });
-                tempPeer.on('error', () => {
-                    clearTimeout(timer);
-                    try { tempPeer.destroy(); } catch (e) { }
-                    resolve([]);
-                });
+                tempPeer.on('error', () => { clearTimeout(timer); try { tempPeer.destroy(); } catch (e) { } resolve([]); });
             });
-        } catch (e) {
-            return [];
+        } catch (e) { return []; }
+    }
+
+    // Send to all connected guests (host) or to host (guest)
+    function send(data) {
+        for (let i = 0; i < conns.length; i++) {
+            if (conns[i] && conns[i].open) {
+                try { conns[i].send(data); } catch (e) { console.warn('Send error slot ' + i, e); }
+            }
         }
     }
 
-    function send(data) {
-        if (conn && conn.open) {
-            try {
-                conn.send(data);
-            } catch (e) {
-                console.warn('Send error:', e);
-            }
+    // Send to a specific slot
+    function sendTo(slot, data) {
+        if (conns[slot] && conns[slot].open) {
+            try { conns[slot].send(data); } catch (e) { console.warn('SendTo error slot ' + slot, e); }
         }
     }
 
     function disconnect() {
         if (pendingConn) { try { pendingConn.close(); } catch (e) { } pendingConn = null; }
-        if (conn) { try { conn.close(); } catch (e) { } conn = null; }
+        for (let i = 0; i < conns.length; i++) {
+            if (conns[i]) { try { conns[i].close(); } catch (e) { } }
+        }
+        conns = [];
         if (peer) { try { peer.destroy(); } catch (e) { } peer = null; }
-        isConnected = false;
         isHost = false;
         isPublic = false;
         roomCode = '';
+        maxSlots = 1;
+    }
+
+    function connectedCount() {
+        let count = 0;
+        for (let i = 0; i < conns.length; i++) {
+            if (conns[i] && conns[i].open) count++;
+        }
+        return count;
     }
 
     return {
         host,
         join,
         send,
+        sendTo,
         disconnect,
         acceptPending,
         denyPending,
         listPublicRooms,
+        connectedCount,
         get isHost() { return isHost; },
-        get isConnected() { return isConnected; },
+        get isConnected() { return conns.some(c => c && c.open); },
         get isPublic() { return isPublic; },
         get roomCode() { return roomCode; },
         get isActive() { return peer !== null; },
-        get hasPending() { return pendingConn !== null; }
+        get hasPending() { return pendingConn !== null; },
+        get maxSlots() { return maxSlots; }
     };
 })();

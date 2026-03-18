@@ -521,6 +521,23 @@
     let p1HP = 3, p2HP = 3; // Individual HP for co-op
     let invincibleTimer2 = 0; // P2 invincibility (separate from P1)
 
+    // 4-PLAYER MODE
+    let fourPlayerMode = false;
+    const cat3 = { x: 0, y: 0, w: 24, h: 32, vx: 0, vy: 0, dir: 1, grounded: false, jumping: false, dead: false, canDoubleJump: true };
+    const cat4 = { x: 0, y: 0, w: 24, h: 32, vx: 0, vy: 0, dir: 1, grounded: false, jumping: false, dead: false, canDoubleJump: true };
+    const keys3 = { left: false, right: false, jump: false, jumpPressed: false, glide: false };
+    const keys4 = { left: false, right: false, jump: false, jumpPressed: false, glide: false };
+    let cat3DeathTimer = 0, cat4DeathTimer = 0;
+    let isBig3 = false, isBig4 = false;
+    let heldShell3 = null, heldShell4 = null;
+    let cat3ScratchTimer = 0, cat3ScratchCooldown = 0;
+    let cat4ScratchTimer = 0, cat4ScratchCooldown = 0;
+    let cat3SelectedSkin = 2, cat4SelectedSkin = 3;
+    let p3HP = 3, p4HP = 3;
+    let invincibleTimer3 = 0, invincibleTimer4 = 0;
+    let remoteInputs2 = { left: false, right: false, jump: false, jumpPressed: false, glide: false, scratch: false, fireball: false };
+    let remoteInputs3 = { left: false, right: false, jump: false, jumpPressed: false, glide: false, scratch: false, fireball: false };
+
     // PARTICLES
     let particles = [];
     let voidParticles = [];
@@ -1063,6 +1080,59 @@
         };
         fireballs.push(fb);
         addParticle(fb.x, fb.y, '#FF4500', 4, 3);
+    }
+
+    // GENERIC EXTRA-CAT UPDATE (for P3, P4)
+    function updateExtraCat(ec, ek, ecHP, ecDT, ecInv, ecBig, ecHeldShell, ecScratchT, ecScratchCD) {
+        if (!fourPlayerMode || !onlineMode) return { hp: ecHP, dt: ecDT, inv: ecInv };
+        if (ec.dead) {
+            ecDT--;
+            if (ecDT <= 0 && ecHP > 0) {
+                // respawn
+                const sx = level ? level.spawnX * T : 100;
+                const sy = level ? (level.spawnY - 1) * T : 200;
+                ec.x = sx + 60; ec.y = sy; ec.vx = 0; ec.vy = 0; ec.dead = false; ec.h = 32;
+                ecInv = 120;
+            }
+            return { hp: ecHP, dt: ecDT, inv: ecInv };
+        }
+        if (ecInv > 0) ecInv--;
+        ec.vx = 0;
+        if (ek.left) { ec.vx = -(WALK + speedBoost); ec.dir = -1; }
+        if (ek.right) { ec.vx = WALK + speedBoost; ec.dir = 1; }
+        if (ek.jumpPressed && ec.grounded) {
+            ec.vy = JUMP; ec.grounded = false; ec.jumping = true; ec.canDoubleJump = true;
+        } else if (ek.jumpPressed && !ec.grounded && ec.canDoubleJump) {
+            ec.vy = JUMP * 0.75; ec.canDoubleJump = false;
+        }
+        ek.jumpPressed = false;
+        if (!ek.jump && ec.vy < -3) ec.vy = -3;
+        const gliding = hasGlide && ek.glide && !ec.grounded && ec.vy > 0;
+        if (gliding) ec.vy = Math.min(ec.vy + GRAVITY * 0.15, 1.5);
+        else ec.vy = Math.min(ec.vy + GRAVITY, MAX_FALL);
+        ec.x += ec.vx;
+        // Horizontal collision
+        const m = 4;
+        if (ec.vx > 0) { let tc = Math.floor((ec.x + ec.w - m) / T); let tr1 = Math.floor((ec.y + 2) / T), tr2 = Math.floor((ec.y + ec.h - 2) / T); if (solid(tr1, tc) || solid(tr2, tc)) ec.x = tc * T - ec.w + m; }
+        if (ec.vx < 0) { let tc = Math.floor((ec.x + m) / T); let tr1 = Math.floor((ec.y + 2) / T), tr2 = Math.floor((ec.y + ec.h - 2) / T); if (solid(tr1, tc) || solid(tr2, tc)) ec.x = (tc + 1) * T - m; }
+        ec.y += ec.vy;
+        ec.grounded = false;
+        if (ec.vy >= 0) { let tr = Math.floor((ec.y + ec.h) / T); let tc1 = Math.floor((ec.x + m) / T), tc2 = Math.floor((ec.x + ec.w - m) / T); if (solid(tr, tc1) || solid(tr, tc2)) { ec.y = tr * T - ec.h; ec.vy = 0; ec.grounded = true; ec.jumping = false; } }
+        if (ec.vy < 0) { let tr = Math.floor(ec.y / T); let tc1 = Math.floor((ec.x + m) / T), tc2 = Math.floor((ec.x + ec.w - m) / T); if (solid(tr, tc1) || solid(tr, tc2)) { ec.y = (tr + 1) * T; ec.vy = 0; } }
+        if (level && ec.y > level.rows * T + 100) {
+            ecHP--;
+            if (ecHP <= 0 && p1HP <= 0 && p2HP <= 0 && (fourPlayerMode ? (ec === cat3 ? p4HP <= 0 : p3HP <= 0) : true)) { state = 'over'; }
+            ec.dead = true; ecDT = 90;
+        }
+        return { hp: ecHP, dt: ecDT, inv: ecInv };
+    }
+
+    function killExtraCat(ec, ecHP, allHPs) {
+        ec.dead = true;
+        ecHP--;
+        const allDead = allHPs.every(hp => hp <= 0);
+        if (allDead) { state = 'over'; }
+        return ecHP;
     }
 
     // CHECKPOINTS
@@ -3482,6 +3552,15 @@
             cat2.vx = 0; cat2.vy = 0; cat2.grounded = false; cat2.dead = false;
             isBig2 = false; cat2.h = 32; heldShell2 = null;
         }
+        // Reset P3/P4 for 4-player mode
+        if (fourPlayerMode) {
+            cat3.x = level.spawnX * T + 60; cat3.y = level.spawnY * T - cat3.h;
+            cat3.vx = 0; cat3.vy = 0; cat3.grounded = false; cat3.dead = false;
+            isBig3 = false; cat3.h = 32; heldShell3 = null;
+            cat4.x = level.spawnX * T + 90; cat4.y = level.spawnY * T - cat4.h;
+            cat4.vx = 0; cat4.vy = 0; cat4.grounded = false; cat4.dead = false;
+            isBig4 = false; cat4.h = 32; heldShell4 = null;
+        }
         // Spawn boss on boss arena (index 4) or pirate boss (index 10)
         if (idx === 4 || idx === 10) {
             const isPirate = idx === 10;
@@ -3534,6 +3613,20 @@
         }
     };
 
+    // 4-player toggle
+    window._set4Player = function (on) {
+        fourPlayerMode = on;
+        const btn2p = document.getElementById('btn-mode-2p');
+        const btn4p = document.getElementById('btn-mode-4p');
+        if (on) {
+            if (btn4p) btn4p.classList.add('mode-btn-active');
+            if (btn2p) btn2p.classList.remove('mode-btn-active');
+        } else {
+            if (btn2p) btn2p.classList.add('mode-btn-active');
+            if (btn4p) btn4p.classList.remove('mode-btn-active');
+        }
+    };
+
     function openLobby() {
         state = 'lobby';
         overlay.classList.remove('visible');
@@ -3564,7 +3657,9 @@
         coopMode = true;
         onlineMode = true;
         cat2SelectedSkin = selectedSkin === 1 ? 0 : 1;
-        p1HP = 3; p2HP = 3;
+        cat3SelectedSkin = 2; cat4SelectedSkin = 3;
+        p1HP = 3; p2HP = 3; p3HP = 3; p4HP = 3;
+        cat3.dead = !fourPlayerMode; cat4.dead = !fourPlayerMode;
         lobbyOverlay.classList.add('hidden');
         if (lobbyApproval) lobbyApproval.classList.add('hidden');
         state = 'playing'; score = 0; lives = 3; coinCount = 0; currentLevel = 0;
@@ -3595,66 +3690,94 @@
         lobbyConnText.textContent = 'Creating room...';
         lobbyDot.classList.remove('connected');
         if (lobbyApproval) lobbyApproval.classList.add('hidden');
+        const maxP = fourPlayerMode ? 4 : 2;
+        let playersConnected = 0;
+        function updatePlayerCount() {
+            if (fourPlayerMode) {
+                lobbyConnText.textContent = 'Players: ' + (playersConnected + 1) + '/' + maxP + (playersConnected > 0 ? ' — Press START or wait for more' : '');
+            } else {
+                lobbyConnText.textContent = 'Waiting for player...';
+            }
+        }
         try {
             const code = await NetworkManager.host({
-                onConnect: () => {
-                    lobbyDot.classList.add('connected');
-                    lobbyConnText.textContent = 'Player joined! Starting...';
+                onConnect: (slot) => {
+                    playersConnected = NetworkManager.connectedCount();
                     isOnlineHost = true;
                     isOnlineGuest = false;
                     if (lobbyApproval) lobbyApproval.classList.add('hidden');
-                    setTimeout(() => {
-                        NetworkManager.send({ type: 'start' });
-                        startOnlineGame();
-                    }, 1000);
+                    lobbyDot.classList.add('connected');
+                    if (!fourPlayerMode || playersConnected >= maxP - 1) {
+                        // Auto-start: 2-player or all slots filled
+                        lobbyConnText.textContent = 'All players joined! Starting...';
+                        setTimeout(() => {
+                            NetworkManager.send({ type: 'start' });
+                            startOnlineGame();
+                        }, 1000);
+                    } else {
+                        updatePlayerCount();
+                        // Show start button for host in 4p mode
+                        const startBtn = document.getElementById('btn-host-start');
+                        if (startBtn) startBtn.classList.remove('hidden');
+                    }
                 },
-                onDisconnect: () => {
+                onDisconnect: (slot) => {
+                    playersConnected = NetworkManager.connectedCount();
                     if (state === 'playing') {
-                        netDisconnectMsg = 'PARTNER DISCONNECTED';
+                        netDisconnectMsg = 'PLAYER ' + (slot + 2) + ' DISCONNECTED';
                         netDisconnectTimer = 180;
-                        onlineMode = false; isOnlineHost = false;
+                    } else {
+                        updatePlayerCount();
                     }
                 },
-                onData: (data) => {
-                    // Host receives guest inputs
+                onData: (data, slot) => {
                     if (data && data.type === 'input') {
-                        remoteInputs = data.keys;
+                        if (slot === 0) remoteInputs = data.keys;
+                        else if (slot === 1) remoteInputs2 = data.keys;
+                        else if (slot === 2) remoteInputs3 = data.keys;
                     }
                 },
-                onConnectionRequest: (peerId) => {
-                    // Public mode: show approval dialog
+                onConnectionRequest: (peerId, slot) => {
                     lobbyConnText.textContent = 'Join request received!';
                     if (lobbyApproval) lobbyApproval.classList.remove('hidden');
                 },
                 onError: (err) => {
                     lobbyStatus.textContent = 'Error: ' + (err.message || err.type);
                 }
-            }, roomIsPublic);
+            }, roomIsPublic, maxP);
             lobbyRoomCode.textContent = code;
-            lobbyConnText.textContent = 'Waiting for player...';
-            // Show mode badge
+            updatePlayerCount();
             if (lobbyModeBadge) {
+                const modeText = fourPlayerMode ? ' (4P)' : '';
                 if (roomIsPublic) {
-                    lobbyModeBadge.textContent = '🌍 PUBLIC — You approve joins';
+                    lobbyModeBadge.textContent = '🌍 PUBLIC' + modeText + ' — You approve joins';
                     lobbyModeBadge.style.color = '#FFD700';
                     lobbyModeBadge.style.background = 'rgba(255,215,0,0.1)';
                 } else {
-                    lobbyModeBadge.textContent = '🔒 PRIVATE — Auto-join';
+                    lobbyModeBadge.textContent = '🔒 PRIVATE' + modeText + ' — Auto-join';
                     lobbyModeBadge.style.color = '#00FF88';
                     lobbyModeBadge.style.background = 'rgba(0,255,136,0.1)';
                 }
             }
-            // Click to copy
             lobbyRoomCode.onclick = () => {
                 navigator.clipboard.writeText(code).then(() => {
+                    const prev = lobbyConnText.textContent;
                     lobbyConnText.textContent = 'Code copied!';
-                    setTimeout(() => { lobbyConnText.textContent = 'Waiting for player...'; }, 1500);
+                    setTimeout(() => { lobbyConnText.textContent = prev; }, 1500);
                 }).catch(() => {});
             };
         } catch (err) {
             lobbyStatus.textContent = 'Failed to host: ' + (err.message || err.type);
             lobbyMenu.style.display = '';
             lobbyWaiting.classList.add('hidden');
+        }
+    };
+
+    // Host can start early in 4-player mode
+    window._hostStartEarly = function () {
+        if (isOnlineHost && NetworkManager.connectedCount() > 0) {
+            NetworkManager.send({ type: 'start' });
+            startOnlineGame();
         }
     };
 
@@ -3851,6 +3974,18 @@
         }
         // Sync frameCount so animations match host
         if (data.frameCount !== undefined) frameCount = data.frameCount;
+        // 4-player sync
+        if (data.fourPlayer !== undefined) fourPlayerMode = data.fourPlayer;
+        if (data.cat3) {
+            cat3.x = data.cat3.x; cat3.y = data.cat3.y; cat3.vx = data.cat3.vx; cat3.vy = data.cat3.vy;
+            cat3.dir = data.cat3.dir; cat3.grounded = data.cat3.grounded; cat3.dead = data.cat3.dead; cat3.h = data.cat3.h;
+        }
+        if (data.cat4) {
+            cat4.x = data.cat4.x; cat4.y = data.cat4.y; cat4.vx = data.cat4.vx; cat4.vy = data.cat4.vy;
+            cat4.dir = data.cat4.dir; cat4.grounded = data.cat4.grounded; cat4.dead = data.cat4.dead; cat4.h = data.cat4.h;
+        }
+        if (data.p3HP !== undefined) p3HP = data.p3HP;
+        if (data.p4HP !== undefined) p4HP = data.p4HP;
     }
 
     // Network sync in game loop (called from update)
@@ -3861,35 +3996,40 @@
         netSendTimer = 0;
 
         if (isOnlineHost) {
-            // Apply remote inputs to keys2
+            // Apply remote inputs to keys2 (guest slot 0 = P2)
             keys2.left = remoteInputs.left;
             keys2.right = remoteInputs.right;
             keys2.jump = remoteInputs.jump;
-            if (remoteInputs.jumpPressed) {
-                keys2.jumpPressed = true;
-                remoteInputs.jumpPressed = false;
-            }
+            if (remoteInputs.jumpPressed) { keys2.jumpPressed = true; remoteInputs.jumpPressed = false; }
             keys2.glide = remoteInputs.glide;
-            // Handle remote scratch
             if (remoteInputs.scratch && cat2ScratchCooldown <= 0 && !cat2.dead) {
-                if (heldShell2) {
-                    heldShell2.shellVx = cat2.dir * 4;
-                    heldShell2.vx = heldShell2.shellVx;
-                    heldShell2.vy = -3;
-                    heldShell2.x = cat2.x + (cat2.dir === 1 ? cat2.w + 4 : -heldShell2.w - 4);
-                    heldShell2.y = cat2.y;
-                    heldShell2 = null;
-                } else {
-                    startScratch2();
-                }
+                if (heldShell2) { heldShell2.shellVx = cat2.dir * 4; heldShell2.vx = heldShell2.shellVx; heldShell2.vy = -3; heldShell2.x = cat2.x + (cat2.dir === 1 ? cat2.w + 4 : -heldShell2.w - 4); heldShell2.y = cat2.y; heldShell2 = null; } else { startScratch2(); }
                 remoteInputs.scratch = false;
             }
-            if (remoteInputs.fireball && hasFire && fireCooldown <= 0 && !cat2.dead) {
-                shootFireball2();
-                remoteInputs.fireball = false;
+            if (remoteInputs.fireball && hasFire && fireCooldown <= 0 && !cat2.dead) { shootFireball2(); remoteInputs.fireball = false; }
+
+            // Apply remote inputs to keys3 (guest slot 1 = P3)
+            if (fourPlayerMode) {
+                keys3.left = remoteInputs2.left; keys3.right = remoteInputs2.right;
+                keys3.jump = remoteInputs2.jump; keys3.glide = remoteInputs2.glide;
+                if (remoteInputs2.jumpPressed) { keys3.jumpPressed = true; remoteInputs2.jumpPressed = false; }
+                if (remoteInputs2.scratch && cat3ScratchCooldown <= 0 && !cat3.dead) { cat3ScratchCooldown = 20; cat3ScratchTimer = 8; remoteInputs2.scratch = false; }
+                if (remoteInputs2.fireball && hasFire && fireCooldown <= 0 && !cat3.dead) {
+                    fireballs.push({ x: cat3.x + (cat3.dir === 1 ? cat3.w : -10), y: cat3.y + cat3.h / 2 - 5, w: 10, h: 10, vx: cat3.dir * 7, vy: -2, bounces: 0, life: 120, trail: [] });
+                    fireCooldown = 20; remoteInputs2.fireball = false;
+                }
+                // Apply remote inputs to keys4 (guest slot 2 = P4)
+                keys4.left = remoteInputs3.left; keys4.right = remoteInputs3.right;
+                keys4.jump = remoteInputs3.jump; keys4.glide = remoteInputs3.glide;
+                if (remoteInputs3.jumpPressed) { keys4.jumpPressed = true; remoteInputs3.jumpPressed = false; }
+                if (remoteInputs3.scratch && cat4ScratchCooldown <= 0 && !cat4.dead) { cat4ScratchCooldown = 20; cat4ScratchTimer = 8; remoteInputs3.scratch = false; }
+                if (remoteInputs3.fireball && hasFire && fireCooldown <= 0 && !cat4.dead) {
+                    fireballs.push({ x: cat4.x + (cat4.dir === 1 ? cat4.w : -10), y: cat4.y + cat4.h / 2 - 5, w: 10, h: 10, vx: cat4.dir * 7, vy: -2, bounces: 0, life: 120, trail: [] });
+                    fireCooldown = 20; remoteInputs3.fireball = false;
+                }
             }
 
-            // Build compact state to send to guest
+            // Build compact state to send to all guests
             const enemyData = level ? level.enemies.map(e => ({
                 x: Math.round(e.x), y: Math.round(e.y), alive: e.alive, vx: e.vx,
                 shell: e.shell || false, frame: e.frame || 0, type: e.type
@@ -3897,27 +4037,30 @@
             const coinData = level ? level.coins.map(c => c.collected) : [];
             const fbData = fireballs.map(fb => ({ x: Math.round(fb.x), y: Math.round(fb.y), vx: fb.vx, vy: fb.vy, life: fb.life }));
 
+            const catState = (c) => ({ x: Math.round(c.x), y: Math.round(c.y), vx: c.vx, vy: c.vy, dir: c.dir, grounded: c.grounded, dead: c.dead, h: c.h });
             const stateData = {
                 type: 'state',
                 level: currentLevel,
                 state: state,
-                cat: { x: Math.round(cat.x), y: Math.round(cat.y), vx: cat.vx, vy: cat.vy, dir: cat.dir, grounded: cat.grounded, dead: cat.dead, h: cat.h },
-                cat2: { x: Math.round(cat2.x), y: Math.round(cat2.y), vx: cat2.vx, vy: cat2.vy, dir: cat2.dir, grounded: cat2.grounded, dead: cat2.dead, h: cat2.h },
+                cat: catState(cat), cat2: catState(cat2),
                 cam: Math.round(cam.x),
-                score: score,
-                coinCount: coinCount,
-                lives: lives,
+                score: score, coinCount: coinCount, lives: lives,
                 p1HP: p1HP, p2HP: p2HP,
                 hasFire: hasFire,
-                enemies: enemyData,
-                coins: coinData,
-                fireballs: fbData,
+                enemies: enemyData, coins: coinData, fireballs: fbData,
                 boss: boss ? { x: Math.round(boss.x), y: Math.round(boss.y), hp: boss.hp, alive: boss.alive, dir: boss.dir, phase: boss.phase, pirate: boss.pirate } : null,
                 shakeTimer: shakeTimer, shakeAmt: shakeAmt,
                 gridChanges: netGridChanges.length > 0 ? netGridChanges.slice() : undefined,
-                frameCount: frameCount
+                frameCount: frameCount,
+                fourPlayer: fourPlayerMode
             };
-            netGridChanges.length = 0; // clear after sending
+            if (fourPlayerMode) {
+                stateData.cat3 = catState(cat3);
+                stateData.cat4 = catState(cat4);
+                stateData.p3HP = p3HP;
+                stateData.p4HP = p4HP;
+            }
+            netGridChanges.length = 0;
             NetworkManager.send(stateData);
         }
 
@@ -4230,6 +4373,10 @@
         if (hotbarFlashTimer > 0) hotbarFlashTimer--;
         if (cat2ScratchTimer > 0) cat2ScratchTimer--;
         if (cat2ScratchCooldown > 0) cat2ScratchCooldown--;
+        if (cat3ScratchTimer > 0) cat3ScratchTimer--;
+        if (cat3ScratchCooldown > 0) cat3ScratchCooldown--;
+        if (cat4ScratchTimer > 0) cat4ScratchTimer--;
+        if (cat4ScratchCooldown > 0) cat4ScratchCooldown--;
 
         // Online guest: skip local game logic, just render from host state
         if (isOnlineGuest) {
@@ -4245,7 +4392,14 @@
                 for (let i = 0; i < 3; i++) p1Str += i < p1HP ? '❤️' : '🖤';
                 let p2Str = ' P2 ';
                 for (let i = 0; i < 3; i++) p2Str += i < p2HP ? '❤️' : '🖤';
-                livesEl.textContent = p1Str + p2Str + (hasFire ? ' 🔥' : '');
+                let extraStr = '';
+                if (fourPlayerMode) {
+                    extraStr += ' P3 ';
+                    for (let i = 0; i < 3; i++) extraStr += i < p3HP ? '❤️' : '🖤';
+                    extraStr += ' P4 ';
+                    for (let i = 0; i < 3; i++) extraStr += i < p4HP ? '❤️' : '🖤';
+                }
+                livesEl.textContent = p1Str + p2Str + extraStr + (hasFire ? ' 🔥' : '');
             }
             coinEl.textContent = '🪙 × ' + coinCount;
             scoreEl.textContent = 'SCORE: ' + score;
@@ -4257,6 +4411,13 @@
         }
 
         updateCat(); updateCat2(); updateEnemies(); updateCoins(); updateOneUps(); updateFireFlowers(); updateFireballs(); updateArrows(); updateBoss(); updateCheckpoints(); checkFlag();
+        // Update P3/P4 on host
+        if (fourPlayerMode && isOnlineHost) {
+            const r3 = updateExtraCat(cat3, keys3, p3HP, cat3DeathTimer, invincibleTimer3);
+            p3HP = r3.hp; cat3DeathTimer = r3.dt; invincibleTimer3 = r3.inv;
+            const r4 = updateExtraCat(cat4, keys4, p4HP, cat4DeathTimer, invincibleTimer4);
+            p4HP = r4.hp; cat4DeathTimer = r4.dt; invincibleTimer4 = r4.inv;
+        }
         updateStars();
         updatePowerUps();
         if (starPowerTimer > 0) starPowerTimer--;
@@ -4273,7 +4434,14 @@
             for (let i = 0; i < 3; i++) p1Str += i < p1HP ? '❤️' : '🖤';
             let p2Str = ' P2 ';
             for (let i = 0; i < 3; i++) p2Str += i < p2HP ? '❤️' : '🖤';
-            livesEl.textContent = p1Str + p2Str + (hasFire ? ' 🔥' : '') + (onlineMode ? ' 🌐' : '');
+            let extraStr = '';
+            if (fourPlayerMode) {
+                extraStr += ' P3 ';
+                for (let i = 0; i < 3; i++) extraStr += i < p3HP ? '❤️' : '🖤';
+                extraStr += ' P4 ';
+                for (let i = 0; i < 3; i++) extraStr += i < p4HP ? '❤️' : '🖤';
+            }
+            livesEl.textContent = p1Str + p2Str + extraStr + (hasFire ? ' 🔥' : '') + (onlineMode ? ' 🌐' : '');
         } else {
             livesEl.textContent = '🐱 × ' + Math.max(0, lives) + (hasFire ? ' 🔥' : '');
         }
@@ -4324,6 +4492,45 @@
             // Cat
             drawCatSprite();
             if (coopMode) drawCat2Sprite();
+            // Draw P3/P4 in 4-player mode
+            if (fourPlayerMode) {
+                // P3 — draw with green tint
+                if (!cat3.dead) {
+                    const sx = Math.round(cat3.x - cam.x), sy = Math.round(cat3.y);
+                    const flash3 = invincibleTimer3 > 0 && Math.floor(frameCount / 3) % 2 === 0;
+                    if (!flash3) {
+                        ctx.save();
+                        ctx.globalAlpha = 0.9;
+                        ctx.fillStyle = '#00CC66';
+                        ctx.fillRect(sx, sy, cat3.w, cat3.h);
+                        // Simple face
+                        ctx.fillStyle = '#000'; ctx.fillRect(sx + 6, sy + 8, 4, 4); ctx.fillRect(sx + 14, sy + 8, 4, 4);
+                        ctx.fillStyle = '#FF69B4'; ctx.fillRect(sx + 9, sy + 14, 6, 3);
+                        // P3 label
+                        ctx.fillStyle = '#00FF88'; ctx.font = 'bold 7px monospace'; ctx.textAlign = 'center';
+                        ctx.fillText('P3', sx + cat3.w / 2, sy - 4);
+                        ctx.textAlign = 'left';
+                        ctx.restore();
+                    }
+                }
+                // P4 — draw with purple tint
+                if (!cat4.dead) {
+                    const sx = Math.round(cat4.x - cam.x), sy = Math.round(cat4.y);
+                    const flash4 = invincibleTimer4 > 0 && Math.floor(frameCount / 3) % 2 === 0;
+                    if (!flash4) {
+                        ctx.save();
+                        ctx.globalAlpha = 0.9;
+                        ctx.fillStyle = '#9966FF';
+                        ctx.fillRect(sx, sy, cat4.w, cat4.h);
+                        ctx.fillStyle = '#000'; ctx.fillRect(sx + 6, sy + 8, 4, 4); ctx.fillRect(sx + 14, sy + 8, 4, 4);
+                        ctx.fillStyle = '#FF69B4'; ctx.fillRect(sx + 9, sy + 14, 6, 3);
+                        ctx.fillStyle = '#CC99FF'; ctx.font = 'bold 7px monospace'; ctx.textAlign = 'center';
+                        ctx.fillText('P4', sx + cat4.w / 2, sy - 4);
+                        ctx.textAlign = 'left';
+                        ctx.restore();
+                    }
+                }
+            }
             // Particles
             drawParticles();
             // Hotbar

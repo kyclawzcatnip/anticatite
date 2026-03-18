@@ -44,6 +44,15 @@
                 🌍 PUBLIC
               </button>
             </div>
+            <!-- Player count toggle -->
+            <div id="room-mode-toggle" style="margin-top:4px">
+              <button id="btn-mode-2p" class="mode-btn mode-btn-active" onclick="window._set4Player(false)">
+                👥 2P
+              </button>
+              <button id="btn-mode-4p" class="mode-btn" onclick="window._set4Player(true)">
+                👥 4P
+              </button>
+            </div>
             <div id="room-mode-desc">Code required, auto-join</div>
 
             <button id="btn-host" class="lobby-btn" onclick="window._lobbyHost()">
@@ -72,6 +81,9 @@
               <span id="lobby-dot" class="pulse-dot"></span>
               <span id="lobby-connection-text">Waiting for player...</span>
             </div>
+            <button id="btn-host-start" class="lobby-btn hidden" onclick="window._hostStartEarly()" style="margin-top:8px;border-color:#00FF88;color:#00FF88;">
+              ▶ START GAME
+            </button>
           </div>
 
           <!-- Join request approval (public rooms) -->
