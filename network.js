@@ -129,6 +129,7 @@ const NetworkManager = (function () {
 
             peer.on('open', (id) => {
                 console.log('Hosting room:', roomCode, isPublic ? '(public)' : '(private)', 'max:', maxPlayers);
+                if (isPublic) registerRoom(roomCode, maxSlots + 1);
                 resolve(roomCode);
             });
 
@@ -225,45 +226,55 @@ const NetworkManager = (function () {
         });
     }
 
-    // List public rooms via HTTP fetch
-    async function listPublicRooms() {
-        const urls = [
-            'https://0.peerjs.com/peerjs/peers',
-            'https://0.peerjs.com/peers',
-            'https://0.peerjs.com/peerjs/peers?key=peerjs'
-        ];
-        for (const url of urls) {
-            try {
-                const resp = await fetch(url, { signal: AbortSignal.timeout(4000) });
-                if (resp.ok) {
-                    const peers = await resp.json();
-                    if (Array.isArray(peers)) {
-                        return peers
-                            .filter(id => typeof id === 'string' && id.startsWith(PREFIX_PUBLIC) && !id.includes('-g-'))
-                            .map(id => id.replace(PREFIX_PUBLIC, ''));
-                    }
-                }
-            } catch (e) { }
-        }
-        // Fallback
+    // Room registry using localStorage (works for same-origin, e.g. GitHub Pages)
+    const ROOM_REGISTRY_KEY = 'scw_public_rooms';
+    const ROOM_TTL = 120000; // rooms expire after 2 minutes if not refreshed
+    let roomRefreshInterval = null;
+    const roomChannel = (typeof BroadcastChannel !== 'undefined') ? new BroadcastChannel('scw_rooms') : null;
+
+    function registerRoom(code, maxPlayers) {
         try {
-            return await new Promise((resolve) => {
-                const tempPeer = new Peer({ debug: 0 });
-                const timer = setTimeout(() => { try { tempPeer.destroy(); } catch (e) { } resolve([]); }, 5000);
-                tempPeer.on('open', () => {
-                    try {
-                        tempPeer.listAllPeers((peers) => {
-                            clearTimeout(timer);
-                            const rooms = (peers || [])
-                                .filter(id => id.startsWith(PREFIX_PUBLIC) && !id.includes('-g-'))
-                                .map(id => id.replace(PREFIX_PUBLIC, ''));
-                            try { tempPeer.destroy(); } catch (e) { }
-                            resolve(rooms);
-                        });
-                    } catch (e) { clearTimeout(timer); try { tempPeer.destroy(); } catch (e2) { } resolve([]); }
-                });
-                tempPeer.on('error', () => { clearTimeout(timer); try { tempPeer.destroy(); } catch (e) { } resolve([]); });
-            });
+            const rooms = JSON.parse(localStorage.getItem(ROOM_REGISTRY_KEY) || '{}');
+            rooms[code] = { time: Date.now(), maxPlayers: maxPlayers || 2 };
+            localStorage.setItem(ROOM_REGISTRY_KEY, JSON.stringify(rooms));
+            if (roomChannel) roomChannel.postMessage({ action: 'new_room', code });
+            // Keep refreshing to stay alive
+            if (roomRefreshInterval) clearInterval(roomRefreshInterval);
+            roomRefreshInterval = setInterval(() => {
+                try {
+                    const r = JSON.parse(localStorage.getItem(ROOM_REGISTRY_KEY) || '{}');
+                    if (r[code]) { r[code].time = Date.now(); localStorage.setItem(ROOM_REGISTRY_KEY, JSON.stringify(r)); }
+                } catch (e) { }
+            }, 30000);
+        } catch (e) { }
+    }
+
+    function unregisterRoom(code) {
+        try {
+            clearInterval(roomRefreshInterval); roomRefreshInterval = null;
+            const rooms = JSON.parse(localStorage.getItem(ROOM_REGISTRY_KEY) || '{}');
+            delete rooms[code];
+            localStorage.setItem(ROOM_REGISTRY_KEY, JSON.stringify(rooms));
+            if (roomChannel) roomChannel.postMessage({ action: 'room_closed', code });
+        } catch (e) { }
+    }
+
+    async function listPublicRooms() {
+        try {
+            const rooms = JSON.parse(localStorage.getItem(ROOM_REGISTRY_KEY) || '{}');
+            const now = Date.now();
+            const active = [];
+            let changed = false;
+            for (const [code, info] of Object.entries(rooms)) {
+                if (now - info.time < ROOM_TTL) {
+                    active.push(code);
+                } else {
+                    delete rooms[code]; // expired
+                    changed = true;
+                }
+            }
+            if (changed) localStorage.setItem(ROOM_REGISTRY_KEY, JSON.stringify(rooms));
+            return active;
         } catch (e) { return []; }
     }
 
@@ -289,11 +300,19 @@ const NetworkManager = (function () {
             if (conns[i]) { try { conns[i].close(); } catch (e) { } }
         }
         conns = [];
+        if (isPublic && roomCode) unregisterRoom(roomCode);
         if (peer) { try { peer.destroy(); } catch (e) { } peer = null; }
         isHost = false;
         isPublic = false;
         roomCode = '';
         maxSlots = 1;
+    }
+
+    // Clean up on page unload
+    if (typeof window !== 'undefined') {
+        window.addEventListener('beforeunload', () => {
+            if (isPublic && roomCode) unregisterRoom(roomCode);
+        });
     }
 
     function connectedCount() {
