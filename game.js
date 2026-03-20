@@ -444,6 +444,7 @@
     let onlineMode = false;   // true when playing online
     let isOnlineHost = false;  // true if this player is the host
     let isOnlineGuest = false; // true if this player is the guest
+    let mySlot = -1;           // which slot this guest occupies (0=P2, 1=P3, 2=P4); -1 for host
     let netSendTimer = 0;      // throttle sending
     const NET_SEND_INTERVAL = 2; // send every N frames
     let guestState = null;     // received game state for guest rendering
@@ -3762,7 +3763,10 @@
                         // Auto-start: 2-player or all slots filled
                         lobbyConnText.textContent = 'All players joined! Starting...';
                         setTimeout(() => {
-                            NetworkManager.send({ type: 'start' });
+                            // Send each guest their slot number
+                            for (let s = 0; s < maxP - 1; s++) {
+                                NetworkManager.sendTo(s, { type: 'start', slot: s });
+                            }
                             startOnlineGame();
                         }, 1000);
                     } else {
@@ -3827,7 +3831,9 @@
     // Host can start early in 4-player mode
     window._hostStartEarly = function () {
         if (isOnlineHost && NetworkManager.connectedCount() > 0) {
-            NetworkManager.send({ type: 'start' });
+            for (let s = 0; s < NetworkManager.maxSlots; s++) {
+                NetworkManager.sendTo(s, { type: 'start', slot: s });
+            }
             startOnlineGame();
         }
     };
@@ -3939,7 +3945,10 @@
                 },
                 onData: (data) => {
                     if (data && data.type === 'state') applyHostState(data);
-                    if (data && data.type === 'start') startOnlineGame();
+                    if (data && data.type === 'start') {
+                        if (data.slot !== undefined) mySlot = data.slot;
+                        startOnlineGame();
+                    }
                 },
                 onError: (err) => {
                     lobbyStatus.textContent = 'Error: ' + (err.message || err.type);
@@ -3976,7 +3985,14 @@
             cat2.dir = data.cat2.dir; cat2.grounded = data.cat2.grounded;
             cat2.dead = data.cat2.dead; cat2.h = data.cat2.h;
         }
-        if (data.cam !== undefined) cam.x = data.cam;
+        // Camera: each player's screen follows their own character
+        if (isOnlineGuest && mySlot >= 0) {
+            let myCat = mySlot === 0 ? cat2 : mySlot === 1 ? cat3 : cat4;
+            cam.x = Math.max(0, myCat.x - W / 3);
+            if (level) cam.x = Math.min(cam.x, level.cols * T - W);
+        } else if (data.cam !== undefined) {
+            cam.x = data.cam;
+        }
         if (data.score !== undefined) score = data.score;
         if (data.coinCount !== undefined) coinCount = data.coinCount;
         if (data.lives !== undefined) lives = data.lives;
