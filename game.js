@@ -3871,7 +3871,8 @@
                         applyHostState(data);
                     }
                     if (data && data.type === 'start') {
-                        // Host tells guest to start the game
+                        if (data.slot !== undefined) mySlot = data.slot;
+                        console.log('Guest received start, mySlot =', mySlot);
                         startOnlineGame();
                     }
                 },
