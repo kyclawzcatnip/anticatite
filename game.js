@@ -1118,7 +1118,22 @@
         ec.y += ec.vy;
         ec.grounded = false;
         if (ec.vy >= 0) { let tr = Math.floor((ec.y + ec.h) / T); let tc1 = Math.floor((ec.x + m) / T), tc2 = Math.floor((ec.x + ec.w - m) / T); if (solid(tr, tc1) || solid(tr, tc2)) { ec.y = tr * T - ec.h; ec.vy = 0; ec.grounded = true; ec.jumping = false; } }
-        if (ec.vy < 0) { let tr = Math.floor(ec.y / T); let tc1 = Math.floor((ec.x + m) / T), tc2 = Math.floor((ec.x + ec.w - m) / T); if (solid(tr, tc1) || solid(tr, tc2)) { ec.y = (tr + 1) * T; ec.vy = 0; } }
+        if (ec.vy < 0) {
+            let tr = Math.floor(ec.y / T);
+            let tc1 = Math.floor((ec.x + m) / T), tc2 = Math.floor((ec.x + ec.w - m) / T);
+            for (let c = tc1; c <= tc2; c++) {
+                if (solid(tr, c)) {
+                    ec.y = (tr + 1) * T; ec.vy = 0;
+                    // Question block head-hit
+                    if (level && (level.grid[tr][c] === 3 || level.grid[tr][c] === 13)) { hitQuestion(tr, c); }
+                    else if (ecBig && level && level.grid[tr][c] === 2) {
+                        level.grid[tr][c] = 0; shakeTimer = 4; shakeAmt = 3;
+                        if (onlineMode && isOnlineHost) netGridChanges.push({ r: tr, c, v: 0 });
+                        addParticle(c * T + T / 2, tr * T + T / 2, '#8B4513', 12, 6);
+                    }
+                }
+            }
+        }
         if (level && ec.y > level.rows * T + 100) {
             ecHP--;
             if (ecHP <= 0 && p1HP <= 0 && p2HP <= 0 && (fourPlayerMode ? (ec === cat3 ? p4HP <= 0 : p3HP <= 0) : true)) { state = 'over'; }
@@ -1648,6 +1663,18 @@
                     addParticle(cn.x + cn.w / 2, cn.y + cn.h / 2, '#FFD700', 8, 4);
                 }
             }
+            // P3/P4 coin collect
+            if (fourPlayerMode && !cn.collected) {
+                [cat3, cat4].forEach(ec => {
+                    if (!ec.dead && !cn.collected) {
+                        let ex = ec.x + 4, ey = ec.y + 2, ew = ec.w - 8, eh = ec.h - 2;
+                        if (ex < cn.x + cn.w && ex + ew > cn.x && ey < cn.y + cn.h && ey + eh > cn.y) {
+                            cn.collected = true; score += 100; coinCount++;
+                            addParticle(cn.x + cn.w / 2, cn.y + cn.h / 2, '#FFD700', 8, 4);
+                        }
+                    }
+                });
+            }
         });
     }
 
@@ -1669,6 +1696,18 @@
                     u.collected = true; lives++; score += 500;
                     addParticle(u.x + u.w / 2, u.y + u.h / 2, '#00FF88', 15, 6);
                 }
+            }
+            // P3/P4 1-up collect
+            if (fourPlayerMode && !u.collected) {
+                [cat3, cat4].forEach(ec => {
+                    if (!ec.dead && !u.collected) {
+                        let ex = ec.x + 4, ey = ec.y + 2, ew = ec.w - 8, eh = ec.h - 2;
+                        if (ex < u.x + u.w && ex + ew > u.x && ey < u.y + u.h && ey + eh > u.y) {
+                            u.collected = true; lives++; score += 500;
+                            addParticle(u.x + u.w / 2, u.y + u.h / 2, '#00FF88', 15, 6);
+                        }
+                    }
+                });
             }
         });
     }
@@ -1731,6 +1770,18 @@
                     ff.collected = true; hasFire = true; score += 300;
                     addParticle(ff.x + ff.w / 2, ff.y + ff.h / 2, '#FF4500', 15, 6);
                 }
+            }
+            // P3/P4 fire flower collect
+            if (fourPlayerMode && !ff.collected) {
+                [cat3, cat4].forEach(ec => {
+                    if (!ec.dead && !ff.collected) {
+                        let ex = ec.x + 4, ey = ec.y + 2, ew = ec.w - 8, eh = ec.h - 2;
+                        if (ex < ff.x + ff.w && ex + ew > ff.x && ey < ff.y + ff.h && ey + eh > ff.y) {
+                            ff.collected = true; hasFire = true; score += 300;
+                            addParticle(ff.x + ff.w / 2, ff.y + ff.h / 2, '#FF4500', 15, 6);
+                        }
+                    }
+                });
             }
         });
     }
