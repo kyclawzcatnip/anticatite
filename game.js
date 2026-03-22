@@ -560,6 +560,15 @@
             keys.jump = val;
         }
         if (code === 'KeyQ') keys.glide = val;
+        // Online guest: also accept arrow keys as P1 input (since guest sends keys, not keys2)
+        if (isOnlineGuest) {
+            if (code === 'ArrowLeft') keys.left = val;
+            if (code === 'ArrowRight') keys.right = val;
+            if (code === 'ArrowUp') {
+                if (val && !keys.jump) keys.jumpPressed = true;
+                keys.jump = val;
+            }
+        }
     }
     function setKey2(code, val) {
         if (code === 'ArrowLeft') keys2.left = val;
