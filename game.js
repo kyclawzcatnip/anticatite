@@ -4066,43 +4066,9 @@
     }
 
     // Network sync in game loop (called from update)
+    // NOTE: Host input application (remoteInputs→keys2/3/4) is done in update() BEFORE game updates
     function networkSync() {
         if (!onlineMode || !NetworkManager.isConnected) return;
-
-        // Apply remote inputs EVERY FRAME (not throttled)
-        if (isOnlineHost) {
-            // Guest slot 0 → P2
-            keys2.left = remoteInputs.left;
-            keys2.right = remoteInputs.right;
-            keys2.jump = remoteInputs.jump;
-            if (remoteInputs.jumpPressed) { keys2.jumpPressed = true; remoteInputs.jumpPressed = false; }
-            keys2.glide = remoteInputs.glide;
-            if (remoteInputs.scratch && cat2ScratchCooldown <= 0 && !cat2.dead) {
-                if (heldShell2) { heldShell2.shellVx = cat2.dir * 4; heldShell2.vx = heldShell2.shellVx; heldShell2.vy = -3; heldShell2.x = cat2.x + (cat2.dir === 1 ? cat2.w + 4 : -heldShell2.w - 4); heldShell2.y = cat2.y; heldShell2 = null; } else { startScratch2(); }
-                remoteInputs.scratch = false;
-            }
-            if (remoteInputs.fireball && hasFire && fireCooldown <= 0 && !cat2.dead) { shootFireball2(); remoteInputs.fireball = false; }
-
-            // Guest slot 1 → P3, Guest slot 2 → P4
-            if (fourPlayerMode) {
-                keys3.left = remoteInputs2.left; keys3.right = remoteInputs2.right;
-                keys3.jump = remoteInputs2.jump; keys3.glide = remoteInputs2.glide;
-                if (remoteInputs2.jumpPressed) { keys3.jumpPressed = true; remoteInputs2.jumpPressed = false; }
-                if (remoteInputs2.scratch && cat3ScratchCooldown <= 0 && !cat3.dead) { cat3ScratchCooldown = 20; cat3ScratchTimer = 8; remoteInputs2.scratch = false; }
-                if (remoteInputs2.fireball && hasFire && fireCooldown <= 0 && !cat3.dead) {
-                    fireballs.push({ x: cat3.x + (cat3.dir === 1 ? cat3.w : -10), y: cat3.y + cat3.h / 2 - 5, w: 10, h: 10, vx: cat3.dir * 7, vy: -2, bounces: 0, life: 120, trail: [] });
-                    fireCooldown = 20; remoteInputs2.fireball = false;
-                }
-                keys4.left = remoteInputs3.left; keys4.right = remoteInputs3.right;
-                keys4.jump = remoteInputs3.jump; keys4.glide = remoteInputs3.glide;
-                if (remoteInputs3.jumpPressed) { keys4.jumpPressed = true; remoteInputs3.jumpPressed = false; }
-                if (remoteInputs3.scratch && cat4ScratchCooldown <= 0 && !cat4.dead) { cat4ScratchCooldown = 20; cat4ScratchTimer = 8; remoteInputs3.scratch = false; }
-                if (remoteInputs3.fireball && hasFire && fireCooldown <= 0 && !cat4.dead) {
-                    fireballs.push({ x: cat4.x + (cat4.dir === 1 ? cat4.w : -10), y: cat4.y + cat4.h / 2 - 5, w: 10, h: 10, vx: cat4.dir * 7, vy: -2, bounces: 0, life: 120, trail: [] });
-                    fireCooldown = 20; remoteInputs3.fireball = false;
-                }
-            }
-        }
 
         // Throttled: only send data every N frames
         netSendTimer++;
@@ -4492,6 +4458,41 @@
             return;
         }
 
+        // HOST: Apply remote inputs BEFORE any game updates so keys2/3/4 are fresh
+        if (isOnlineHost && onlineMode && NetworkManager.isConnected) {
+            // Guest slot 0 → P2
+            keys2.left = remoteInputs.left;
+            keys2.right = remoteInputs.right;
+            keys2.jump = remoteInputs.jump;
+            if (remoteInputs.jumpPressed) { keys2.jumpPressed = true; remoteInputs.jumpPressed = false; }
+            keys2.glide = remoteInputs.glide;
+            if (remoteInputs.scratch && cat2ScratchCooldown <= 0 && !cat2.dead) {
+                if (heldShell2) { heldShell2.shellVx = cat2.dir * 4; heldShell2.vx = heldShell2.shellVx; heldShell2.vy = -3; heldShell2.x = cat2.x + (cat2.dir === 1 ? cat2.w + 4 : -heldShell2.w - 4); heldShell2.y = cat2.y; heldShell2 = null; } else { startScratch2(); }
+                remoteInputs.scratch = false;
+            }
+            if (remoteInputs.fireball && hasFire && fireCooldown <= 0 && !cat2.dead) { shootFireball2(); remoteInputs.fireball = false; }
+
+            // Guest slot 1 → P3, Guest slot 2 → P4
+            if (fourPlayerMode) {
+                keys3.left = remoteInputs2.left; keys3.right = remoteInputs2.right;
+                keys3.jump = remoteInputs2.jump; keys3.glide = remoteInputs2.glide;
+                if (remoteInputs2.jumpPressed) { keys3.jumpPressed = true; remoteInputs2.jumpPressed = false; }
+                if (remoteInputs2.scratch && cat3ScratchCooldown <= 0 && !cat3.dead) { cat3ScratchCooldown = 20; cat3ScratchTimer = 8; remoteInputs2.scratch = false; }
+                if (remoteInputs2.fireball && hasFire && fireCooldown <= 0 && !cat3.dead) {
+                    fireballs.push({ x: cat3.x + (cat3.dir === 1 ? cat3.w : -10), y: cat3.y + cat3.h / 2 - 5, w: 10, h: 10, vx: cat3.dir * 7, vy: -2, bounces: 0, life: 120, trail: [] });
+                    fireCooldown = 20; remoteInputs2.fireball = false;
+                }
+                keys4.left = remoteInputs3.left; keys4.right = remoteInputs3.right;
+                keys4.jump = remoteInputs3.jump; keys4.glide = remoteInputs3.glide;
+                if (remoteInputs3.jumpPressed) { keys4.jumpPressed = true; remoteInputs3.jumpPressed = false; }
+                if (remoteInputs3.scratch && cat4ScratchCooldown <= 0 && !cat4.dead) { cat4ScratchCooldown = 20; cat4ScratchTimer = 8; remoteInputs3.scratch = false; }
+                if (remoteInputs3.fireball && hasFire && fireCooldown <= 0 && !cat4.dead) {
+                    fireballs.push({ x: cat4.x + (cat4.dir === 1 ? cat4.w : -10), y: cat4.y + cat4.h / 2 - 5, w: 10, h: 10, vx: cat4.dir * 7, vy: -2, bounces: 0, life: 120, trail: [] });
+                    fireCooldown = 20; remoteInputs3.fireball = false;
+                }
+            }
+        }
+
         updateCat(); updateCat2(); updateEnemies(); updateCoins(); updateOneUps(); updateFireFlowers(); updateFireballs(); updateArrows(); updateBoss(); updateCheckpoints(); checkFlag();
         // Update P3/P4 on host
         if (fourPlayerMode && isOnlineHost) {
@@ -4507,7 +4508,7 @@
         if (frameCount % 2 === 0) spawnVoidParticles();
         updateVoidParticles();
 
-        // Network sync (host sends state)
+        // Network sync (host sends state — inputs already applied above)
         if (isOnlineHost) networkSync();
 
         // HUD
