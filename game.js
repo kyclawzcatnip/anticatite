@@ -856,6 +856,12 @@
             heldShell.y = cat.y - heldShell.h + 4;
             heldShell.vx = 0; heldShell.vy = 0; heldShell.shellVx = 0;
         }
+
+        // Camera follows P1 (host) — match per-player camera behavior
+        if (!isOnlineGuest) {
+            cam.x = Math.max(0, cat.x - W / 3);
+            if (level) cam.x = Math.min(cam.x, level.cols * T - W);
+        }
     }
 
     function hitQuestion(r, c) {
