@@ -932,7 +932,8 @@
         cat.dead = true; cat.vy = -8; deathTimer = 60; heldShell = null;
         if (coopMode) {
             p1HP--;
-            if (p1HP <= 0 && p2HP <= 0) { deathTimer = 90; state = 'over'; }
+            const allOut = p1HP <= 0 && p2HP <= 0 && (!fourPlayerMode || (p3HP <= 0 && p4HP <= 0));
+            if (allOut) { deathTimer = 90; state = 'over'; }
         } else {
             lives--;
             if (lives < 0) { deathTimer = 90; state = 'over'; }
@@ -1034,7 +1035,8 @@
         }
         cat2.dead = true; cat2.vy = -8; cat2DeathTimer = 60; heldShell2 = null;
         p2HP--;
-        if (p1HP <= 0 && p2HP <= 0) { cat2DeathTimer = 90; state = 'over'; }
+        const allOut = p1HP <= 0 && p2HP <= 0 && (!fourPlayerMode || (p3HP <= 0 && p4HP <= 0));
+        if (allOut) { cat2DeathTimer = 90; state = 'over'; }
     }
 
     function respawn2() {
@@ -1714,7 +1716,7 @@
                 return false;
             }
             let ox = cat.x + 4, oy = cat.y + 2, ow = cat.w - 8, oh = cat.h - 2;
-            if (ox < u.x + u.w && ox + ow > u.x && oy < u.y + u.h && oy + oh > u.y) {
+            if (!cat.dead && ox < u.x + u.w && ox + ow > u.x && oy < u.y + u.h && oy + oh > u.y) {
                 u.collected = true; score += 500;
                 if (coopMode) {
                     if (!reviveDeadTeammate(cat)) p1HP = Math.min(3, p1HP + 1);
