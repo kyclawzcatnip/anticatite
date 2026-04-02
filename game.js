@@ -4660,23 +4660,7 @@
                 ctx.font = '7px "Press Start 2P", monospace';
                 ctx.fillText('🌐 ONLINE', W - 90, H - 8);
             }
-            // DEBUG: Visible network debug overlay
-            if (onlineMode) {
-                ctx.fillStyle = 'rgba(0,0,0,0.8)';
-                ctx.fillRect(0, 0, 260, 60);
-                ctx.fillStyle = '#0F0'; ctx.font = '7px monospace';
-                if (isOnlineHost) {
-                    ctx.fillText('HOST | conn:' + NetworkManager.connectedCount() + ' | 4P:' + fourPlayerMode, 4, 10);
-                    ctx.fillText('rI: L=' + remoteInputs.left + ' R=' + remoteInputs.right + ' J=' + remoteInputs.jump, 4, 22);
-                    ctx.fillText('k2: L=' + keys2.left + ' R=' + keys2.right + ' J=' + keys2.jump, 4, 34);
-                    ctx.fillText('cat2: x=' + Math.round(cat2.x) + ' dead=' + cat2.dead + ' vx=' + cat2.vx.toFixed(1), 4, 46);
-                } else if (isOnlineGuest) {
-                    ctx.fillText('GUEST slot:' + mySlot + ' | conn:' + NetworkManager.isConnected, 4, 10);
-                    ctx.fillText('keys: L=' + keys.left + ' R=' + keys.right + ' J=' + keys.jump, 4, 22);
-                    ctx.fillText('cat2: x=' + Math.round(cat2.x) + ' y=' + Math.round(cat2.y) + ' dead=' + cat2.dead, 4, 34);
-                    ctx.fillText('state:' + state + ' online:' + onlineMode + ' coop:' + coopMode, 4, 46);
-                }
-            }
+
         }
         // Shop overlay
         if (state === 'shop') { drawShop(); }
