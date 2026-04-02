@@ -3652,6 +3652,11 @@
             cat2.vx = 0; cat2.vy = 0; cat2.grounded = false; cat2.dead = false;
             isBig2 = false; cat2.h = 32; heldShell2 = null;
         }
+        // Restore all players' HP on new level
+        if (coopMode) {
+            p1HP = 3; p2HP = 3;
+            if (fourPlayerMode) { p3HP = 3; p4HP = 3; }
+        }
         // Reset P3/P4 for 4-player mode
         if (fourPlayerMode) {
             cat3.x = level.spawnX * T + 60; cat3.y = level.spawnY * T - cat3.h;
