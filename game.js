@@ -551,24 +551,15 @@
         }
     }
 
-    // INPUT
+    // INPUT — keys (P1) accepts BOTH WASD and arrows so online guests can use either
     function setKey(code, val) {
-        if (code === 'KeyA') keys.left = val;
-        if (code === 'KeyD') keys.right = val;
-        if (code === 'Space' || code === 'KeyW') {
+        if (code === 'KeyA' || code === 'ArrowLeft') keys.left = val;
+        if (code === 'KeyD' || code === 'ArrowRight') keys.right = val;
+        if (code === 'Space' || code === 'KeyW' || code === 'ArrowUp') {
             if (val && !keys.jump) keys.jumpPressed = true;
             keys.jump = val;
         }
-        if (code === 'KeyQ') keys.glide = val;
-        // Online guest: also accept arrow keys as P1 input (since guest sends keys, not keys2)
-        if (isOnlineGuest) {
-            if (code === 'ArrowLeft') keys.left = val;
-            if (code === 'ArrowRight') keys.right = val;
-            if (code === 'ArrowUp') {
-                if (val && !keys.jump) keys.jumpPressed = true;
-                keys.jump = val;
-            }
-        }
+        if (code === 'KeyQ' || code === 'ArrowDown') keys.glide = val;
     }
     function setKey2(code, val) {
         if (code === 'ArrowLeft') keys2.left = val;
