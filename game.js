@@ -59,20 +59,20 @@
         ],
         // Level 3 — Hard
         [
-            "                                                                                                                                                          ",
-            "                                                                                                                                                          ",
-            "                                                                                                                                    K K K                 ",
-            "                  C                                                                     CCC                                         KKKKK                 ",
-            "                                     C C                           C  C  C           Q BBBBB          L                              KK KK                 ",
-            "         C C C  BBQ           CCC   BBBBB     C           CCC              H                         C                            KKKKKKKKK                ",
-            "        BBBBBBB          W                       Q BBBBB                BBBBB                    BBBZBBB   C                     K KKKKKKK K               ",
-            "                    GGGGG    V GGGGG     R     V  GGGGG    R   V  GGG    R  GGG V GGGGG    V        BBB                         KKKKKKKKKKK               ",
-            "  SA    VA       GG      GG   A V    GGG   GGGGG  GGG    V  GG    GG    V  GGG    V  GG     GG   V  GG     GGGGGF|GGGGGGGGGGGGGKKKKA D  KKKK              ",
-            "GGGGG  GGG  GG    R  R        GGG                                                                     R    GGGGG||GGGGGGGGGGGGGKKKKKKKKKKKKK              ",
-            "GGGGG  GGG  GGG    GGGGG   GGGGG   GGGGG    GGGG   GGGGG    GGG   GGGGG   GGG    GGGGG   GGG    GGG   GGGGGGGGGGGGGGGGGGGGGKK D KKK D KKK D KK           ",
-            "GGGGG  GGG  GGG    GGGGG   GGGGG   GGGGG    GGGG   GGGGG    GGG   GGGGG   GGG    GGGGG   GGG    GGG   GGGGGGGGGGGGGGGGGGGGGKKKKKKKKKKKKKKKKKKKKK          ",
-            "GGGGG  GGG  GGG    GGGGG   GGGGG   GGGGG    GGGG   GGGGG    GGG   GGGGG   GGG    GGGGG   GGG    GGG   GGGGGGGGGGGGGGGGGGGGGKKKKKKKKKKKKKKKKKKKKK          ",
-            "GGGGG  GGG  GGG    GGGGG   GGGGG   GGGGG    GGGG   GGGGG    GGG   GGGGG   GGG    GGGGG   GGG    GGG   GGGGGGGGGGGGGGGGGGGGGKKKKKKKKKKKKKKKKKKKKK          ",
+            "                                                                                                                              K K                       K K      ",
+            "                                                                                                                              KKK                       KKK      ",
+            "                                                                                                                              KKK                       KKK      ",
+            "                  C                                                                     CCC                                   KKK  K K K K K K K K K K  KKK      ",
+            "                                     C C                           C  C  C           Q BBBBB          L                        KKKKKKKKKKKKKKKKKKKKKKKKKKKKKK      ",
+            "         C C C  BBQ           CCC   BBBBB     C           CCC              H                         C                        KKKKKKKKKKKKKKKKKKKKKKKKKKKKKK      ",
+            "        BBBBBBB          W                       Q BBBBB                BBBBB                    BBBZBBB   C                   KKKKKKKKKKKKKKKKKKKKKKKKKKKKKK      ",
+            "                    GGGGG    V GGGGG     R     V  GGGGG    R   V  GGG    R  GGG V GGGGG    V        BBB                        KKKKKKKKKKKKKKKKKKKKKKKKKKKKKK      ",
+            "  SA    VA       GG      GG   A V    GGG   GGGGG  GGG    V  GG    GG    V  GGG    V  GG     GG   V  GG     GGGGGGGGGGGGGGGGGGGDDKKKKKKKKKKKKKKKKKKKKKKKKKKKK      ",
+            "GGGGG  GGG  GG    R  R        GGG                                                                     R    GGGGGGGGGGGGGGGGGGGDDKKKKKKKKKKKKKKKKKKKKKKKKKKKK      ",
+            "GGGGG  GGG  GGG    GGGGG   GGGGG   GGGGG    GGGG   GGGGG    GGG   GGGGG   GGG    GGGGG   GGG    GGG   GGGGGGGGGGGGGGGGGGGGGGGKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK      ",
+            "GGGGG  GGG  GGG    GGGGG   GGGGG   GGGGG    GGGG   GGGGG    GGG   GGGGG   GGG    GGGGG   GGG    GGG   GGGGGGGGGGGGGGGGGGGGGGGKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK      ",
+            "GGGGG  GGG  GGG    GGGGG   GGGGG   GGGGG    GGGG   GGGGG    GGG   GGGGG   GGG    GGGGG   GGG    GGG   GGGGGGGGGGGGGGGGGGGGGGGKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK      ",
+            "GGGGG  GGG  GGG    GGGGG   GGGGG   GGGGG    GGGG   GGGGG    GGG   GGGGG   GGG    GGGGG   GGG    GGG   GGGGGGGGGGGGGGGGGGGGGGGKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK      ",
         ],
         // Level 4 — Castle Interior (platforming)
         [
@@ -2493,27 +2493,65 @@
         }
         // Castle wall brick pattern
         if (type === 11) {
-            ctx.fillStyle = '#B5451B'; ctx.fillRect(x, y, T, T);
-            ctx.fillStyle = '#C85A28'; ctx.fillRect(x + 1, y + 1, T - 2, T - 2);
-            // Brick mortar lines
-            ctx.strokeStyle = '#8B3A10'; ctx.lineWidth = 1;
+            // Base stone
+            ctx.fillStyle = '#6B5B4F'; ctx.fillRect(x, y, T, T);
+            // Inner stone face with slight color variation
+            const stoneShade = ((Math.floor(x / T) * 7 + Math.floor(y / T) * 13) % 3);
+            const shades = ['#7A6A5E', '#6E5E52', '#746458'];
+            ctx.fillStyle = shades[stoneShade];
+            ctx.fillRect(x + 1, y + 1, T - 2, T - 2);
+            // Mortar lines (dark grout)
+            ctx.strokeStyle = '#3A3028'; ctx.lineWidth = 1;
             // Horizontal mortar
             ctx.beginPath(); ctx.moveTo(x, y + T / 2); ctx.lineTo(x + T, y + T / 2); ctx.stroke();
-            // Vertical mortar (offset between rows)
-            ctx.beginPath(); ctx.moveTo(x + T / 2, y); ctx.lineTo(x + T / 2, y + T / 2); ctx.stroke();
-            ctx.beginPath(); ctx.moveTo(x, y + T / 2); ctx.lineTo(x, y + T); ctx.stroke();
-            ctx.beginPath(); ctx.moveTo(x + T, y + T / 2); ctx.lineTo(x + T, y + T); ctx.stroke();
-            // Subtle highlight on top-left of bricks
-            ctx.fillStyle = 'rgba(255,200,150,0.15)';
-            ctx.fillRect(x + 1, y + 1, T / 2 - 1, 2);
+            // Vertical mortar — offset every other row for realistic brick pattern
+            const rowIdx = Math.floor(y / T);
+            const offset = (rowIdx % 2 === 0) ? 0 : T / 2;
+            ctx.beginPath(); ctx.moveTo(x + (T / 4 + offset) % T, y); ctx.lineTo(x + (T / 4 + offset) % T, y + T / 2); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(x + (3 * T / 4 + offset) % T, y); ctx.lineTo(x + (3 * T / 4 + offset) % T, y + T / 2); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(x + T / 4, y + T / 2); ctx.lineTo(x + T / 4, y + T); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(x + 3 * T / 4, y + T / 2); ctx.lineTo(x + 3 * T / 4, y + T); ctx.stroke();
+            // Top-left highlight for 3D depth
+            ctx.fillStyle = 'rgba(255,240,220,0.12)';
+            ctx.fillRect(x + 1, y + 1, T - 2, 2);
             ctx.fillRect(x + 1, y + T / 2 + 1, T - 2, 2);
+            // Bottom-right shadow for 3D depth
+            ctx.fillStyle = 'rgba(0,0,0,0.15)';
+            ctx.fillRect(x + 1, y + T / 2 - 2, T - 2, 2);
+            ctx.fillRect(x + 1, y + T - 2, T - 2, 2);
         }
-        // Castle door (arched)
+        // Castle door (arched wooden door)
         if (type === 12) {
-            ctx.fillStyle = '#B5451B'; ctx.fillRect(x, y, T, T);
-            ctx.fillStyle = '#111'; ctx.fillRect(x + 4, y + 2, T - 8, T - 2);
+            // Surrounding wall stone
+            ctx.fillStyle = '#6B5B4F'; ctx.fillRect(x, y, T, T);
+            // Door opening
+            ctx.fillStyle = '#1A0A00'; ctx.fillRect(x + 3, y + 2, T - 6, T - 2);
+            // Warm glow from inside
+            const glowAlpha = 0.25 + Math.sin(frameCount * 0.04) * 0.08;
+            ctx.fillStyle = `rgba(255,160,40,${glowAlpha})`;
+            ctx.fillRect(x + 4, y + 4, T - 8, T - 4);
+            // Wooden door planks
+            ctx.fillStyle = '#5C3A1E';
+            ctx.fillRect(x + 4, y + 6, T - 8, T - 6);
+            ctx.fillStyle = '#4A2E16';
+            // Vertical plank lines
+            for (let px = x + 8; px < x + T - 4; px += 6) {
+                ctx.fillRect(px, y + 6, 1, T - 6);
+            }
             // Arch top
-            ctx.beginPath(); ctx.arc(x + T / 2, y + 8, (T - 8) / 2, Math.PI, 0); ctx.fill();
+            ctx.fillStyle = '#3A3028';
+            ctx.beginPath(); ctx.arc(x + T / 2, y + 10, (T - 6) / 2, Math.PI, 0); ctx.fill();
+            ctx.fillStyle = '#5C3A1E';
+            ctx.beginPath(); ctx.arc(x + T / 2, y + 10, (T - 10) / 2, Math.PI, 0); ctx.fill();
+            // Iron studs
+            ctx.fillStyle = '#888';
+            ctx.beginPath(); ctx.arc(x + 8, y + 16, 2, 0, Math.PI * 2); ctx.fill();
+            ctx.beginPath(); ctx.arc(x + T - 8, y + 16, 2, 0, Math.PI * 2); ctx.fill();
+            ctx.beginPath(); ctx.arc(x + 8, y + T - 6, 2, 0, Math.PI * 2); ctx.fill();
+            ctx.beginPath(); ctx.arc(x + T - 8, y + T - 6, 2, 0, Math.PI * 2); ctx.fill();
+            // Door handle
+            ctx.fillStyle = '#DAA520';
+            ctx.beginPath(); ctx.arc(x + T - 10, y + T / 2 + 4, 2.5, 0, Math.PI * 2); ctx.fill();
         }
     }
 
@@ -3338,7 +3376,7 @@
     function drawBackground() {
         if (currentLevel >= 11) { drawCaveBackground(); return; }
         if (currentLevel >= 5) { drawSkyIslandBackground(); return; }
-        if (currentLevel >= 3) { drawCastleBackground(); return; }
+        if (currentLevel >= 3 && currentLevel <= 4) { drawCastleBackground(); return; }
         // Sky
         const grad = ctx.createLinearGradient(0, 0, 0, H);
         grad.addColorStop(0, '#4A90D9'); grad.addColorStop(0.6, '#87CEEB'); grad.addColorStop(1, '#B8E6B8');
@@ -3799,6 +3837,8 @@
                         if (slot === 0) remoteInputs = data.keys;
                         else if (slot === 1) remoteInputs2 = data.keys;
                         else if (slot === 2) remoteInputs3 = data.keys;
+                        // Debug: log first few inputs
+                        if (frameCount % 60 === 0) console.log('[HOST] Got input slot=' + slot, 'L=' + data.keys.left, 'R=' + data.keys.right, 'J=' + data.keys.jump);
                     }
                 },
                 onConnectionRequest: (peerId, slot) => {
@@ -4628,6 +4668,23 @@
                 ctx.fillStyle = '#00FF88';
                 ctx.font = '7px "Press Start 2P", monospace';
                 ctx.fillText('🌐 ONLINE', W - 90, H - 8);
+            }
+            // DEBUG: Visible network debug overlay
+            if (onlineMode) {
+                ctx.fillStyle = 'rgba(0,0,0,0.8)';
+                ctx.fillRect(0, 0, 260, 60);
+                ctx.fillStyle = '#0F0'; ctx.font = '7px monospace';
+                if (isOnlineHost) {
+                    ctx.fillText('HOST | conn:' + NetworkManager.connectedCount() + ' | 4P:' + fourPlayerMode, 4, 10);
+                    ctx.fillText('rI: L=' + remoteInputs.left + ' R=' + remoteInputs.right + ' J=' + remoteInputs.jump, 4, 22);
+                    ctx.fillText('k2: L=' + keys2.left + ' R=' + keys2.right + ' J=' + keys2.jump, 4, 34);
+                    ctx.fillText('cat2: x=' + Math.round(cat2.x) + ' dead=' + cat2.dead + ' vx=' + cat2.vx.toFixed(1), 4, 46);
+                } else if (isOnlineGuest) {
+                    ctx.fillText('GUEST slot:' + mySlot + ' | conn:' + NetworkManager.isConnected, 4, 10);
+                    ctx.fillText('keys: L=' + keys.left + ' R=' + keys.right + ' J=' + keys.jump, 4, 22);
+                    ctx.fillText('cat2: x=' + Math.round(cat2.x) + ' y=' + Math.round(cat2.y) + ' dead=' + cat2.dead, 4, 34);
+                    ctx.fillText('state:' + state + ' online:' + onlineMode + ' coop:' + coopMode, 4, 46);
+                }
             }
         }
         // Shop overlay
