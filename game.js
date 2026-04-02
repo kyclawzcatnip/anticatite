@@ -560,6 +560,8 @@
             keys.jump = val;
         }
         if (code === 'KeyQ' || code === 'ArrowDown') keys.glide = val;
+        // DEBUG: log key changes on guest
+        if (isOnlineGuest && val) console.log('[GUEST-KEY] code=' + code + ' → L=' + keys.left + ' R=' + keys.right + ' J=' + keys.jump);
     }
     function setKey2(code, val) {
         if (code === 'ArrowLeft') keys2.left = val;
@@ -4509,6 +4511,8 @@
             updateVoidParticles();
             // Send inputs to host
             networkSync();
+            // DEBUG: log what guest is sending every 30 frames
+            if (frameCount % 30 === 0) console.log('[GUEST-SEND] L=' + keys.left + ' R=' + keys.right + ' J=' + keys.jump + ' slot=' + mySlot + ' connected=' + NetworkManager.isConnected);
             // Update HUD
             if (coopMode) {
                 let p1Str = 'P1 ';
