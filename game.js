@@ -1691,10 +1691,34 @@
         level.oneUps.forEach(u => {
             if (u.collected) return;
             u.bob += 0.04;
+            // Helper: revive first dead teammate at collector's position
+            function reviveDeadTeammate(collector) {
+                const teammates = [
+                    { cat: cat2, hp: () => p2HP, setHp: (v) => { p2HP = v; }, ref: 'p2' },
+                    { cat: cat, hp: () => p1HP, setHp: (v) => { p1HP = v; }, ref: 'p1' }
+                ];
+                if (fourPlayerMode) {
+                    teammates.push({ cat: cat3, hp: () => p3HP, setHp: (v) => { p3HP = v; }, ref: 'p3' });
+                    teammates.push({ cat: cat4, hp: () => p4HP, setHp: (v) => { p4HP = v; }, ref: 'p4' });
+                }
+                for (const t of teammates) {
+                    if (t.cat !== collector && t.cat.dead && t.hp() <= 0) {
+                        t.setHp(3);
+                        t.cat.dead = false;
+                        t.cat.x = collector.x + 20; t.cat.y = collector.y;
+                        t.cat.vx = 0; t.cat.vy = 0; t.cat.h = 32;
+                        addParticle(t.cat.x + t.cat.w / 2, t.cat.y, '#00FFAA', 20, 8);
+                        return true;
+                    }
+                }
+                return false;
+            }
             let ox = cat.x + 4, oy = cat.y + 2, ow = cat.w - 8, oh = cat.h - 2;
             if (ox < u.x + u.w && ox + ow > u.x && oy < u.y + u.h && oy + oh > u.y) {
                 u.collected = true; score += 500;
-                if (coopMode) { p1HP = Math.min(3, p1HP + 1); } else { lives++; }
+                if (coopMode) {
+                    if (!reviveDeadTeammate(cat)) p1HP = Math.min(3, p1HP + 1);
+                } else { lives++; }
                 addParticle(u.x + u.w / 2, u.y + u.h / 2, '#00FF88', 15, 6);
                 addParticle(u.x + u.w / 2, u.y, '#FFFFFF', 5, 3);
             }
@@ -1702,7 +1726,7 @@
                 let ox2 = cat2.x + 4, oy2 = cat2.y + 2, ow2 = cat2.w - 8, oh2 = cat2.h - 2;
                 if (ox2 < u.x + u.w && ox2 + ow2 > u.x && oy2 < u.y + u.h && oy2 + oh2 > u.y) {
                     u.collected = true; score += 500;
-                    p2HP = Math.min(3, p2HP + 1);
+                    if (!reviveDeadTeammate(cat2)) p2HP = Math.min(3, p2HP + 1);
                     addParticle(u.x + u.w / 2, u.y + u.h / 2, '#00FF88', 15, 6);
                 }
             }
@@ -1713,8 +1737,10 @@
                         let ex = ec.x + 4, ey = ec.y + 2, ew = ec.w - 8, eh = ec.h - 2;
                         if (ex < u.x + u.w && ex + ew > u.x && ey < u.y + u.h && ey + eh > u.y) {
                             u.collected = true; score += 500;
-                            if (ec === cat3) p3HP = Math.min(3, p3HP + 1);
-                            else p4HP = Math.min(3, p4HP + 1);
+                            if (!reviveDeadTeammate(ec)) {
+                                if (ec === cat3) p3HP = Math.min(3, p3HP + 1);
+                                else p4HP = Math.min(3, p4HP + 1);
+                            }
                             addParticle(u.x + u.w / 2, u.y + u.h / 2, '#00FF88', 15, 6);
                         }
                     }
@@ -3646,25 +3672,26 @@
         cam.x = Math.max(0, cat.x - W / 3);
         particles = []; questionHits = []; invincibleTimer = 0; fireballs = []; arrows = []; activeCheckpoint = null; stars = []; powerUps = []; heldShell = null;
         isBig = false; cat.h = 32;
-        // Reset P2
+        // Reset P2 — only revive if they have HP remaining
         if (coopMode) {
-            cat2.x = level.spawnX * T + 30; cat2.y = level.spawnY * T - cat2.h;
-            cat2.vx = 0; cat2.vy = 0; cat2.grounded = false; cat2.dead = false;
-            isBig2 = false; cat2.h = 32; heldShell2 = null;
+            if (p2HP > 0) {
+                cat2.x = level.spawnX * T + 30; cat2.y = level.spawnY * T - cat2.h;
+                cat2.vx = 0; cat2.vy = 0; cat2.grounded = false; cat2.dead = false;
+                isBig2 = false; cat2.h = 32; heldShell2 = null;
+            }
         }
-        // Restore all players' HP on new level
-        if (coopMode) {
-            p1HP = 3; p2HP = 3;
-            if (fourPlayerMode) { p3HP = 3; p4HP = 3; }
-        }
-        // Reset P3/P4 for 4-player mode
+        // Reset P3/P4 for 4-player mode — only revive if they have HP remaining
         if (fourPlayerMode) {
-            cat3.x = level.spawnX * T + 60; cat3.y = level.spawnY * T - cat3.h;
-            cat3.vx = 0; cat3.vy = 0; cat3.grounded = false; cat3.dead = false;
-            isBig3 = false; cat3.h = 32; heldShell3 = null;
-            cat4.x = level.spawnX * T + 90; cat4.y = level.spawnY * T - cat4.h;
-            cat4.vx = 0; cat4.vy = 0; cat4.grounded = false; cat4.dead = false;
-            isBig4 = false; cat4.h = 32; heldShell4 = null;
+            if (p3HP > 0) {
+                cat3.x = level.spawnX * T + 60; cat3.y = level.spawnY * T - cat3.h;
+                cat3.vx = 0; cat3.vy = 0; cat3.grounded = false; cat3.dead = false;
+                isBig3 = false; cat3.h = 32; heldShell3 = null;
+            }
+            if (p4HP > 0) {
+                cat4.x = level.spawnX * T + 90; cat4.y = level.spawnY * T - cat4.h;
+                cat4.vx = 0; cat4.vy = 0; cat4.grounded = false; cat4.dead = false;
+                isBig4 = false; cat4.h = 32; heldShell4 = null;
+            }
         }
         // Spawn boss on boss arena (index 4) or pirate boss (index 10)
         if (idx === 4 || idx === 10) {
