@@ -967,6 +967,8 @@
         }
         if (invincibleTimer2 > 0) invincibleTimer2--;
         cat2.vx = 0;
+        // TEMP TEST: Force cat2 to walk right on host, proving rendering works
+        if (isOnlineHost) { cat2.vx = 1; cat2.dir = 1; }
         if (keys2.left) { cat2.vx = -(WALK + speedBoost); cat2.dir = -1; }
         if (keys2.right) { cat2.vx = WALK + speedBoost; cat2.dir = 1; }
         if (keys2.jumpPressed && cat2.grounded) {
