@@ -12,13 +12,15 @@
     const T = 32, GRAVITY = 0.55, MAX_FALL = 10, JUMP = -15, WALK = 3.5, COLS = Math.ceil(W / T) + 2;
     const ENEMY_SPEED = 1.2, COIN_ANIM = 0.08;
 
-    // TILE TYPES: 0=air,1=ground,2=brick,3=question,4=pipe_tl,5=pipe_tr,6=pipe_bl,7=pipe_br,8=used_q,9=platform,10=flag
+    // TILE TYPES: 0=air,1=ground,2=brick,3=question,4=pipe_tl,5=pipe_tr,6=pipe_bl,7=pipe_br,8=used_q,9=platform,10=flag,14=mine_rock,15=mine_rails
     const TILE_COLORS = {
         1: ['#8B5E3C', '#6B3F1F'], 2: ['#C84B31', '#A03820'], 3: ['#FFD700', '#DAA520'],
         4: ['#2E8B57', '#1E6B3A'], 5: ['#2E8B57', '#1E6B3A'], 6: ['#3CB371', '#2E8B57'], 7: ['#3CB371', '#2E8B57'],
         8: ['#8B7355', '#6B5335'], 9: ['#A0826D', '#8B6F5C'], 10: ['#C0C0C0', '#A0A0A0'],
         11: ['#3A3A4A', '#2A2A3A'], 12: ['#4A3A2A', '#3A2A1A'], // 11=castle wall, 12=castle door
-        13: ['#FFD700', '#DAA520'] // 13=rare question block
+        13: ['#FFD700', '#DAA520'], // 13=rare question block
+        14: ['#4A3828', '#3A2818'], // 14=mineshaft rock
+        15: ['#5C4A3A', '#4A382A']  // 15=mine rails
     };
 
     // LEVELS (each row is a horizontal row; stored top-to-bottom)
@@ -379,6 +381,91 @@
             "GGG C  C  C  C  C  C  C  C  C  C  C  C  C  C  C  C  C  C  C  C  C  C  C  C  C  C  GGGGGGGGGGGGGGGGG",
             "GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG",
             "GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG",
+        ],
+        // Level 22 — Mine 1: The Entrance
+        [
+            "MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM",
+            "M                                                                                                      M",
+            "M  S      C C C         R         C C        R         C C C                    C C C                   M",
+            "M        BBBBBBB     MMMMM       BBBBB    MMMMM       BBBBBBB       C C        BBBBBBB        C   F    M",
+            "M   R    V       A  MM    V   MM     V       MM  Q   MMMMM    R   BBBBB   V     R    MM  BB  MM   |    M",
+            "M MMMMM    BBB     BBB      BBB          BBB     MMMMM    BBB       V        BBB       BBB        |    M",
+            "M                                                                     H                            |    M",
+            "M      MM      MM      MM      MM   =  MM      MMMMM    MM      MM      MM      MM      MM      |    M",
+            "M                          =====                                                                   |    M",
+            "M        BBB      BBB      BBB      BBB  =  BBB      BBB     BBB     BBB     BBB     BBB          |    M",
+            "M                                                                                                      M",
+            "MM C   C   C   C   C   C   C   C   C   C   C   C   C   C   C   C   C   C   C   C   MMMMMMMMMMMMMMMMMMMM",
+            "MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM",
+            "MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM",
+        ],
+        // Level 23 — Mine 2: Timber Supports
+        [
+            "MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM",
+            "M                                                                                                      M",
+            "M  S       R       C C C           C C C         W           C C        R          C C C                M",
+            "M      MMMMM     BBBBBBB    R    BBBBBBB      MMMMM       BBBBB     MMMMM        BBBBBBB          F    M",
+            "M  R     V    A MM     V  MMMMM    V    MM  Q    V     MM     V  A     V     MM     V      MM     |    M",
+            "MMMMM     BBB     BBB        BBB     BBB   MMMMM   BBB    BBB     BBB     BBB    BBB    BBBBBB    |    M",
+            "M                                                                  H                               |    M",
+            "M   MM      MM   =  MM      MM      MMMMM    MM      MM      MM MMMMM MM      MM      MM  MMMMMMM    M",
+            "M                 =====                                                                                M",
+            "M      BBB     BBB  =   BBB     BBB      BBB  =  BBB     BBB      BBB     BBB     BBB                  M",
+            "M                                                                                                      M",
+            "MM C  C  C  C  C  C  C  C  C  C  C  C  C  C  C  C  C  C  C  C  C  C  C  C  C  MMMMMMMMMMMMMMMMMMMMMMMMM",
+            "MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM",
+            "MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM",
+        ],
+        // Level 24 — Mine 3: The Deep Shaft
+        [
+            "MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM",
+            "M                                                                                                M",
+            "M  S      C C C       L        C C C           C C          R         C C C        R              M",
+            "M   R    BBBBBBB   MMMMM     BBBBBBB    R    BBBBB      MMMMM       BBBBBBB    MMMMM        F    M",
+            "MMMMMM    V     A MM    V   MM    V   MMMMM    V    A MM    V    A     V    MM     V    MMMMMM    M",
+            "M        BBB  BBB    BBB       BBB         BBB    BBB    BBB    BBB      BBB    BBB    BBB        M",
+            "M                              =                              H                                   M",
+            "M    MM    = MM      MM  Q   MMMMM  MM      MM      MM     MMMMM   MM      MM      MM   MMMMMM  M",
+            "M         =====          MMMMMM                                                                   M",
+            "M     BBB   =  BBB     BBB     BBB      BBB     BBB     BBB     BBB     BBB      BBB              M",
+            "M                                                                                                 M",
+            "MM C   C   C   C   C   C   C   C   C   C   C   C   C   C   C   C   C   MMMMMMMMMMMMMMMMMMMMMMMMMMM",
+            "MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM",
+            "MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM",
+        ],
+        // Level 25 — Mine 4: Ore Vein
+        [
+            "MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM",
+            "M                                                                                                      M",
+            "M  S        C C C        R       C C C       C C C       W          C C          R         C C     F    M",
+            "M    R     BBBZBBB    MMMMM     BBBBBBB     BBBBBBB   MMMMM       BBBBB      MMMMM       BBBBB    |    M",
+            "M MMMMM  A  V    MM     V  A  MM    V     MM    V   Q   V    A  MM    V   A MM    V    MM    V    |    M",
+            "M          BBB     BBB      BBB       BBB      BBB  MMMMM  BBB     BBB      BBB     BBB      BBB  |    M",
+            "M                                                                    H                             |    M",
+            "M   MM      MM      MM  =   MM      MM      MM   MMMMM  MM      MMMMM   MM      MM      MMMMMMMMM    M",
+            "M                    =====                                                                             M",
+            "M      BBB     BBB    =  BBB     BBB     BBB      BBB     BBB     BBB      BBB     BBB                 M",
+            "M                                                                                                      M",
+            "MM C   C   C   C   C   C   C   C   C   C   C   C   C   C   C   C   C   C   C   C  MMMMMMMMMMMMMMMMMMMMM",
+            "MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM",
+            "MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM",
+        ],
+        // Level 26 — Mine 5: Bedrock
+        [
+            "MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM",
+            "M                                                                                                          M",
+            "M  S       C C C       L         C C C       C C C       W           C C C        R          C C C     F    M",
+            "M    R    BBBBBBB   MMMMM       BBBZBBB  R  BBBBBBB   MMMMM   C C  BBBBBBB    MMMMM        BBBZBBB    |    M",
+            "MMMMMMM A  V    MM     V  A   MM    V  MMMMM   V    Q   V  A BBBBB    V  A  MM    V  A   MM    V      |    M",
+            "M         BBB     BBB      BBB       BBB      BBB  MMMMM    BBB  BBB     BBB     BBB      BBB    BBB  |    M",
+            "M                                                                      H                              |    M",
+            "M   MM      MM      MM  =   MM  Q   MM      MM   MMMMM  MM      MMMMM   MM      MM  Q   MM    MMMMMMM    M",
+            "M                    =====       MMMMMM                                              MMMMMM                M",
+            "M      BBB     BBB    =  BBB      BBB    BBB     BBB      BBB     BBB      BBB     BBB      BBB            M",
+            "M                                                                                                          M",
+            "MMM C  C  C  C  C  C  C  C  C  C  C  C  C  C  C  C  C  C  C  C  C  C  C  C  C  C  C  MMMMMMMMMMMMMMMMMMMMM",
+            "MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM",
+            "MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM",
         ]
     ];
 
@@ -408,6 +495,8 @@
                 else if (ch === 'K') grid[r][c] = 11;
                 else if (ch === 'D') grid[r][c] = 12;
                 else if (ch === 'Z') grid[r][c] = 13; // rare question block
+                else if (ch === 'M') grid[r][c] = 14; // mineshaft rock
+                else if (ch === '=') grid[r][c] = 15; // mine rails (decorative, not solid)
                 else if (ch === 'X') { grid[r][c] = 0; } // boss spawn marker handled separately
                 else if (ch === 'S') { grid[r][c] = 0; spawnX = c; spawnY = r; }
                 else grid[r][c] = 0;
@@ -735,7 +824,7 @@
     function solid(r, c) {
         if (!level || r < 0 || r >= level.rows || c < 0 || c >= level.cols) return false;
         const t = level.grid[r][c];
-        return t === 1 || t === 2 || t === 3 || t === 8 || t === 9 || t === 10 || t === 11 || t === 13;
+        return t === 1 || t === 2 || t === 3 || t === 8 || t === 9 || t === 10 || t === 11 || t === 13 || t === 14;
     }
 
     function tileAt(px, py) { return { r: Math.floor(py / T), c: Math.floor(px / T) }; }
@@ -2460,7 +2549,7 @@
         const colors = TILE_COLORS[type];
         if (!colors) return;
         // Underground cave rock rendering for G-blocks
-        if (type === 1 && currentLevel >= 11) {
+        if (type === 1 && currentLevel >= 11 && currentLevel < 22) {
             ctx.fillStyle = '#555'; ctx.fillRect(x, y, T, T);
             ctx.fillStyle = '#666'; ctx.fillRect(x + 1, y + 1, T - 2, T - 2);
             // Rock texture cracks
@@ -2476,6 +2565,60 @@
                 ctx.fillStyle = '#FF6644'; ctx.fillRect(x + 20, y + 18, 3, 3);
                 ctx.fillStyle = '#FF9966'; ctx.fillRect(x + 21, y + 19, 1, 1);
             }
+            return;
+        }
+        // Mineshaft rock rendering (M-blocks, tile 14)
+        if (type === 14) {
+            // Dark earthy rock base
+            ctx.fillStyle = '#4A3828'; ctx.fillRect(x, y, T, T);
+            ctx.fillStyle = '#5A4838'; ctx.fillRect(x + 1, y + 1, T - 2, T - 2);
+            // Rock cracks and texture
+            ctx.strokeStyle = '#3A2818'; ctx.lineWidth = 1;
+            ctx.beginPath(); ctx.moveTo(x + 6, y + 4); ctx.lineTo(x + 14, y + 12); ctx.lineTo(x + 10, y + 22); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(x + 22, y + 6); ctx.lineTo(x + 28, y + 16); ctx.stroke();
+            // Ore veins embedded in rock
+            if ((r * 7 + c * 11) % 13 === 0) {
+                // Gold ore vein
+                ctx.fillStyle = '#DAA520'; ctx.fillRect(x + 8, y + 6, 4, 3);
+                ctx.fillStyle = '#FFD700'; ctx.fillRect(x + 9, y + 7, 2, 1);
+                ctx.fillRect(x + 12, y + 8, 3, 2);
+            }
+            if ((r * 13 + c * 5) % 19 === 0) {
+                // Iron ore vein
+                ctx.fillStyle = '#8B7355'; ctx.fillRect(x + 18, y + 14, 5, 4);
+                ctx.fillStyle = '#9B8365'; ctx.fillRect(x + 19, y + 15, 3, 2);
+            }
+            if ((r * 3 + c * 17) % 29 === 0) {
+                // Diamond sparkle (rare)
+                ctx.fillStyle = '#66EEFF'; ctx.fillRect(x + 14, y + 20, 3, 3);
+                ctx.fillStyle = '#AAFFFF'; ctx.fillRect(x + 15, y + 21, 1, 1);
+            }
+            // Top edge highlight
+            ctx.fillStyle = 'rgba(255,220,180,0.08)';
+            ctx.fillRect(x + 1, y + 1, T - 2, 2);
+            // Bottom shadow
+            ctx.fillStyle = 'rgba(0,0,0,0.15)';
+            ctx.fillRect(x + 1, y + T - 2, T - 2, 2);
+            return;
+        }
+        // Mine rails (decorative track, tile 15)
+        if (type === 15) {
+            // Wooden ties
+            ctx.fillStyle = '#5C3A1E';
+            ctx.fillRect(x + 2, y + 10, T - 4, 5);
+            ctx.fillRect(x + 2, y + 20, T - 4, 5);
+            // Wood grain
+            ctx.strokeStyle = '#4A2E16'; ctx.lineWidth = 1;
+            ctx.beginPath(); ctx.moveTo(x + 4, y + 12); ctx.lineTo(x + T - 4, y + 12); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(x + 4, y + 22); ctx.lineTo(x + T - 4, y + 22); ctx.stroke();
+            // Metal rails
+            ctx.fillStyle = '#888';
+            ctx.fillRect(x + 6, y + 8, 3, T - 8);
+            ctx.fillRect(x + T - 9, y + 8, 3, T - 8);
+            // Rail shine
+            ctx.fillStyle = '#AAA';
+            ctx.fillRect(x + 7, y + 8, 1, T - 8);
+            ctx.fillRect(x + T - 8, y + 8, 1, T - 8);
             return;
         }
         ctx.fillStyle = colors[0]; ctx.fillRect(x, y, T, T);
@@ -2518,6 +2661,25 @@
                 ctx.fillRect(x + T - 5, y + 3, 2, 2);
                 ctx.fillRect(x + 3, y + T - 5, 2, 2);
                 ctx.fillRect(x + T - 5, y + T - 5, 2, 2);
+            } else if (currentLevel >= 22) {
+                // Mineshaft: reinforced wooden planks
+                ctx.fillStyle = '#5C3A1E'; ctx.fillRect(x, y, T, T);
+                ctx.fillStyle = '#6E4C2C'; ctx.fillRect(x + 1, y + 1, T - 2, T - 2);
+                // Wood grain (horizontal)
+                ctx.strokeStyle = '#4A2E16'; ctx.lineWidth = 1;
+                ctx.beginPath(); ctx.moveTo(x + 2, y + 8); ctx.lineTo(x + T - 2, y + 8); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(x + 2, y + 18); ctx.lineTo(x + T - 2, y + 18); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(x + 2, y + 28); ctx.lineTo(x + T - 2, y + 28); ctx.stroke();
+                // Iron bolt corners
+                ctx.fillStyle = '#777';
+                ctx.beginPath(); ctx.arc(x + 5, y + 5, 2, 0, Math.PI * 2); ctx.fill();
+                ctx.beginPath(); ctx.arc(x + T - 5, y + 5, 2, 0, Math.PI * 2); ctx.fill();
+                ctx.beginPath(); ctx.arc(x + 5, y + T - 5, 2, 0, Math.PI * 2); ctx.fill();
+                ctx.beginPath(); ctx.arc(x + T - 5, y + T - 5, 2, 0, Math.PI * 2); ctx.fill();
+                // Bolt shine
+                ctx.fillStyle = '#999';
+                ctx.fillRect(x + 5, y + 4, 1, 1);
+                ctx.fillRect(x + T - 5, y + 4, 1, 1);
             } else {
                 ctx.strokeStyle = '#7A2E1A'; ctx.lineWidth = 1;
                 ctx.strokeRect(x + 1, y + 1, T - 2, T / 2 - 1);
@@ -2789,8 +2951,9 @@
         const ex = Math.round(e.x - cam.x), ey = Math.round(e.y);
         if (ex < -T || ex > W + T) return;
 
-        const isCave = currentLevel >= 11;
+        const isCave = currentLevel >= 11 && currentLevel < 22;
         const isSky = currentLevel >= 5 && currentLevel <= 10;
+        const isMine = currentLevel >= 22;
 
         // === RATTER (Koopa-style rat) ===
         if (e.type === 'ratter') {
@@ -3406,7 +3569,121 @@
         ctx.globalAlpha = 1;
     }
 
+    function drawMineshaftBackground() {
+        // Deep earthy underground background
+        const grad = ctx.createLinearGradient(0, 0, 0, H);
+        grad.addColorStop(0, '#1a1008'); grad.addColorStop(0.3, '#2a1a0a'); grad.addColorStop(0.7, '#1e1206'); grad.addColorStop(1, '#0e0804');
+        ctx.fillStyle = grad; ctx.fillRect(0, 0, W, H);
+
+        const co = -cam.x * 0.04;
+
+        // Wooden support beams (vertical)
+        for (let i = 0; i < 12; i++) {
+            const bx = (i * 130 + co) % 1560 - 80;
+            ctx.fillStyle = '#3D2810';
+            ctx.fillRect(bx, 0, 10, H);
+            ctx.fillStyle = '#4A3218';
+            ctx.fillRect(bx + 1, 0, 8, H);
+            // Wood grain
+            ctx.strokeStyle = '#2E1A08';
+            ctx.lineWidth = 1;
+            for (let gy = 10; gy < H; gy += 22) {
+                ctx.globalAlpha = 0.4;
+                ctx.beginPath(); ctx.moveTo(bx + 2, gy); ctx.lineTo(bx + 8, gy + 3); ctx.stroke();
+            }
+            ctx.globalAlpha = 1;
+            // Cross beam (horizontal) on some supports
+            if (i % 3 === 0) {
+                const by = 30 + Math.sin(i * 1.7) * 20;
+                ctx.fillStyle = '#3D2810';
+                ctx.fillRect(bx - 20, by, 50, 8);
+                ctx.fillStyle = '#4A3218';
+                ctx.fillRect(bx - 19, by + 1, 48, 6);
+            }
+        }
+
+        // Hanging lanterns on beams
+        const lanternPulse = Math.sin(frameCount * 0.06) * 0.2 + 0.8;
+        for (let i = 0; i < 6; i++) {
+            const lx = (i * 260 + co * 1.2) % 1560 - 40;
+            const ly = 20 + Math.sin(i * 2.5 + frameCount * 0.01) * 3;
+
+            // Chain
+            ctx.strokeStyle = '#555';
+            ctx.lineWidth = 1;
+            ctx.beginPath(); ctx.moveTo(lx + 6, 0); ctx.lineTo(lx + 6, ly); ctx.stroke();
+
+            // Lantern body
+            ctx.fillStyle = '#5C3A1E';
+            ctx.fillRect(lx, ly, 12, 14);
+            ctx.fillStyle = '#4A2E16';
+            ctx.fillRect(lx + 1, ly + 1, 10, 12);
+
+            // Lantern glow
+            ctx.globalAlpha = lanternPulse * 0.3;
+            ctx.fillStyle = '#FFAA33';
+            ctx.beginPath(); ctx.arc(lx + 6, ly + 7, 24, 0, Math.PI * 2); ctx.fill();
+            ctx.globalAlpha = lanternPulse * 0.15;
+            ctx.beginPath(); ctx.arc(lx + 6, ly + 7, 45, 0, Math.PI * 2); ctx.fill();
+            ctx.globalAlpha = 1;
+
+            // Flame in lantern
+            const flicker = Math.sin(frameCount * 0.2 + i * 3) * 2;
+            ctx.fillStyle = '#FF8800';
+            ctx.fillRect(lx + 4, ly + 3 + flicker * 0.3, 4, 6);
+            ctx.fillStyle = '#FFCC44';
+            ctx.fillRect(lx + 5, ly + 4 + flicker * 0.3, 2, 4);
+        }
+
+        // Ore veins sparkling in walls
+        const sparkle = Math.sin(frameCount * 0.05) * 0.3 + 0.7;
+        for (let i = 0; i < 10; i++) {
+            const ox = (i * 170 + co * 0.6) % 1700 - 50;
+            const oy = 80 + Math.sin(i * 4.1) * 50;
+            // Gold ore
+            if (i % 3 === 0) {
+                ctx.globalAlpha = sparkle * 0.5;
+                ctx.fillStyle = '#FFD700';
+                ctx.fillRect(ox, oy, 4, 3);
+                ctx.fillRect(ox + 6, oy - 2, 3, 4);
+                ctx.globalAlpha = sparkle * 0.15;
+                ctx.beginPath(); ctx.arc(ox + 3, oy + 1, 12, 0, Math.PI * 2); ctx.fill();
+            }
+            // Iron ore
+            else if (i % 3 === 1) {
+                ctx.globalAlpha = sparkle * 0.4;
+                ctx.fillStyle = '#AA8866';
+                ctx.fillRect(ox, oy, 5, 4);
+                ctx.fillRect(ox + 3, oy + 5, 4, 3);
+            }
+            // Diamond ore (rare)
+            else {
+                ctx.globalAlpha = sparkle * 0.6;
+                ctx.fillStyle = '#66EEFF';
+                ctx.fillRect(ox + 1, oy, 3, 3);
+                ctx.globalAlpha = sparkle * 0.2;
+                ctx.beginPath(); ctx.arc(ox + 2, oy + 1, 10, 0, Math.PI * 2); ctx.fill();
+            }
+        }
+        ctx.globalAlpha = 1;
+
+        // Dust motes floating
+        if (frameCount % 12 === 0) {
+            const dx = Math.random() * W + cam.x;
+            const dy = Math.random() * H * 0.8;
+            addParticle(dx, dy, '#8B7355', 1, 0.5);
+        }
+
+        // Subtle ambient glow at bottom (warm underground heat)
+        const heatGlow = 0.08 + Math.sin(frameCount * 0.015) * 0.03;
+        ctx.globalAlpha = heatGlow;
+        ctx.fillStyle = '#FF6600';
+        ctx.fillRect(0, H - 40, W, 40);
+        ctx.globalAlpha = 1;
+    }
+
     function drawBackground() {
+        if (currentLevel >= 22) { drawMineshaftBackground(); return; }
         if (currentLevel >= 11) { drawCaveBackground(); return; }
         if (currentLevel >= 5) { drawSkyIslandBackground(); return; }
         if (currentLevel >= 3 && currentLevel <= 4) { drawCastleBackground(); return; }
@@ -4532,7 +4809,7 @@
             }
             coinEl.textContent = '🪙 × ' + coinCount;
             scoreEl.textContent = 'SCORE: ' + score;
-            levelEl.textContent = boss ? (boss.pirate ? 'SKY BOSS' : 'BOSS') : (currentLevel >= 11 ? 'CAVE ' + (currentLevel - 10) : currentLevel >= 5 ? 'SKY ' + (currentLevel - 4) : 'WORLD ' + (currentLevel + 1));
+            levelEl.textContent = boss ? (boss.pirate ? 'SKY BOSS' : 'BOSS') : (currentLevel >= 22 ? 'MINE ' + (currentLevel - 21) : currentLevel >= 11 ? 'CAVE ' + (currentLevel - 10) : currentLevel >= 5 ? 'SKY ' + (currentLevel - 4) : 'WORLD ' + (currentLevel + 1));
             if (state === 'over') { showOverlay('GAME OVER', 'SCORE: ' + score + '\n\nPRESS SPACE TO RETRY'); }
             if (state === 'levelcomplete') { showOverlay('LEVEL COMPLETE!', 'SCORE: ' + score + '\n\nWAITING FOR HOST...'); }
             if (state === 'win') { showOverlay('YOU WIN! 🎉', 'FINAL SCORE: ' + score); }
@@ -4611,7 +4888,7 @@
         }
         coinEl.textContent = '🪙 × ' + coinCount;
         scoreEl.textContent = 'SCORE: ' + score;
-        levelEl.textContent = boss ? (boss.pirate ? 'SKY BOSS' : 'BOSS') : (currentLevel >= 11 ? 'CAVE ' + (currentLevel - 10) : currentLevel >= 5 ? 'SKY ' + (currentLevel - 4) : 'WORLD ' + (currentLevel + 1));
+        levelEl.textContent = boss ? (boss.pirate ? 'SKY BOSS' : 'BOSS') : (currentLevel >= 22 ? 'MINE ' + (currentLevel - 21) : currentLevel >= 11 ? 'CAVE ' + (currentLevel - 10) : currentLevel >= 5 ? 'SKY ' + (currentLevel - 4) : 'WORLD ' + (currentLevel + 1));
         // Check game over
         if (state === 'over') { showOverlay('GAME OVER', 'SCORE: ' + score + '\n\nPRESS SPACE TO RETRY\nPRESS 2 FOR CO-OP'); }
         if (state === 'levelcomplete') { showOverlay('LEVEL COMPLETE!', 'SCORE: ' + score + '\n\nPRESS SPACE TO CONTINUE'); }
