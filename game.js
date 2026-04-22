@@ -640,8 +640,8 @@
         }
     }
 
-    // INPUT — WASD always controls P1. Arrows only go to P1 in online mode (guest sends keys to host).
-    // In local co-op, arrows go ONLY to P2 via setKey2.
+    // INPUT — WASD always controls P1. Arrows only go to P1 when this is an online GUEST
+    // (because the guest sends keys to host). On host and in local co-op, arrows go to P2 via setKey2.
     function setKey(code, val) {
         if (code === 'KeyA') keys.left = val;
         if (code === 'KeyD') keys.right = val;
@@ -650,8 +650,8 @@
             keys.jump = val;
         }
         if (code === 'KeyQ') keys.glide = val;
-        // Online mode: also accept arrow keys as P1 input (guest uses these to send to host)
-        if (onlineMode) {
+        // Only online GUESTS route arrows to keys (they send to host as their input)
+        if (isOnlineGuest) {
             if (code === 'ArrowLeft') keys.left = val;
             if (code === 'ArrowRight') keys.right = val;
             if (code === 'ArrowUp') {
