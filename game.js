@@ -640,17 +640,26 @@
         }
     }
 
-    // INPUT — keys (P1) accepts BOTH WASD and arrows so online guests can use either
+    // INPUT — WASD always controls P1. Arrows only go to P1 in online mode (guest sends keys to host).
+    // In local co-op, arrows go ONLY to P2 via setKey2.
     function setKey(code, val) {
-        if (code === 'KeyA' || code === 'ArrowLeft') keys.left = val;
-        if (code === 'KeyD' || code === 'ArrowRight') keys.right = val;
-        if (code === 'Space' || code === 'KeyW' || code === 'ArrowUp') {
+        if (code === 'KeyA') keys.left = val;
+        if (code === 'KeyD') keys.right = val;
+        if (code === 'Space' || code === 'KeyW') {
             if (val && !keys.jump) keys.jumpPressed = true;
             keys.jump = val;
         }
-        if (code === 'KeyQ' || code === 'ArrowDown') keys.glide = val;
-        // DEBUG: log key changes on guest
-        if (isOnlineGuest && val) console.log('[GUEST-KEY] code=' + code + ' → L=' + keys.left + ' R=' + keys.right + ' J=' + keys.jump);
+        if (code === 'KeyQ') keys.glide = val;
+        // Online mode: also accept arrow keys as P1 input (guest uses these to send to host)
+        if (onlineMode) {
+            if (code === 'ArrowLeft') keys.left = val;
+            if (code === 'ArrowRight') keys.right = val;
+            if (code === 'ArrowUp') {
+                if (val && !keys.jump) keys.jumpPressed = true;
+                keys.jump = val;
+            }
+            if (code === 'ArrowDown') keys.glide = val;
+        }
     }
     function setKey2(code, val) {
         if (code === 'ArrowLeft') keys2.left = val;
@@ -1056,8 +1065,6 @@
         }
         if (invincibleTimer2 > 0) invincibleTimer2--;
         cat2.vx = 0;
-        // TEMP TEST: Force cat2 to walk right on host, proving rendering works
-        if (isOnlineHost) { cat2.vx = 1; cat2.dir = 1; }
         if (keys2.left) { cat2.vx = -(WALK + speedBoost); cat2.dir = -1; }
         if (keys2.right) { cat2.vx = WALK + speedBoost; cat2.dir = 1; }
         if (keys2.jumpPressed && cat2.grounded) {
@@ -4153,8 +4160,7 @@
                         if (slot === 0) remoteInputs = data.keys;
                         else if (slot === 1) remoteInputs2 = data.keys;
                         else if (slot === 2) remoteInputs3 = data.keys;
-                        // Debug: log first few inputs
-                        if (frameCount % 60 === 0) console.log('[HOST] Got input slot=' + slot, 'L=' + data.keys.left, 'R=' + data.keys.right, 'J=' + data.keys.jump);
+
                     }
                 },
                 onConnectionRequest: (peerId, slot) => {
@@ -4790,8 +4796,7 @@
             updateVoidParticles();
             // Send inputs to host
             networkSync();
-            // DEBUG: log what guest is sending every 30 frames
-            if (frameCount % 30 === 0) console.log('[GUEST-SEND] L=' + keys.left + ' R=' + keys.right + ' J=' + keys.jump + ' slot=' + mySlot + ' connected=' + NetworkManager.isConnected);
+
             // Update HUD
             if (coopMode) {
                 let p1Str = 'P1 ';
