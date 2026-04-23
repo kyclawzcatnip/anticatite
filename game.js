@@ -519,6 +519,7 @@
     let shopSelection = 0; // currently highlighted shop item
     let hasGlide = false, isGliding = false; // glide power-up
     let hasPickaxe = false, pickaxes = [], pickaxeCooldown = 0; // pickaxe boomerang
+    let pickaxeAmmo = 5, pickaxeReloading = false, pickaxeReloadTimer = 0; // ammo: 5 throws then 3s reload
     let starPowerTimer = 0; // super star invincibility timer (frames)
     let isBig = false; // big mushroom power-up (2 blocks tall, break bricks)
     let stars = []; // spawned star items in the level
@@ -726,7 +727,7 @@
             if (isOnlineGuest) { guestFireballFlag = true; } else { shootFireball(); }
         }
         // Pickaxe boomerang
-        if (state === 'playing' && e.code === 'KeyR' && hasPickaxe && pickaxeCooldown <= 0 && !cat.dead) {
+        if (state === 'playing' && e.code === 'KeyR' && hasPickaxe && pickaxeCooldown <= 0 && !cat.dead && pickaxeAmmo > 0 && !pickaxeReloading) {
             throwPickaxe();
         }
         if (state === 'playing' && (e.code === 'KeyF' || e.code === 'KeyX') && scratchCooldown <= 0 && !cat.dead) {
@@ -2113,6 +2114,12 @@
     // PICKAXE BOOMERANG
     function throwPickaxe() {
         pickaxeCooldown = 45; // cooldown between throws
+        pickaxeAmmo--;
+        // Start reload when out of ammo
+        if (pickaxeAmmo <= 0) {
+            pickaxeReloading = true;
+            pickaxeReloadTimer = 180; // 3 seconds at 60fps
+        }
         const pk = {
             x: cat.x + (cat.dir === 1 ? cat.w : -12),
             y: cat.y + 6,
@@ -2133,6 +2140,15 @@
 
     function updatePickaxes() {
         if (pickaxeCooldown > 0) pickaxeCooldown--;
+        // Reload timer
+        if (pickaxeReloading) {
+            pickaxeReloadTimer--;
+            if (pickaxeReloadTimer <= 0) {
+                pickaxeAmmo = 5;
+                pickaxeReloading = false;
+                addParticle(cat.x + cat.w / 2, cat.y, '#00FF88', 10, 5);
+            }
+        }
         for (let i = pickaxes.length - 1; i >= 0; i--) {
             const pk = pickaxes[i];
             pk.life--;
@@ -4188,7 +4204,7 @@
 
     function startGame() {
         state = 'playing'; score = 0; lives = 3; coinCount = 0; currentLevel = 0; hasFire = false; fireCooldown = 0; fireballs = []; activeCheckpoint = null; speedBoost = 0; shieldHits = 0;
-        hasPickaxe = false; pickaxes = []; pickaxeCooldown = 0;
+        hasPickaxe = false; pickaxes = []; pickaxeCooldown = 0; pickaxeAmmo = 5; pickaxeReloading = false; pickaxeReloadTimer = 0;
         inventory = [];
         cat2SelectedSkin = selectedSkin === 1 ? 0 : 1; // P2 uses different skin
         p1HP = 3; p2HP = 3;
@@ -4276,7 +4292,7 @@
         if (lobbyApproval) lobbyApproval.classList.add('hidden');
         state = 'playing'; score = 0; lives = 3; coinCount = 0; currentLevel = 0;
         hasFire = false; fireCooldown = 0; fireballs = []; activeCheckpoint = null;
-        hasPickaxe = false; pickaxes = []; pickaxeCooldown = 0;
+        hasPickaxe = false; pickaxes = []; pickaxeCooldown = 0; pickaxeAmmo = 5; pickaxeReloading = false; pickaxeReloadTimer = 0;
         speedBoost = 0; shieldHits = 0; inventory = [];
         loadLevel(0); overlay.classList.remove('visible');
     }
@@ -4953,6 +4969,35 @@
         if (p2HP <= 0) {
             ctx.fillStyle = '#FF4444'; ctx.font = 'bold 7px monospace';
             ctx.fillText('OUT', bx + 78, p2y + 10);
+        }
+        // Pickaxe ammo indicator
+        if (hasPickaxe) {
+            const ay = coopMode ? by + rowH * 2 + 4 : by + rowH + 4;
+            ctx.fillStyle = '#A0845C'; ctx.font = 'bold 7px monospace';
+            ctx.fillText('⛏', bx, ay + 8);
+            // Ammo dots
+            for (let i = 0; i < 5; i++) {
+                const dx = bx + 14 + i * 10;
+                if (i < pickaxeAmmo) {
+                    ctx.fillStyle = '#DAA520';
+                    ctx.beginPath(); ctx.arc(dx + 3, ay + 5, 4, 0, Math.PI * 2); ctx.fill();
+                    ctx.fillStyle = '#FFD700';
+                    ctx.beginPath(); ctx.arc(dx + 2, ay + 4, 2, 0, Math.PI * 2); ctx.fill();
+                } else {
+                    ctx.fillStyle = '#444';
+                    ctx.beginPath(); ctx.arc(dx + 3, ay + 5, 4, 0, Math.PI * 2); ctx.fill();
+                }
+            }
+            // Reload bar
+            if (pickaxeReloading) {
+                const barW = 50, barH = 4;
+                const barX = bx + 14, barY = ay + 13;
+                const progress = 1 - (pickaxeReloadTimer / 180);
+                ctx.fillStyle = '#333'; ctx.fillRect(barX, barY, barW, barH);
+                ctx.fillStyle = '#DAA520'; ctx.fillRect(barX, barY, barW * progress, barH);
+                ctx.fillStyle = '#FFD700'; ctx.font = '6px monospace';
+                ctx.fillText('RELOAD', barX + barW + 4, barY + 4);
+            }
         }
     }
 
