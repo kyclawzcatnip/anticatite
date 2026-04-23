@@ -4252,7 +4252,11 @@
         cat.vx = 0; cat.vy = 0; cat.grounded = false; cat.dead = false;
         cam.x = Math.max(0, cat.x - W / 3);
         particles = []; questionHits = []; invincibleTimer = 0; fireballs = []; arrows = []; activeCheckpoint = null; stars = []; powerUps = []; heldShell = null;
-        isBig = false; isMini = false; cat.h = 32; cat.w = 24;
+        // Keep isBig/isMini across levels — re-apply correct size
+        if (isBig) { cat.h = 64; cat.w = 24; }
+        else if (isMini) { cat.h = 16; cat.w = 12; }
+        else { cat.h = 32; cat.w = 24; }
+        cat.y = level.spawnY * T - cat.h; // re-adjust spawn for size
         // Reset P2 — only revive if they have HP remaining
         if (coopMode) {
             if (p2HP > 0) {
