@@ -38,9 +38,9 @@
             "         Q    Q                 BBBBBBBBB       BBBBBBBZ          BBBBB                                                   |         ",
             "                    C        W                              H                              BB QBB                         |         ",
             "  S     V        GGGGG    GG    V    R       GG    V     R    GG   V    GGGG    GG   V    GGGGGGGGG  GG V GGGGGGGGGGGGGGGGGGGGGGGGGGG",
-            "GGGGG  GGGGG  GGGGGGGGGGGGGGG     GGGGGGGGGGGGGG      GGGGGGGGGGG  GGGGGGGGGGGGGGG    GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG",
-            "GGGGG  GGGGG  GGGGGGGGGGGGGGGGGG  GGGGGGGGGGGGGGGGGG  GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG",
-            "GGGGG  GGGGG  GGGGGGGGGGGGGGGGGG  GGGGGGGGGGGGGGGGGG  GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG",
+            "GGGGG  GGGGG  GGGGGGGGGGGGGGG     GGGGGGGGGGGGGG   [] GGGGGGGGGGG  GGGGGGGGGGGGGGG    GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG",
+            "GGGGG  GGGGG  GGGGGGGGGGGGGGGGGG  GGGGGGGGGGGGGGGG{}GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG",
+            "GGGGG  GGGGG  GGGGGGGGGGGGGGGGGG  GGGGGGGGGGGGGGGG{}GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG",
         ],
         // Level 2 — Gaps and more enemies
         [
@@ -497,6 +497,10 @@
                 else if (ch === 'Z') grid[r][c] = 13; // rare question block
                 else if (ch === 'M') grid[r][c] = 14; // mineshaft rock
                 else if (ch === '=') grid[r][c] = 15; // mine rails (decorative, not solid)
+                else if (ch === '[') grid[r][c] = 4;  // pipe top-left
+                else if (ch === ']') grid[r][c] = 5;  // pipe top-right
+                else if (ch === '{') grid[r][c] = 6;  // pipe body-left
+                else if (ch === '}') grid[r][c] = 7;  // pipe body-right
                 else if (ch === 'X') { grid[r][c] = 0; } // boss spawn marker handled separately
                 else if (ch === 'S') { grid[r][c] = 0; spawnX = c; spawnY = r; }
                 else grid[r][c] = 0;
@@ -840,7 +844,7 @@
     function solid(r, c) {
         if (!level || r < 0 || r >= level.rows || c < 0 || c >= level.cols) return false;
         const t = level.grid[r][c];
-        return t === 1 || t === 2 || t === 3 || t === 8 || t === 9 || t === 10 || t === 11 || t === 13 || t === 14;
+        return t === 1 || t === 2 || t === 3 || t === 4 || t === 5 || t === 6 || t === 7 || t === 8 || t === 9 || t === 10 || t === 11 || t === 13 || t === 14;
     }
 
     function tileAt(px, py) { return { r: Math.floor(py / T), c: Math.floor(px / T) }; }
@@ -2768,6 +2772,42 @@
         if (x < -T || x > W + T) return;
         const colors = TILE_COLORS[type];
         if (!colors) return;
+        // Pipe rendering (green pipes!)
+        if (type >= 4 && type <= 7) {
+            const isTop = (type === 4 || type === 5);
+            const isLeft = (type === 4 || type === 6);
+            if (isTop) {
+                // Pipe top — wider lip
+                ctx.fillStyle = '#1B8C3A';
+                ctx.fillRect(x + (isLeft ? -2 : 0), y, T + (isLeft ? 2 : 2), T);
+                ctx.fillStyle = '#22AA44';
+                ctx.fillRect(x + (isLeft ? 0 : 2), y + 2, T - 2, T - 2);
+                // Lip top edge
+                ctx.fillStyle = '#2ECC55';
+                ctx.fillRect(x + (isLeft ? -2 : 0), y, T + (isLeft ? 2 : 2), 4);
+                // Highlight stripe
+                ctx.fillStyle = '#44DD66';
+                ctx.fillRect(x + (isLeft ? 4 : 6), y + 5, 3, T - 7);
+                // Dark edge
+                ctx.fillStyle = '#147030';
+                if (isLeft) ctx.fillRect(x - 2, y, 2, T);
+                else ctx.fillRect(x + T, y, 2, T);
+            } else {
+                // Pipe body
+                ctx.fillStyle = '#1B8C3A';
+                ctx.fillRect(x, y, T, T);
+                ctx.fillStyle = '#22AA44';
+                ctx.fillRect(x + 2, y, T - 4, T);
+                // Highlight stripe
+                ctx.fillStyle = '#44DD66';
+                ctx.fillRect(x + (isLeft ? 6 : 8), y, 3, T);
+                // Dark edges
+                ctx.fillStyle = '#147030';
+                if (isLeft) ctx.fillRect(x, y, 2, T);
+                else ctx.fillRect(x + T - 2, y, 2, T);
+            }
+            return;
+        }
         // Underground cave rock rendering for G-blocks
         if (type === 1 && currentLevel >= 11 && currentLevel < 22) {
             ctx.fillStyle = '#555'; ctx.fillRect(x, y, T, T);
