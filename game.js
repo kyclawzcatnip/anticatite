@@ -2193,11 +2193,20 @@
             let hitBlock = false;
             for (let r = pkR1; r <= pkR2 && !hitBlock; r++) {
                 for (let c = pkC1; c <= pkC2 && !hitBlock; c++) {
-                    if (r >= 0 && r < level.rows && c >= 0 && c < level.cols && (level.grid[r][c] === 3 || level.grid[r][c] === 13)) {
-                        hitQuestion(r, c);
-                        addParticle(pk.x + pk.w / 2, pk.y + pk.h / 2, '#8B7355', 8, 4);
-                        // Don't destroy pickaxe on block hit — boomerang goes through
-                        hitBlock = true;
+                    if (r >= 0 && r < level.rows && c >= 0 && c < level.cols) {
+                        // Hit question blocks
+                        if (level.grid[r][c] === 3 || level.grid[r][c] === 13) {
+                            hitQuestion(r, c);
+                            addParticle(pk.x + pk.w / 2, pk.y + pk.h / 2, '#8B7355', 8, 4);
+                        }
+                        // Break brick blocks
+                        if (level.grid[r][c] === 2) {
+                            level.grid[r][c] = 0;
+                            if (onlineMode && isOnlineHost) netGridChanges.push({ r, c, v: 0 });
+                            shakeTimer = 3; shakeAmt = 3;
+                            addParticle(c * T + T / 2, r * T + T / 2, '#8B4513', 12, 6);
+                            addParticle(c * T + T / 2, r * T + T / 2, '#A0522D', 8, 4);
+                        }
                     }
                 }
             }
