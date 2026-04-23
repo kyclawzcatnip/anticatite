@@ -711,6 +711,10 @@
             if (e.code === 'Digit3') { tryBuyItem(2); return; }
             if (e.code === 'Digit4') { tryBuyItem(3); return; }
             if (e.code === 'Digit5') { tryBuyItem(4); return; }
+            if (e.code === 'Digit6') { tryBuyItem(5); return; }
+            if (e.code === 'Digit7') { tryBuyItem(6); return; }
+            if (e.code === 'Digit8') { tryBuyItem(7); return; }
+            if (e.code === 'Digit9') { tryBuyItem(8); return; }
             return;
         }
         if (state === 'playing' && e.code === 'KeyN') { currentLevel++; if (currentLevel >= LEVEL_DATA.length) { currentLevel = 0; } loadLevel(currentLevel); return; }
@@ -4829,7 +4833,7 @@
         // Subtitle
         ctx.fillStyle = '#AAA';
         ctx.font = '12px monospace';
-        ctx.fillText('Press 1-4 to buy  •  ← → to select  •  R to continue', W / 2, 110);
+        ctx.fillText('Press 1-9 to buy  •  ← → to select  •  Space to buy  •  R to continue', W / 2, 110);
 
         // Item cards (show up to 5 at a time, scroll with selection)
         const itemW = 140, itemH = 130, gap = 12;
