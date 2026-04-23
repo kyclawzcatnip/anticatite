@@ -2223,6 +2223,14 @@
                             addParticle(c * T + T / 2, r * T + T / 2, '#8B4513', 12, 6);
                             addParticle(c * T + T / 2, r * T + T / 2, '#A0522D', 8, 4);
                         }
+                        // Break ground blocks (tile 1)
+                        if (level.grid[r][c] === 1) {
+                            level.grid[r][c] = 0;
+                            if (onlineMode && isOnlineHost) netGridChanges.push({ r, c, v: 0 });
+                            shakeTimer = 3; shakeAmt = 3;
+                            addParticle(c * T + T / 2, r * T + T / 2, '#8B5E3C', 12, 6);
+                            addParticle(c * T + T / 2, r * T + T / 2, '#6B3F1F', 8, 4);
+                        }
                         // Break cave stone (tile 14) — ONLY the pickaxe can break these!
                         if (level.grid[r][c] === 14) {
                             level.grid[r][c] = 0;
