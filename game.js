@@ -526,6 +526,7 @@
     let pickaxeAmmo = 5, pickaxeReloading = false, pickaxeReloadTimer = 0; // ammo: 5 throws then 3s reload
     let starPowerTimer = 0; // super star invincibility timer (frames)
     let isBig = false; // big mushroom power-up (2 blocks tall, break bricks)
+    let isMini = false; // mini mushroom power-up (half size, higher jump, fits 1-block gaps)
     let stars = []; // spawned star items in the level
     let powerUps = []; // spawned power-up items from question blocks
     let heldShell = null; // reference to shell enemy being carried
@@ -571,7 +572,8 @@
         { name: 'Speed Boost', icon: '⚡', desc: 'Faster movement', cost: 10, action: () => { speedBoost = Math.min(speedBoost + 1, WALK); } },
         { name: 'Glide', icon: '🪂', desc: 'Hold Q to glide', cost: 12, skyOnly: true, action: () => { hasGlide = true; } },
         { name: 'Shield', icon: '🛡️', desc: 'Absorb 3 hits', cost: 15, action: () => { shieldHits = 3; } },
-        { name: 'Big Mushroom', icon: '🍄', desc: 'Grow big, break bricks', cost: 12, action: () => { isBig = true; cat.y -= 32; cat.h = 64; } },
+        { name: 'Big Mushroom', icon: '🍄', desc: 'Grow big, break bricks', cost: 12, action: () => { isMini = false; isBig = true; cat.y -= 32; cat.h = 64; cat.w = 24; } },
+        { name: 'Mini Mushroom', icon: '🔹', desc: 'Tiny! Higher jump, fit gaps', cost: 7, action: () => { isBig = false; isMini = true; cat.h = 16; cat.w = 12; } },
         { name: 'Cat Revive', icon: '💖', desc: 'Revive partner +3HP', cost: 10, coopOnly: true, action: () => { p1HP = 3; p2HP = 3; cat.dead = false; cat2.dead = false; } },
     ];
     function getVisibleShopItems() {
@@ -880,11 +882,13 @@
         }
         // Horizontal
         cat.vx = 0;
-        if (keys.left) { cat.vx = -(WALK + speedBoost); cat.dir = -1; }
-        if (keys.right) { cat.vx = WALK + speedBoost; cat.dir = 1; }
+        const miniSpd = isMini ? 0.7 : 1; // mini cats walk slower
+        if (keys.left) { cat.vx = -(WALK + speedBoost) * miniSpd; cat.dir = -1; }
+        if (keys.right) { cat.vx = (WALK + speedBoost) * miniSpd; cat.dir = 1; }
         // Jump
+        const jumpForce = isMini ? JUMP * 1.15 : JUMP; // mini cats jump higher
         if (keys.jumpPressed && cat.grounded) {
-            cat.vy = JUMP; cat.grounded = false; cat.jumping = true; cat.canDoubleJump = true;
+            cat.vy = jumpForce; cat.grounded = false; cat.jumping = true; cat.canDoubleJump = true;
         } else if (keys.jumpPressed && !cat.grounded && cat.canDoubleJump) {
             cat.vy = JUMP * 0.75; cat.canDoubleJump = false;
             // Puff particles for double jump
@@ -902,7 +906,9 @@
             // Wind particles while gliding
             if (frameCount % 3 === 0) addParticle(cat.x + cat.w / 2, cat.y + cat.h + 4, '#B0D8FF', 1.5, 4);
         } else {
-            cat.vy = Math.min(cat.vy + GRAVITY, MAX_FALL);
+            const grav = isMini ? GRAVITY * 0.7 : GRAVITY; // mini cats float more
+            const maxF = isMini ? MAX_FALL * 0.7 : MAX_FALL;
+            cat.vy = Math.min(cat.vy + grav, maxF);
         }
 
         // Move X
@@ -1028,7 +1034,7 @@
         if (invincibleTimer > 0) return;
         if (isBig) {
             isBig = false;
-            cat.h = 32;
+            cat.h = 32; cat.w = 24;
             invincibleTimer = 90;
             shakeTimer = 6; shakeAmt = 4;
             addParticle(cat.x + cat.w / 2, cat.y + cat.h / 2, '#FF4444', 10, 6);
@@ -1055,7 +1061,7 @@
 
     function respawn() {
         cat.dead = false;
-        isBig = false; cat.h = 32;
+        isBig = false; isMini = false; cat.h = 32; cat.w = 24;
         if (activeCheckpoint) {
             cat.x = activeCheckpoint.x; cat.y = activeCheckpoint.y - cat.h;
         } else {
@@ -4242,7 +4248,7 @@
         cat.vx = 0; cat.vy = 0; cat.grounded = false; cat.dead = false;
         cam.x = Math.max(0, cat.x - W / 3);
         particles = []; questionHits = []; invincibleTimer = 0; fireballs = []; arrows = []; activeCheckpoint = null; stars = []; powerUps = []; heldShell = null;
-        isBig = false; cat.h = 32;
+        isBig = false; isMini = false; cat.h = 32; cat.w = 24;
         // Reset P2 — only revive if they have HP remaining
         if (coopMode) {
             if (p2HP > 0) {
