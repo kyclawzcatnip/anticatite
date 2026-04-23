@@ -2117,7 +2117,7 @@
             x: cat.x + (cat.dir === 1 ? cat.w : -12),
             y: cat.y + 6,
             w: 14, h: 14,
-            vx: cat.dir * 6,
+            vx: cat.dir * 8,
             vy: 0,
             dir: cat.dir,
             owner: cat, // tracks who threw it (for return)
@@ -2147,7 +2147,7 @@
 
             if (pk.phase === 'out') {
                 // Decelerate
-                pk.vx *= 0.96;
+                pk.vx *= 0.975;
                 pk.vy += 0.05; // slight arc
                 // Switch to return phase when slow enough
                 if (Math.abs(pk.vx) < 1.5) {
@@ -2215,6 +2215,14 @@
                             addParticle(c * T + T / 2, r * T + T / 2, '#5A4A3A', 15, 7);
                             addParticle(c * T + T / 2, r * T + T / 2, '#888', 10, 5);
                             addParticle(c * T + T / 2, r * T + T / 2, '#AAA', 6, 3);
+                        }
+                        // Break used lucky blocks (tile 8)
+                        if (level.grid[r][c] === 8) {
+                            level.grid[r][c] = 0;
+                            if (onlineMode && isOnlineHost) netGridChanges.push({ r, c, v: 0 });
+                            shakeTimer = 3; shakeAmt = 3;
+                            addParticle(c * T + T / 2, r * T + T / 2, '#8B7355', 10, 5);
+                            addParticle(c * T + T / 2, r * T + T / 2, '#DAA520', 8, 4);
                         }
                     }
                 }
