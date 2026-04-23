@@ -755,6 +755,8 @@
         if (state === 'playing' && e.code === 'KeyH') { tutorialPrevState = 'playing'; state = 'tutorial'; return; }
         // P2 fireball
         if (state === 'playing' && coopMode && e.code === 'KeyP' && hasFire && fireCooldown <= 0 && !cat2.dead) { shootFireball2(); }
+        // P2 pickaxe
+        if (state === 'playing' && coopMode && e.code === 'KeyI' && hasPickaxe && pickaxeCooldown <= 0 && !cat2.dead && pickaxeAmmo > 0 && !pickaxeReloading) { throwPickaxe2(); }
         // P2 scratch/throw
         if (state === 'playing' && coopMode && e.code === 'KeyO' && cat2ScratchCooldown <= 0 && !cat2.dead) {
             if (heldShell2) {
@@ -2133,6 +2135,32 @@
             dir: cat.dir,
             owner: cat, // tracks who threw it (for return)
             phase: 'out', // 'out' = flying away, 'return' = coming back
+            life: 180,
+            angle: 0,
+            trail: []
+        };
+        pickaxes.push(pk);
+        addParticle(pk.x + pk.w / 2, pk.y + pk.h / 2, '#8B7355', 5, 3);
+        shakeTimer = 2; shakeAmt = 2;
+    }
+
+    // P2 pickaxe throw (returns to cat2)
+    function throwPickaxe2() {
+        pickaxeCooldown = 45;
+        pickaxeAmmo--;
+        if (pickaxeAmmo <= 0) {
+            pickaxeReloading = true;
+            pickaxeReloadTimer = 180;
+        }
+        const pk = {
+            x: cat2.x + (cat2.dir === 1 ? cat2.w : -12),
+            y: cat2.y + 6,
+            w: 14, h: 14,
+            vx: cat2.dir * 8,
+            vy: 0,
+            dir: cat2.dir,
+            owner: cat2,
+            phase: 'out',
             life: 180,
             angle: 0,
             trail: []
@@ -5455,6 +5483,7 @@
         drawRow(col2, y2, '↓', 'Glide'); y2 += 26;
         drawRow(col2, y2, 'O', 'Scratch / Throw shell'); y2 += 26;
         drawRow(col2, y2, 'P', 'Fireball'); y2 += 26;
+        drawRow(col2, y2, 'I', 'Throw Pickaxe'); y2 += 26;
 
         y2 += 10;
         ctx.fillStyle = '#AAFFAA';
