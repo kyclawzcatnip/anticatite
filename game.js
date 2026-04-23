@@ -2207,6 +2207,15 @@
                             addParticle(c * T + T / 2, r * T + T / 2, '#8B4513', 12, 6);
                             addParticle(c * T + T / 2, r * T + T / 2, '#A0522D', 8, 4);
                         }
+                        // Break cave stone (tile 14) — ONLY the pickaxe can break these!
+                        if (level.grid[r][c] === 14) {
+                            level.grid[r][c] = 0;
+                            if (onlineMode && isOnlineHost) netGridChanges.push({ r, c, v: 0 });
+                            shakeTimer = 4; shakeAmt = 4;
+                            addParticle(c * T + T / 2, r * T + T / 2, '#5A4A3A', 15, 7);
+                            addParticle(c * T + T / 2, r * T + T / 2, '#888', 10, 5);
+                            addParticle(c * T + T / 2, r * T + T / 2, '#AAA', 6, 3);
+                        }
                     }
                 }
             }
