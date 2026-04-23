@@ -518,6 +518,7 @@
     let shieldHits = 0; // shield hits remaining
     let shopSelection = 0; // currently highlighted shop item
     let hasGlide = false, isGliding = false; // glide power-up
+    let hasPickaxe = false, pickaxes = [], pickaxeCooldown = 0; // pickaxe boomerang
     let starPowerTimer = 0; // super star invincibility timer (frames)
     let isBig = false; // big mushroom power-up (2 blocks tall, break bricks)
     let stars = []; // spawned star items in the level
@@ -561,6 +562,7 @@
     const SHOP_ITEMS = [
         { name: 'Extra Life', icon: '❤️', desc: '+1 Life', cost: 5, action: () => { lives++; } },
         { name: 'Fire Power', icon: '🔥', desc: 'Fireball ability', cost: 8, action: () => { hasFire = true; } },
+        { name: 'Pickaxe', icon: '⛏️', desc: 'Boomerang pickaxe (R)', cost: 10, action: () => { hasPickaxe = true; } },
         { name: 'Speed Boost', icon: '⚡', desc: 'Faster movement', cost: 10, action: () => { speedBoost = Math.min(speedBoost + 1, WALK); } },
         { name: 'Glide', icon: '🪂', desc: 'Hold Q to glide', cost: 12, skyOnly: true, action: () => { hasGlide = true; } },
         { name: 'Shield', icon: '🛡️', desc: 'Absorb 3 hits', cost: 15, action: () => { shieldHits = 3; } },
@@ -722,6 +724,10 @@
         if (e.code === 'KeyP') keys2._pHeld = true;
         if (state === 'playing' && e.code === 'KeyE' && hasFire && fireCooldown <= 0) {
             if (isOnlineGuest) { guestFireballFlag = true; } else { shootFireball(); }
+        }
+        // Pickaxe boomerang
+        if (state === 'playing' && e.code === 'KeyR' && hasPickaxe && pickaxeCooldown <= 0 && !cat.dead) {
+            throwPickaxe();
         }
         if (state === 'playing' && (e.code === 'KeyF' || e.code === 'KeyX') && scratchCooldown <= 0 && !cat.dead) {
             if (isOnlineGuest) { guestScratchFlag = true; }
@@ -2100,6 +2106,163 @@
         ctx.fillStyle = '#FF4500';
         ctx.beginPath();
         ctx.arc(sx + fb.w / 2, sy + fb.h / 2, fb.w, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.globalAlpha = 1;
+    }
+
+    // PICKAXE BOOMERANG
+    function throwPickaxe() {
+        pickaxeCooldown = 45; // cooldown between throws
+        const pk = {
+            x: cat.x + (cat.dir === 1 ? cat.w : -12),
+            y: cat.y + 6,
+            w: 14, h: 14,
+            vx: cat.dir * 6,
+            vy: 0,
+            dir: cat.dir,
+            owner: cat, // tracks who threw it (for return)
+            phase: 'out', // 'out' = flying away, 'return' = coming back
+            life: 180,
+            angle: 0,
+            trail: []
+        };
+        pickaxes.push(pk);
+        addParticle(pk.x + pk.w / 2, pk.y + pk.h / 2, '#8B7355', 5, 3);
+        shakeTimer = 2; shakeAmt = 2;
+    }
+
+    function updatePickaxes() {
+        if (pickaxeCooldown > 0) pickaxeCooldown--;
+        for (let i = pickaxes.length - 1; i >= 0; i--) {
+            const pk = pickaxes[i];
+            pk.life--;
+            if (pk.life <= 0) { pickaxes.splice(i, 1); continue; }
+
+            // Trail
+            pk.trail.push({ x: pk.x, y: pk.y });
+            if (pk.trail.length > 8) pk.trail.shift();
+
+            // Spin animation
+            pk.angle += 0.3;
+
+            if (pk.phase === 'out') {
+                // Decelerate
+                pk.vx *= 0.96;
+                pk.vy += 0.05; // slight arc
+                // Switch to return phase when slow enough
+                if (Math.abs(pk.vx) < 1.5) {
+                    pk.phase = 'return';
+                }
+            }
+
+            if (pk.phase === 'return') {
+                // Home toward the owner cat
+                const ox = pk.owner.x + pk.owner.w / 2;
+                const oy = pk.owner.y + pk.owner.h / 2;
+                const dx = ox - (pk.x + pk.w / 2);
+                const dy = oy - (pk.y + pk.h / 2);
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                if (dist > 0) {
+                    pk.vx += (dx / dist) * 0.6;
+                    pk.vy += (dy / dist) * 0.6;
+                }
+                // Cap speed
+                const spd = Math.sqrt(pk.vx * pk.vx + pk.vy * pk.vy);
+                if (spd > 7) { pk.vx = (pk.vx / spd) * 7; pk.vy = (pk.vy / spd) * 7; }
+
+                // Catch: if close enough to owner, remove
+                if (dist < 20) {
+                    addParticle(pk.x + pk.w / 2, pk.y + pk.h / 2, '#8B7355', 6, 3);
+                    pickaxes.splice(i, 1);
+                    continue;
+                }
+            }
+
+            pk.x += pk.vx;
+            pk.y += pk.vy;
+
+            // Off screen removal
+            if (pk.x < cam.x - 100 || pk.x > cam.x + W + 100 || pk.y > level.rows * T + 100) {
+                pickaxes.splice(i, 1);
+                continue;
+            }
+
+            // Hit question blocks
+            let pkR1 = Math.floor(pk.y / T), pkR2 = Math.floor((pk.y + pk.h) / T);
+            let pkC1 = Math.floor(pk.x / T), pkC2 = Math.floor((pk.x + pk.w) / T);
+            let hitBlock = false;
+            for (let r = pkR1; r <= pkR2 && !hitBlock; r++) {
+                for (let c = pkC1; c <= pkC2 && !hitBlock; c++) {
+                    if (r >= 0 && r < level.rows && c >= 0 && c < level.cols && (level.grid[r][c] === 3 || level.grid[r][c] === 13)) {
+                        hitQuestion(r, c);
+                        addParticle(pk.x + pk.w / 2, pk.y + pk.h / 2, '#8B7355', 8, 4);
+                        // Don't destroy pickaxe on block hit — boomerang goes through
+                        hitBlock = true;
+                    }
+                }
+            }
+
+            // Hit enemies
+            if (!level) continue;
+            for (const e of level.enemies) {
+                if (!e.alive) continue;
+                if (pk.x < e.x + e.w && pk.x + pk.w > e.x && pk.y < e.y + e.h && pk.y + pk.h > e.y) {
+                    e.alive = false;
+                    score += 200;
+                    shakeTimer = 3; shakeAmt = 3;
+                    addParticle(e.x + e.w / 2, e.y + e.h / 2, '#FF4444', 10, 5);
+                    addParticle(e.x + e.w / 2, e.y, '#FFD700', 6, 3);
+                    // Pickaxe continues — boomerang goes through enemies
+                }
+            }
+        }
+    }
+
+    function drawPickaxe(pk) {
+        const cx = Math.round(pk.x - cam.x + pk.w / 2);
+        const cy = Math.round(pk.y + pk.h / 2);
+
+        // Trail
+        pk.trail.forEach((t, idx) => {
+            const a = (idx + 1) / pk.trail.length * 0.35;
+            ctx.globalAlpha = a;
+            ctx.fillStyle = '#A0845C';
+            const ts = 3 + (idx / pk.trail.length) * 3;
+            ctx.beginPath();
+            ctx.arc(t.x - cam.x + pk.w / 2, t.y + pk.h / 2, ts, 0, Math.PI * 2);
+            ctx.fill();
+        });
+        ctx.globalAlpha = 1;
+
+        // Spinning pickaxe
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.rotate(pk.angle);
+
+        // Handle (brown wooden stick)
+        ctx.fillStyle = '#8B6914';
+        ctx.fillRect(-2, -1, 12, 3);
+
+        // Head (iron/steel)
+        ctx.fillStyle = '#A8A8A8';
+        ctx.fillRect(7, -6, 4, 5);  // top blade
+        ctx.fillRect(7, 2, 4, 5);   // bottom blade
+        ctx.fillStyle = '#C0C0C0';
+        ctx.fillRect(8, -5, 2, 4);  // highlight
+        ctx.fillRect(8, 3, 2, 4);
+
+        // Tip points
+        ctx.fillStyle = '#D0D0D0';
+        ctx.fillRect(10, -7, 2, 2); // sharp tip top
+        ctx.fillRect(10, 6, 2, 2);  // sharp tip bottom
+
+        ctx.restore();
+
+        // Glow effect
+        ctx.globalAlpha = 0.15;
+        ctx.fillStyle = '#FFD700';
+        ctx.beginPath();
+        ctx.arc(cx, cy, pk.w, 0, Math.PI * 2);
         ctx.fill();
         ctx.globalAlpha = 1;
     }
@@ -3999,6 +4162,7 @@
 
     function startGame() {
         state = 'playing'; score = 0; lives = 3; coinCount = 0; currentLevel = 0; hasFire = false; fireCooldown = 0; fireballs = []; activeCheckpoint = null; speedBoost = 0; shieldHits = 0;
+        hasPickaxe = false; pickaxes = []; pickaxeCooldown = 0;
         inventory = [];
         cat2SelectedSkin = selectedSkin === 1 ? 0 : 1; // P2 uses different skin
         p1HP = 3; p2HP = 3;
@@ -4086,6 +4250,7 @@
         if (lobbyApproval) lobbyApproval.classList.add('hidden');
         state = 'playing'; score = 0; lives = 3; coinCount = 0; currentLevel = 0;
         hasFire = false; fireCooldown = 0; fireballs = []; activeCheckpoint = null;
+        hasPickaxe = false; pickaxes = []; pickaxeCooldown = 0;
         speedBoost = 0; shieldHits = 0; inventory = [];
         loadLevel(0); overlay.classList.remove('visible');
     }
@@ -4856,7 +5021,7 @@
             }
         }
 
-        updateCat(); updateCat2(); updateEnemies(); updateCoins(); updateOneUps(); updateFireFlowers(); updateFireballs(); updateArrows(); updateBoss(); updateCheckpoints(); checkFlag();
+        updateCat(); updateCat2(); updateEnemies(); updateCoins(); updateOneUps(); updateFireFlowers(); updateFireballs(); updatePickaxes(); updateArrows(); updateBoss(); updateCheckpoints(); checkFlag();
         // Update P3/P4 on host
         if (fourPlayerMode && isOnlineHost) {
             const r3 = updateExtraCat(cat3, keys3, p3HP, cat3DeathTimer, invincibleTimer3);
@@ -4931,6 +5096,7 @@
             level.enemies.forEach(drawEnemy);
             // Fireballs
             fireballs.forEach(drawFireball);
+            pickaxes.forEach(drawPickaxe);
             arrows.forEach(drawArrow);
             // Boss
             drawBoss();
@@ -5152,6 +5318,7 @@
         drawRow(col1, y1, 'Q', 'Glide (when purchased)'); y1 += 26;
         drawRow(col1, y1, 'F / X', 'Scratch attack / Throw shell'); y1 += 26;
         drawRow(col1, y1, 'E', 'Fireball (need fire power)'); y1 += 26;
+        drawRow(col1, y1, 'R', 'Throw Pickaxe (boomerang)'); y1 += 26;
         drawRow(col1, y1, '1-5', 'Use inventory items'); y1 += 26;
         drawRow(col1, y1, 'T', 'Open Cat Closet (skins)'); y1 += 26;
 
