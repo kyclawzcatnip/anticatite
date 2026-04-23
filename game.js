@@ -4831,14 +4831,30 @@
         ctx.font = '12px monospace';
         ctx.fillText('Press 1-4 to buy  •  ← → to select  •  R to continue', W / 2, 110);
 
-        // Item cards
-        const itemW = 140, itemH = 130, gap = 20;
-        const totalW = visibleItems.length * itemW + (visibleItems.length - 1) * gap;
+        // Item cards (show up to 5 at a time, scroll with selection)
+        const itemW = 140, itemH = 130, gap = 12;
+        const maxVisible = Math.min(5, visibleItems.length);
+        // Calculate scroll offset to keep selection visible
+        let scrollStart = Math.max(0, shopSelection - Math.floor(maxVisible / 2));
+        scrollStart = Math.min(scrollStart, visibleItems.length - maxVisible);
+        const totalW = maxVisible * itemW + (maxVisible - 1) * gap;
         const startX = (W - totalW) / 2;
         const shopY = 130;
 
-        visibleItems.forEach((item, i) => {
-            const ix = startX + i * (itemW + gap);
+        // Scroll arrows
+        if (scrollStart > 0) {
+            ctx.fillStyle = '#FFD700'; ctx.font = 'bold 20px monospace'; ctx.textAlign = 'center';
+            ctx.fillText('◄', startX - 18, shopY + itemH / 2 + 5);
+        }
+        if (scrollStart + maxVisible < visibleItems.length) {
+            ctx.fillStyle = '#FFD700'; ctx.font = 'bold 20px monospace'; ctx.textAlign = 'center';
+            ctx.fillText('►', startX + totalW + 18, shopY + itemH / 2 + 5);
+        }
+
+        for (let vi = 0; vi < maxVisible; vi++) {
+            const i = scrollStart + vi;
+            const item = visibleItems[i];
+            const ix = startX + vi * (itemW + gap);
             const selected = i === shopSelection;
             const canAfford = coinCount >= item.cost;
 
@@ -4879,7 +4895,7 @@
             ctx.fillStyle = canAfford ? '#44FF44' : '#FF4444';
             ctx.font = 'bold 14px monospace';
             ctx.fillText('🪙 ' + item.cost, ix + itemW / 2, shopY + 118);
-        });
+        }
 
         // Continue button
         ctx.fillStyle = 'rgba(0,200,100,0.3)';
