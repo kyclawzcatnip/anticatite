@@ -5363,6 +5363,30 @@
             ctx.strokeRect(sx - 3, a.y - 2, 6, 4);
         });
 
+        // -- Question block loot preview --
+        const startCol = Math.max(0, Math.floor(cam.x / T) - 1);
+        const endCol = Math.min(level.cols, startCol + COLS + 2);
+        for (let r = 0; r < level.rows; r++) {
+            for (let c = startCol; c < endCol; c++) {
+                const tile = level.grid[r][c];
+                if (tile !== 3 && tile !== 13) continue; // only question blocks
+                const sx = c * T - cam.x, sy = r * T;
+                const isRare = tile === 13;
+                // Highlight border
+                ctx.strokeStyle = isRare ? '#FFD700' : '#FFA500'; ctx.lineWidth = 1.5;
+                ctx.strokeRect(sx, sy, T, T);
+                // Loot label above block
+                ctx.fillStyle = 'rgba(0,0,0,0.7)';
+                ctx.fillRect(sx - 8, sy - 14, T + 16, 12);
+                ctx.fillStyle = isRare ? '#FFD700' : '#FFA500';
+                ctx.font = '7px monospace'; ctx.textAlign = 'center';
+                // Show loot odds: star > rat > powerup > coins
+                const label = isRare ? '50%⭐ 15%🐀 PU' : '1%⭐ 15%🐀 PU';
+                ctx.fillText(label, sx + T / 2, sy - 5);
+                ctx.textAlign = 'left';
+            }
+        }
+
         // -- Boss hitbox --
         if (boss && boss.alive) {
             const bx = boss.x - cam.x, by = boss.y;
