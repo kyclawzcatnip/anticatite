@@ -5702,7 +5702,17 @@
         ctx.lineWidth = 1;
     }
 
-    function loop() { update(); draw(); requestAnimationFrame(loop); }
+    let devSlowCounter = 0;
+    function loop() {
+        if (devMode) {
+            devSlowCounter++;
+            if (devSlowCounter % 3 === 0) update(); // update every 3rd frame = 1/3 speed
+        } else {
+            update();
+        }
+        draw();
+        requestAnimationFrame(loop);
+    }
 
     // INIT
     showOverlay('SUPER CAT WORLD', 'PRESS SPACE TO START\nPRESS 2 FOR CO-OP\nPRESS 3 FOR ONLINE\nPRESS H FOR HOW TO PLAY');
