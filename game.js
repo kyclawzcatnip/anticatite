@@ -5363,16 +5363,32 @@
             ctx.strokeRect(sx - 3, a.y - 2, 6, 4);
         });
 
+        // -- Boss hitbox --
+        if (boss && boss.alive) {
+            const bx = boss.x - cam.x, by = boss.y;
+            ctx.strokeStyle = '#F0F'; ctx.lineWidth = 2;
+            ctx.strokeRect(bx, by, boss.w, boss.h);
+            // Boss velocity arrow
+            ctx.strokeStyle = '#FF0'; ctx.lineWidth = 2;
+            ctx.beginPath(); ctx.moveTo(bx + boss.w/2, by + boss.h/2);
+            ctx.lineTo(bx + boss.w/2 + (boss.vx || 0) * 5, by + boss.h/2 + (boss.vy || 0) * 3);
+            ctx.stroke();
+            // Label
+            ctx.fillStyle = '#F0F'; ctx.font = 'bold 9px monospace'; ctx.textAlign = 'center';
+            ctx.fillText('BOSS HP:' + boss.hp, bx + boss.w/2, by - 6);
+            ctx.textAlign = 'left';
+        }
+
         // -- Dev info panel (top-left) --
         ctx.fillStyle = 'rgba(0,0,0,0.75)';
-        ctx.fillRect(4, 4, 200, 135);
+        ctx.fillRect(4, 4, 210, 148);
         ctx.strokeStyle = '#0F0'; ctx.lineWidth = 1;
-        ctx.strokeRect(4, 4, 200, 135);
+        ctx.strokeRect(4, 4, 210, 148);
 
         ctx.fillStyle = '#0F0'; ctx.font = 'bold 9px monospace'; ctx.textAlign = 'left';
         let dy = 16;
         const info = [
-            `FPS: ${devFps}`,
+            `FPS: ${devFps} | SLOW-MO: 1/3`,
             `P1 pos: ${Math.round(cat.x)}, ${Math.round(cat.y)}`,
             `P1 vel: ${cat.vx.toFixed(1)}, ${cat.vy.toFixed(1)}`,
             `P1 grnd: ${cat.grounded} | big: ${isBig} | mini: ${isMini}`,
@@ -5383,6 +5399,7 @@
             `Cam: ${Math.round(cam.x)} | Level: ${currentLevel + 1}`,
             `State: ${state} | Frame: ${frameCount}`,
             `Grid: ${level.cols}x${level.rows} tiles`,
+            boss ? `Boss HP: ${boss.hp} | alive: ${boss.alive}` : 'No boss',
         ];
         info.forEach(line => {
             ctx.fillText(line, 10, dy);
