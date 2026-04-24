@@ -12,7 +12,7 @@
     const T = 32, GRAVITY = 0.55, MAX_FALL = 10, JUMP = -15, WALK = 3.5, COLS = Math.ceil(W / T) + 2;
     const ENEMY_SPEED = 1.2, COIN_ANIM = 0.08;
 
-    // TILE TYPES: 0=air,1=ground,2=brick,3=question,4=pipe_tl,5=pipe_tr,6=pipe_bl,7=pipe_br,8=used_q,9=platform,10=flag,14=mine_rock,15=mine_rails
+    // TILE TYPES: 0=air,1=ground,2=brick,3=question,4=pipe_tl,5=pipe_tr,6=pipe_bl,7=pipe_br,8=used_q,9=platform,10=flag,14=mine_rock,15=mine_rails,16-19=silver_pipe(end)
     const TILE_COLORS = {
         1: ['#8B5E3C', '#6B3F1F'], 2: ['#C84B31', '#A03820'], 3: ['#FFD700', '#DAA520'],
         4: ['#2E8B57', '#1E6B3A'], 5: ['#2E8B57', '#1E6B3A'], 6: ['#3CB371', '#2E8B57'], 7: ['#3CB371', '#2E8B57'],
@@ -20,23 +20,25 @@
         11: ['#3A3A4A', '#2A2A3A'], 12: ['#4A3A2A', '#3A2A1A'], // 11=castle wall, 12=castle door
         13: ['#FFD700', '#DAA520'], // 13=rare question block
         14: ['#4A3828', '#3A2818'], // 14=mineshaft rock
-        15: ['#5C4A3A', '#4A382A']  // 15=mine rails
+        15: ['#5C4A3A', '#4A382A'], // 15=mine rails
+        16: ['#C0C0C0', '#A0A0A0'], 17: ['#C0C0C0', '#A0A0A0'], // 16-17=silver pipe top
+        18: ['#B0B0B0', '#909090'], 19: ['#B0B0B0', '#909090']  // 18-19=silver pipe body
     };
 
     // LEVELS (each row is a horizontal row; stored top-to-bottom)
     const LEVEL_H = 14, LEVEL_DATA = [
         // Level 1 — Intro
         [
-            "                                                                                                                          F         ",
-            "                                                                                                                          |         ",
-            "                                                                                                                          |         ",
-            "                                                                                                                          |         ",
-            "                                                                                                                          |         ",
-            "                      CCC                                                                                                 |         ",
-            "                   BBBBBBB          C  C  C                        C                     L                                |         ",
-            "            C                                     C C C                     CCC                                           |         ",
-            "         Q    Q                 BBBBBBBBB       BBBBBBBZ          BBBBB                                                   |         ",
-            "                    C        W                              H                              BB QBB                         |         ",
+            "                                                                                                                          <>        ",
+            "                                                                                                                          ()        ",
+            "                                                                                                                          ()        ",
+            "                                                                                                                          ()        ",
+            "                                                                                                                          ()        ",
+            "                      CCC                                                                                                 ()        ",
+            "                   BBBBBBB          C  C  C                        C                     L                                ()        ",
+            "            C                                     C C C                     CCC                                           ()        ",
+            "         Q    Q                 BBBBBBBBB       BBBBBBBZ          BBBBB                                                   ()        ",
+            "                    C        W                              H                              BB QBB                         ()        ",
             "  S     V        GGGGG    GG    V    R       GG    V     R    GG   V    GGGG    GG   V    GGGGGGGGG  GG V GGGGGGGGGGGGGGGGGGGGGGGGGGG",
             "GGGGG  GGGGG  GGGGGGGGGGGGGGG     GGGGGGGGGGGGGG   [] GGGGGGGGGGG  GGGGGGGGGGGGGGG    GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG",
             "GGGGG  GGGGG  GGGGGGGGGGGGGGGGGG  GGGGGGGGGGGGGGGG{}GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG",
@@ -44,16 +46,16 @@
         ],
         // Level 2 — Gaps and more enemies
         [
-            "                                                                                                                            F       ",
-            "                                                                                                                            |       ",
-            "                                                                                                                            |       ",
-            "                                                                                                                            |       ",
-            "                         C C C                                         CCC                                                  |       ",
-            "                        BBBBBBB                C                      BBBBB             C   C                               |       ",
-            "            CC                        C C   Q              C                     L                       CCC               |       ",
-            "          QBBBBQ        W     R    BBBBBBBBB         R          R  BBB    BBZ       BBBBBBB                                 |       ",
-            "                           GGGGG              GGGGG      GGGGG              GG           R      Q  BBBBBB              |       ",
-            "  S        R    V   A  GG  V    GG  H R    V AGG     V GG    V         GGGGG  A  V  GGGGG       GG      A   GGGG        A |       ",
+            "                                                                                                                            <>      ",
+            "                                                                                                                            ()      ",
+            "                                                                                                                            ()      ",
+            "                                                                                                                            ()      ",
+            "                         C C C                                         CCC                                                  ()      ",
+            "                        BBBBBBB                C                      BBBBB             C   C                               ()      ",
+            "            CC                        C C   Q              C                     L                       CCC               ()      ",
+            "          QBBBBQ        W     R    BBBBBBBBB         R          R  BBB    BBZ       BBBBBBB                                 ()      ",
+            "                           GGGGG              GGGGG      GGGGG              GG           R      Q  BBBBBB              ()      ",
+            "  S        R    V   A  GG  V    GG  H R    V AGG     V GG    V         GGGGG  A  V  GGGGG       GG      A   GGGG        A ()      ",
             "GGGGG   GGGGG   GG  GGGG        GGGGGGGG  GGGGG          GGG    GGGG         GGG          GGG       GGGGG       GGGGGGGGGGGGGGGGGGG",
             "GGGGG   GGGGG   GGGGGGGG        GGGGGGGG  GGGGG          GGG    GGGG         GGG          GGG       GGGGG       GGGGGGGGGGGGGGGGGGG",
             "GGGGG   GGGGG   GGGGGGGG        GGGGGGGG  GGGGG          GGG    GGGG         GGG          GGG       GGGGG       GGGGGGGGGGGGGGGGGGG",
@@ -501,6 +503,10 @@
                 else if (ch === ']') grid[r][c] = 5;  // pipe top-right
                 else if (ch === '{') grid[r][c] = 6;  // pipe body-left
                 else if (ch === '}') grid[r][c] = 7;  // pipe body-right
+                else if (ch === '<') grid[r][c] = 16; // silver pipe top-left (end pipe)
+                else if (ch === '>') grid[r][c] = 17; // silver pipe top-right (end pipe)
+                else if (ch === '(') grid[r][c] = 18; // silver pipe body-left (end pipe)
+                else if (ch === ')') grid[r][c] = 19; // silver pipe body-right (end pipe)
                 else if (ch === 'X') { grid[r][c] = 0; } // boss spawn marker handled separately
                 else if (ch === 'S') { grid[r][c] = 0; spawnX = c; spawnY = r; }
                 else grid[r][c] = 0;
@@ -854,7 +860,7 @@
     function solid(r, c) {
         if (!level || r < 0 || r >= level.rows || c < 0 || c >= level.cols) return false;
         const t = level.grid[r][c];
-        return t === 1 || t === 2 || t === 3 || t === 4 || t === 5 || t === 6 || t === 7 || t === 8 || t === 9 || t === 10 || t === 11 || t === 13 || t === 14;
+        return t === 1 || t === 2 || t === 3 || t === 4 || t === 5 || t === 6 || t === 7 || t === 8 || t === 9 || t === 10 || t === 11 || t === 13 || t === 14 || t === 16 || t === 17 || t === 18 || t === 19;
     }
 
     function tileAt(px, py) { return { r: Math.floor(py / T), c: Math.floor(px / T) }; }
@@ -2782,6 +2788,28 @@
             return false;
         }
 
+        // Silver pipe end check — touching a silver pipe ends the level
+        function touchesSilverPipe(c) {
+            if (c.dead) return false;
+            let r1 = Math.floor((c.y + 4) / T), r2 = Math.floor((c.y + c.h - 4) / T);
+            let c1 = Math.floor((c.x + 4) / T), c2 = Math.floor((c.x + c.w - 4) / T);
+            for (let r = r1; r <= r2; r++) {
+                for (let cc = c1; cc <= c2; cc++) {
+                    if (r >= 0 && r < level.rows && cc >= 0 && cc < level.cols) {
+                        const t = level.grid[r][cc];
+                        if (t >= 16 && t <= 19) return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        if (touchesSilverPipe(cat) || (coopMode && touchesSilverPipe(cat2))) {
+            if (currentLevel < LEVEL_DATA.length - 1) { state = 'levelcomplete'; winTimer = 120; score += 1000; }
+            else { state = 'win'; score += 5000; }
+            return;
+        }
+
         // Castle door check
         if (currentLevel === 2 || currentLevel === 3) {
             if (touchesDoor(cat) || (coopMode && touchesDoor(cat2))) {
@@ -2812,37 +2840,45 @@
         if (x < -T || x > W + T) return;
         const colors = TILE_COLORS[type];
         if (!colors) return;
-        // Pipe rendering (green pipes!)
-        if (type >= 4 && type <= 7) {
-            const isTop = (type === 4 || type === 5);
-            const isLeft = (type === 4 || type === 6);
+        // Pipe rendering (green pipes + silver end-pipes!)
+        if ((type >= 4 && type <= 7) || (type >= 16 && type <= 19)) {
+            const isSilver = type >= 16;
+            const mappedType = isSilver ? type - 12 : type; // map 16-19 to 4-7 for shape logic
+            const isTop = (mappedType === 4 || mappedType === 5);
+            const isLeft = (mappedType === 4 || mappedType === 6);
+            // Color palette
+            const dark = isSilver ? '#808890' : '#1B8C3A';
+            const mid = isSilver ? '#A0A8B0' : '#22AA44';
+            const lip = isSilver ? '#C0C8D0' : '#2ECC55';
+            const highlight = isSilver ? '#D8E0E8' : '#44DD66';
+            const edge = isSilver ? '#606870' : '#147030';
             if (isTop) {
                 // Pipe top — wider lip
-                ctx.fillStyle = '#1B8C3A';
+                ctx.fillStyle = dark;
                 ctx.fillRect(x + (isLeft ? -2 : 0), y, T + (isLeft ? 2 : 2), T);
-                ctx.fillStyle = '#22AA44';
+                ctx.fillStyle = mid;
                 ctx.fillRect(x + (isLeft ? 0 : 2), y + 2, T - 2, T - 2);
                 // Lip top edge
-                ctx.fillStyle = '#2ECC55';
+                ctx.fillStyle = lip;
                 ctx.fillRect(x + (isLeft ? -2 : 0), y, T + (isLeft ? 2 : 2), 4);
                 // Highlight stripe
-                ctx.fillStyle = '#44DD66';
+                ctx.fillStyle = highlight;
                 ctx.fillRect(x + (isLeft ? 4 : 6), y + 5, 3, T - 7);
                 // Dark edge
-                ctx.fillStyle = '#147030';
+                ctx.fillStyle = edge;
                 if (isLeft) ctx.fillRect(x - 2, y, 2, T);
                 else ctx.fillRect(x + T, y, 2, T);
             } else {
                 // Pipe body
-                ctx.fillStyle = '#1B8C3A';
+                ctx.fillStyle = dark;
                 ctx.fillRect(x, y, T, T);
-                ctx.fillStyle = '#22AA44';
+                ctx.fillStyle = mid;
                 ctx.fillRect(x + 2, y, T - 4, T);
                 // Highlight stripe
-                ctx.fillStyle = '#44DD66';
+                ctx.fillStyle = highlight;
                 ctx.fillRect(x + (isLeft ? 6 : 8), y, 3, T);
                 // Dark edges
-                ctx.fillStyle = '#147030';
+                ctx.fillStyle = edge;
                 if (isLeft) ctx.fillRect(x, y, 2, T);
                 else ctx.fillRect(x + T - 2, y, 2, T);
             }
