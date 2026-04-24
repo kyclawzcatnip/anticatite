@@ -659,8 +659,10 @@
             keys.jump = val;
         }
         if (code === 'KeyQ') keys.glide = val;
-        // Only online GUESTS route arrows to keys (they send to host as their input)
-        if (isOnlineGuest) {
+        // In 1-player mode, arrows also control P1
+        // In local co-op, arrows are reserved for P2
+        // Online guests route arrows to their own keys (sent to host)
+        if (isOnlineGuest || !coopMode) {
             if (code === 'ArrowLeft') keys.left = val;
             if (code === 'ArrowRight') keys.right = val;
             if (code === 'ArrowUp') {
