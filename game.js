@@ -539,6 +539,7 @@
     let devInput = [];
     let stars = []; // spawned star items in the level
     let powerUps = []; // spawned power-up items from question blocks
+    let blockLoot = {}; // pre-rolled loot for question blocks, keyed by 'r,c'
     let heldShell = null; // reference to shell enemy being carried
     let inventory = []; // stored power-ups (hotbar), max 5 slots
     const MAX_INVENTORY = 5;
@@ -1005,44 +1006,68 @@
         }
     }
 
+    // Pre-roll loot for all question blocks in the level
+    function rollBlockLoot() {
+        blockLoot = {};
+        if (!level) return;
+        for (let r = 0; r < level.rows; r++) {
+            for (let c = 0; c < level.cols; c++) {
+                const t = level.grid[r][c];
+                if (t !== 3 && t !== 13) continue;
+                const isRare = t === 13;
+                const key = r + ',' + c;
+                // Roll the loot
+                if (Math.random() < (isRare ? 0.5 : 0.01)) {
+                    blockLoot[key] = { type: 'star', icon: '⭐', color: '#FFD700' };
+                } else if (Math.random() < 0.15) {
+                    blockLoot[key] = { type: 'rat', icon: '🐀', color: '#8B4513' };
+                } else if (Math.random() < 0.5) {
+                    const roll = Math.random();
+                    if (roll < 0.3) blockLoot[key] = { type: 'life', icon: '❤', color: '#FF69B4' };
+                    else if (roll < 0.55) blockLoot[key] = { type: 'fire', icon: '🔥', color: '#FF4500' };
+                    else if (roll < 0.8) blockLoot[key] = { type: 'speed', icon: '⚡', color: '#00FFFF' };
+                    else if (roll < 0.9) blockLoot[key] = { type: 'big', icon: '🍄', color: '#FF2222' };
+                    else blockLoot[key] = { type: 'shield', icon: '🛡️', color: '#4488FF' };
+                } else {
+                    const nc = Math.floor(Math.random() * 5) + 1;
+                    blockLoot[key] = { type: 'coins', icon: nc + '🪙', color: '#FFD700', count: nc };
+                }
+            }
+        }
+    }
+
     function hitQuestion(r, c) {
         const isRare = level.grid[r][c] === 13;
-        // Star chance: 50% for rare blocks, 1% for normal
-        if (Math.random() < (isRare ? 0.5 : 0.01)) {
+        const key = r + ',' + c;
+        const loot = blockLoot[key] || { type: 'coins', icon: '1🪙', color: '#FFD700', count: 1 };
+        delete blockLoot[key];
+
+        level.grid[r][c] = 8;
+        if (onlineMode && isOnlineHost) netGridChanges.push({ r, c, v: 8 });
+        questionHits.push({ r, c, timer: 8 });
+
+        if (loot.type === 'star') {
             stars.push({ x: c * T, y: r * T - T, vx: 2, vy: -4, w: 24, h: 24, anim: 0 });
             addParticle(c * T + T / 2, r * T - 20, '#FFD700', 20, 8);
             addParticle(c * T + T / 2, r * T - 16, '#FFFFFF', 15, 6);
         }
-        level.grid[r][c] = 8;
-        if (onlineMode && isOnlineHost) netGridChanges.push({ r, c, v: 8 });
-        questionHits.push({ r, c, timer: 8 });
-        // Random 1-5 coins
-        const numCoins = Math.floor(Math.random() * 5) + 1;
+        // Coins (always drop some)
+        const numCoins = loot.count || (Math.floor(Math.random() * 5) + 1);
         coinCount += numCoins;
         score += numCoins * 100;
         for (let i = 0; i < numCoins; i++) {
             addParticle(c * T + T / 2 + (Math.random() - 0.5) * 16, r * T - 8 - i * 6, '#FFD700', 6, 4);
         }
-        // 15% chance to spawn a rat enemy
-        if (Math.random() < 0.15) {
+        if (loot.type === 'rat') {
             level.enemies.push({ x: c * T, y: r * T - T, w: T, h: T, vx: (Math.random() > 0.5 ? 1 : -1) * ENEMY_SPEED, vy: -4, type: 'rat', alive: true, frame: 0 });
             addParticle(c * T + T / 2, r * T - 10, '#8B4513', 8, 4);
-        }
-        // 50% chance to spawn a power-up item
-        else if (Math.random() < 0.5) {
-            const roll = Math.random();
-            let puType, puColor, puIcon, puApply;
-            if (roll < 0.3) {
-                puType = 'life'; puColor = '#FF69B4'; puIcon = '❤'; puApply = () => { lives++; };
-            } else if (roll < 0.55) {
-                puType = 'fire'; puColor = '#FF4500'; puIcon = '🔥'; puApply = () => { hasFire = true; };
-            } else if (roll < 0.8) {
-                puType = 'speed'; puColor = '#00FFFF'; puIcon = '⚡'; puApply = () => { speedBoost = Math.min(speedBoost + 0.5, WALK); };
-            } else if (roll < 0.9) {
-                puType = 'big'; puColor = '#FF2222'; puIcon = '🍄'; puApply = () => { isBig = true; cat.y -= 32; cat.h = 64; };
-            } else {
-                puType = 'shield'; puColor = '#4488FF'; puIcon = '🛡️'; puApply = () => { shieldHits = Math.min(shieldHits + 1, 5); };
-            }
+        } else if (loot.type !== 'star' && loot.type !== 'coins') {
+            let puType = loot.type, puColor = loot.color, puIcon = loot.icon, puApply;
+            if (puType === 'life') puApply = () => { lives++; };
+            else if (puType === 'fire') puApply = () => { hasFire = true; };
+            else if (puType === 'speed') puApply = () => { speedBoost = Math.min(speedBoost + 0.5, WALK); };
+            else if (puType === 'big') puApply = () => { isBig = true; cat.y -= 32; cat.h = 64; };
+            else if (puType === 'shield') puApply = () => { shieldHits = Math.min(shieldHits + 1, 5); };
             powerUps.push({
                 x: c * T + 4, y: r * T - T, w: 24, h: 24,
                 vx: (Math.random() > 0.5 ? 1 : -1) * 1.5, vy: -5,
@@ -4340,6 +4365,7 @@
         } else {
             boss = null;
         }
+        rollBlockLoot(); // pre-roll loot for all question blocks
     }
 
     function startGame() {
@@ -5369,20 +5395,21 @@
         for (let r = 0; r < level.rows; r++) {
             for (let c = startCol; c < endCol; c++) {
                 const tile = level.grid[r][c];
-                if (tile !== 3 && tile !== 13) continue; // only question blocks
+                if (tile !== 3 && tile !== 13) continue;
+                const key = r + ',' + c;
+                const loot = blockLoot[key];
+                if (!loot) continue;
                 const sx = c * T - cam.x, sy = r * T;
                 const isRare = tile === 13;
                 // Highlight border
                 ctx.strokeStyle = isRare ? '#FFD700' : '#FFA500'; ctx.lineWidth = 1.5;
                 ctx.strokeRect(sx, sy, T, T);
-                // Loot label above block
-                ctx.fillStyle = 'rgba(0,0,0,0.7)';
-                ctx.fillRect(sx - 8, sy - 14, T + 16, 12);
-                ctx.fillStyle = isRare ? '#FFD700' : '#FFA500';
-                ctx.font = '7px monospace'; ctx.textAlign = 'center';
-                // Show loot odds: star > rat > powerup > coins
-                const label = isRare ? '50%⭐ 15%🐀 PU' : '1%⭐ 15%🐀 PU';
-                ctx.fillText(label, sx + T / 2, sy - 5);
+                // Loot icon above block
+                ctx.fillStyle = 'rgba(0,0,0,0.75)';
+                ctx.fillRect(sx - 4, sy - 16, T + 8, 14);
+                ctx.fillStyle = loot.color || '#FFF';
+                ctx.font = '9px monospace'; ctx.textAlign = 'center';
+                ctx.fillText(loot.icon, sx + T / 2, sy - 5);
                 ctx.textAlign = 'left';
             }
         }
