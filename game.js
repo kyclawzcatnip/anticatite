@@ -5439,7 +5439,7 @@
         ctx.fillStyle = '#0F0'; ctx.font = 'bold 9px monospace'; ctx.textAlign = 'left';
         let dy = 16;
         const info = [
-            `FPS: ${devFps} | SLOW-MO: 1/3`,
+            `FPS: ${devFps} | ${onlineMode ? 'ONLINE (no slow-mo)' : 'SLOW-MO: 1/3'}`,
             `P1 pos: ${Math.round(cat.x)}, ${Math.round(cat.y)}`,
             `P1 vel: ${cat.vx.toFixed(1)}, ${cat.vy.toFixed(1)}`,
             `P1 grnd: ${cat.grounded} | big: ${isBig} | mini: ${isMini}`,
@@ -5772,9 +5772,10 @@
 
     let devSlowCounter = 0;
     function loop() {
-        if (devMode) {
+        if (devMode && !onlineMode) {
+            // Slow-mo only in offline mode (would desync online)
             devSlowCounter++;
-            if (devSlowCounter % 3 === 0) update(); // update every 3rd frame = 1/3 speed
+            if (devSlowCounter % 3 === 0) update();
         } else {
             update();
         }
