@@ -533,6 +533,10 @@
     let starPowerTimer = 0; // super star invincibility timer (frames)
     let isBig = false; // big mushroom power-up (2 blocks tall, break bricks)
     let isMini = false; // mini mushroom power-up (half size, higher jump, fits 1-block gaps)
+    // Dev mode — activated by Konami code: ↑↑↓↓←→←→BA
+    let devMode = false;
+    const devCode = ['ArrowUp','ArrowUp','ArrowDown','ArrowDown','ArrowLeft','ArrowRight','ArrowLeft','ArrowRight','KeyB','KeyA'];
+    let devInput = [];
     let stars = []; // spawned star items in the level
     let powerUps = []; // spawned power-up items from question blocks
     let heldShell = null; // reference to shell enemy being carried
@@ -691,6 +695,12 @@
         // Allow typing in lobby input
         if (document.activeElement && document.activeElement.id === 'join-code-input') return;
         if (['Space', 'ArrowUp', 'ArrowLeft', 'ArrowRight', 'ArrowDown', 'KeyA', 'KeyD', 'KeyW'].includes(e.code)) e.preventDefault();
+        // Dev mode Konami code tracker
+        devInput.push(e.code);
+        if (devInput.length > devCode.length) devInput.shift();
+        if (devInput.length === devCode.length && devInput.every((k, i) => k === devCode[i])) {
+            devMode = !devMode; devInput = [];
+        }
         if (state === 'start' || state === 'over' || state === 'win') {
             if (e.code === 'Space' || e.code === 'Digit1') { coopMode = false; startGame(); return; }
             if (e.code === 'Digit2') { coopMode = true; startGame(); return; }
@@ -5283,6 +5293,112 @@
     }
 
     // DRAW
+    let devFps = 0, devFrames = 0, devLastFpsTime = performance.now();
+    function drawDevOverlay() {
+        if (!level) return;
+        // FPS counter
+        devFrames++;
+        const now = performance.now();
+        if (now - devLastFpsTime >= 1000) { devFps = devFrames; devFrames = 0; devLastFpsTime = now; }
+
+        // -- Tile grid lines --
+        ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+        ctx.lineWidth = 0.5;
+        const startC = Math.max(0, Math.floor(cam.x / T) - 1);
+        const endC = Math.min(level.cols, startC + COLS + 2);
+        for (let c = startC; c <= endC; c++) {
+            const gx = c * T - cam.x;
+            ctx.beginPath(); ctx.moveTo(gx, 0); ctx.lineTo(gx, H); ctx.stroke();
+        }
+        for (let r = 0; r <= level.rows; r++) {
+            ctx.beginPath(); ctx.moveTo(0, r * T); ctx.lineTo(W, r * T); ctx.stroke();
+        }
+
+        // -- Player hitbox --
+        function drawHitbox(c, color) {
+            if (c.dead) return;
+            const sx = c.x - cam.x, sy = c.y;
+            ctx.strokeStyle = color; ctx.lineWidth = 1.5;
+            ctx.strokeRect(sx, sy, c.w, c.h);
+            // Velocity arrow
+            ctx.strokeStyle = '#FF0'; ctx.lineWidth = 2;
+            ctx.beginPath(); ctx.moveTo(sx + c.w/2, sy + c.h/2);
+            ctx.lineTo(sx + c.w/2 + c.vx * 5, sy + c.h/2 + c.vy * 3);
+            ctx.stroke();
+            // Dot at feet
+            ctx.fillStyle = '#0FF';
+            ctx.fillRect(sx + c.w/2 - 1, sy + c.h - 1, 3, 3);
+        }
+        drawHitbox(cat, '#0F0');
+        if (coopMode) drawHitbox(cat2, '#0AF');
+
+        // -- Enemy hitboxes & velocity arrows --
+        level.enemies.forEach(e => {
+            if (e.dead) return;
+            const sx = e.x - cam.x, sy = e.y;
+            if (sx < -T * 2 || sx > W + T * 2) return;
+            // Hitbox
+            ctx.strokeStyle = '#F44'; ctx.lineWidth = 1;
+            ctx.strokeRect(sx, sy, e.w, e.h);
+            // Velocity arrow
+            ctx.strokeStyle = '#F80'; ctx.lineWidth = 1.5;
+            ctx.beginPath(); ctx.moveTo(sx + e.w/2, sy + e.h/2);
+            ctx.lineTo(sx + e.w/2 + (e.vx || 0) * 6, sy + e.h/2);
+            ctx.stroke();
+            // Type label
+            ctx.fillStyle = '#FFF'; ctx.font = '7px monospace'; ctx.textAlign = 'center';
+            ctx.fillText(e.type || '?', sx + e.w/2, sy - 3);
+            ctx.textAlign = 'left';
+        });
+
+        // -- Fireball/Arrow hitboxes --
+        fireballs.forEach(fb => {
+            const sx = fb.x - cam.x;
+            ctx.strokeStyle = '#FA0'; ctx.lineWidth = 1;
+            ctx.strokeRect(sx - 4, fb.y - 4, 8, 8);
+        });
+        arrows.forEach(a => {
+            const sx = a.x - cam.x;
+            ctx.strokeStyle = '#F0F'; ctx.lineWidth = 1;
+            ctx.strokeRect(sx - 3, a.y - 2, 6, 4);
+        });
+
+        // -- Dev info panel (top-left) --
+        ctx.fillStyle = 'rgba(0,0,0,0.75)';
+        ctx.fillRect(4, 4, 200, 135);
+        ctx.strokeStyle = '#0F0'; ctx.lineWidth = 1;
+        ctx.strokeRect(4, 4, 200, 135);
+
+        ctx.fillStyle = '#0F0'; ctx.font = 'bold 9px monospace'; ctx.textAlign = 'left';
+        let dy = 16;
+        const info = [
+            `FPS: ${devFps}`,
+            `P1 pos: ${Math.round(cat.x)}, ${Math.round(cat.y)}`,
+            `P1 vel: ${cat.vx.toFixed(1)}, ${cat.vy.toFixed(1)}`,
+            `P1 grnd: ${cat.grounded} | big: ${isBig} | mini: ${isMini}`,
+            `P1 inv: ${invincibleTimer} | star: ${starPowerTimer}`,
+            `Enemies: ${level.enemies.filter(e=>!e.dead).length} / ${level.enemies.length}`,
+            `Coins: ${level.coins.filter(c=>!c.collected).length} | FB: ${fireballs.length}`,
+            `Pickaxe ammo: ${pickaxeAmmo} | reload: ${pickaxeReloading}`,
+            `Cam: ${Math.round(cam.x)} | Level: ${currentLevel + 1}`,
+            `State: ${state} | Frame: ${frameCount}`,
+            `Grid: ${level.cols}x${level.rows} tiles`,
+        ];
+        info.forEach(line => {
+            ctx.fillText(line, 10, dy);
+            dy += 11;
+        });
+
+        // -- DEV MODE banner --
+        ctx.fillStyle = 'rgba(0,255,0,0.15)';
+        ctx.fillRect(W - 95, 4, 91, 18);
+        ctx.strokeStyle = '#0F0'; ctx.lineWidth = 1;
+        ctx.strokeRect(W - 95, 4, 91, 18);
+        ctx.fillStyle = '#0F0'; ctx.font = 'bold 10px monospace'; ctx.textAlign = 'center';
+        ctx.fillText('⚙ DEV MODE', W - 50, 16);
+        ctx.textAlign = 'left';
+    }
+
     function draw() {
         ctx.save();
         if (shakeTimer > 0) { const sx = (Math.random() - .5) * shakeAmt, sy = (Math.random() - .5) * shakeAmt; ctx.translate(sx, sy); }
@@ -5375,6 +5491,9 @@
                 ctx.font = '7px "Press Start 2P", monospace';
                 ctx.fillText('🌐 ONLINE', W - 90, H - 8);
             }
+
+            // ===== DEV MODE OVERLAY =====
+            if (devMode) drawDevOverlay();
 
         }
         // Shop overlay
