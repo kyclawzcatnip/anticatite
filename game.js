@@ -664,7 +664,7 @@
             if (val && !keys.jump) keys.jumpPressed = true;
             keys.jump = val;
         }
-        if (code === 'KeyQ') keys.glide = val;
+        if (code === 'KeyQ' || code === 'KeyS') keys.glide = val;
         // In 1-player mode, arrows also control P1
         // In local co-op, arrows are reserved for P2
         // Online guests route arrows to their own keys (sent to host)
@@ -2788,23 +2788,25 @@
             return false;
         }
 
-        // Silver pipe end check — touching a silver pipe ends the level
-        function touchesSilverPipe(c) {
-            if (c.dead) return false;
-            let r1 = Math.floor((c.y + 4) / T), r2 = Math.floor((c.y + c.h - 4) / T);
-            let c1 = Math.floor((c.x + 4) / T), c2 = Math.floor((c.x + c.w - 4) / T);
-            for (let r = r1; r <= r2; r++) {
-                for (let cc = c1; cc <= c2; cc++) {
-                    if (r >= 0 && r < level.rows && cc >= 0 && cc < level.cols) {
-                        const t = level.grid[r][cc];
-                        if (t >= 16 && t <= 19) return true;
-                    }
+        // Silver pipe end check — press DOWN while standing on top of a silver pipe to enter it
+        function onSilverPipe(c, k) {
+            if (c.dead || !c.grounded) return false;
+            // Check if pressing down
+            const pressingDown = k.glide; // glide key = down arrow / S key
+            if (!pressingDown) return false;
+            // Check tile below cat's feet (the tile the cat is standing on)
+            const feetRow = Math.floor((c.y + c.h) / T);
+            const c1 = Math.floor((c.x + 4) / T), c2 = Math.floor((c.x + c.w - 4) / T);
+            for (let cc = c1; cc <= c2; cc++) {
+                if (feetRow >= 0 && feetRow < level.rows && cc >= 0 && cc < level.cols) {
+                    const t = level.grid[feetRow][cc];
+                    if (t === 16 || t === 17) return true; // standing on silver pipe top
                 }
             }
             return false;
         }
 
-        if (touchesSilverPipe(cat) || (coopMode && touchesSilverPipe(cat2))) {
+        if (onSilverPipe(cat, keys) || (coopMode && onSilverPipe(cat2, keys2))) {
             if (currentLevel < LEVEL_DATA.length - 1) { state = 'levelcomplete'; winTimer = 120; score += 1000; }
             else { state = 'win'; score += 5000; }
             return;
