@@ -580,7 +580,7 @@
     const SHOP_ITEMS = [
         { name: 'Extra Life', icon: '❤️', desc: '+1 Life', cost: 5, action: () => { lives++; } },
         { name: 'Fire Power', icon: '🔥', desc: 'Fireball ability', cost: 8, action: () => { hasFire = true; } },
-        { name: 'Pickaxe', icon: '⛏️', desc: 'Boomerang pickaxe (R)', cost: 10, action: () => { hasPickaxe = true; } },
+        { name: 'Pickaxe', icon: '⛏️', desc: 'Boomerang pickaxe (R)', cost: 10, caveOnly: true, action: () => { hasPickaxe = true; } },
         { name: 'Speed Boost', icon: '⚡', desc: 'Faster movement', cost: 10, action: () => { speedBoost = Math.min(speedBoost + 1, WALK); } },
         { name: 'Glide', icon: '🪂', desc: 'Hold Q to glide', cost: 12, skyOnly: true, action: () => { hasGlide = true; } },
         { name: 'Shield', icon: '🛡️', desc: 'Absorb 3 hits', cost: 15, action: () => { shieldHits = 3; } },
@@ -590,7 +590,8 @@
     ];
     function getVisibleShopItems() {
         const isSky = currentLevel >= 5 && currentLevel <= 10;
-        return SHOP_ITEMS.filter(item => (!item.skyOnly || isSky) && (!item.coopOnly || coopMode));
+        const isCave = currentLevel >= 11;
+        return SHOP_ITEMS.filter(item => (!item.skyOnly || isSky) && (!item.caveOnly || isCave) && (!item.coopOnly || coopMode));
     }
 
     // BOSS
