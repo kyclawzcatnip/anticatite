@@ -682,6 +682,7 @@
                 keys.jump = val;
             }
             if (code === 'ArrowDown') keys.glide = val;
+            if (isOnlineGuest && val) console.log('[GUEST setKey]', code, '→ keys:', JSON.stringify({l:keys.left, r:keys.right, j:keys.jump}));
         }
     }
     function setKey2(code, val) {
@@ -5268,6 +5269,7 @@
             // Guest slot 0 → P2
             keys2.left = remoteInputs.left;
             keys2.right = remoteInputs.right;
+            if (remoteInputs.left || remoteInputs.right || remoteInputs.jump) console.log('[HOST apply]', JSON.stringify({l:remoteInputs.left, r:remoteInputs.right, j:remoteInputs.jump}));
             keys2.jump = remoteInputs.jump;
             if (remoteInputs.jumpPressed) { keys2.jumpPressed = true; remoteInputs.jumpPressed = false; }
             keys2.glide = remoteInputs.glide;
