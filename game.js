@@ -589,7 +589,7 @@
         { name: 'Cat Revive', icon: '💖', desc: 'Revive partner +3HP', cost: 10, coopOnly: true, action: () => { p1HP = 3; p2HP = 3; cat.dead = false; cat2.dead = false; } },
     ];
     function getVisibleShopItems() {
-        const isSky = currentLevel >= 5 && currentLevel <= 10;
+        const isSky = currentLevel >= 5;
         const isCave = currentLevel >= 11;
         return SHOP_ITEMS.filter(item => (!item.skyOnly || isSky) && (!item.caveOnly || isCave) && (!item.coopOnly || coopMode));
     }
