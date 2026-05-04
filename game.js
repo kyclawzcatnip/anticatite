@@ -540,6 +540,7 @@
     let stars = []; // spawned star items in the level
     let powerUps = []; // spawned power-up items from question blocks
     let blockLoot = {}; // pre-rolled loot for question blocks, keyed by 'r,c'
+    let bossPipeSpawned = false; // true after boss dies and silver pipe appears
     let heldShell = null; // reference to shell enemy being carried
     let inventory = []; // stored power-ups (hotbar), max 5 slots
     const MAX_INVENTORY = 5;
@@ -2539,16 +2540,39 @@
                 if (boss.deathTimer % 8 < 4) {
                     addParticle(boss.x + Math.random() * boss.w, boss.y + Math.random() * boss.h, ['#FF4500', '#FFD700', '#FF0000', '#FFA500'][Math.floor(Math.random() * 4)], 3, 4);
                 }
-                if (boss.deathTimer <= 0) {
-                    if (boss.pirate) {
-                        // Pirate boss = continue to caves
-                        state = 'levelcomplete'; winTimer = 120; score += 10000; coinCount += 200;
-                        showOverlay('🏴‍☠️ PIRATE CAPTAIN DEFEATED!', 'THE DEPTHS AWAIT...\n\nSCORE: ' + score + '\n\nPRESS SPACE TO CONTINUE');
-                    } else {
-                        // Rat King = continue to sky levels
-                        state = 'levelcomplete'; winTimer = 120; score += 5000; coinCount += 100;
-                        showOverlay('👑 RAT KING DEFEATED!', 'THE SKIES AWAIT...\n\nSCORE: ' + score + '\n\nPRESS SPACE TO CONTINUE');
+                if (boss.deathTimer <= 0 && !bossPipeSpawned) {
+                    // Spawn a silver pipe where the boss died
+                    bossPipeSpawned = true;
+                    score += boss.pirate ? 10000 : 5000;
+                    coinCount += boss.pirate ? 200 : 100;
+                    // Find the ground row near the boss death position
+                    const pipeCol = Math.floor((boss.x + boss.w / 2) / T);
+                    let groundRow = level.rows - 1;
+                    for (let r = 0; r < level.rows; r++) {
+                        if (level.grid[r][pipeCol] === 1 || level.grid[r][pipeCol] === 2 || level.grid[r][pipeCol] === 11) {
+                            groundRow = r; break;
+                        }
                     }
+                    // Place 3-block-tall silver pipe on top of ground
+                    const topRow = groundRow - 3;
+                    if (topRow >= 0 && pipeCol + 1 < level.cols) {
+                        level.grid[topRow][pipeCol] = 16;     // pipe top-left
+                        level.grid[topRow][pipeCol + 1] = 17; // pipe top-right
+                        level.grid[topRow + 1][pipeCol] = 18;     // pipe body-left
+                        level.grid[topRow + 1][pipeCol + 1] = 19; // pipe body-right
+                        level.grid[topRow + 2][pipeCol] = 18;     // pipe body-left
+                        level.grid[topRow + 2][pipeCol + 1] = 19; // pipe body-right
+                    }
+                    // Big celebration particles
+                    for (let i = 0; i < 30; i++) {
+                        addParticle(pipeCol * T + T, (topRow) * T, ['#C0C0C0', '#FFD700', '#FFFFFF', '#88CCFF'][Math.floor(Math.random() * 4)], 4 + Math.random() * 4, 6);
+                    }
+                    shakeTimer = 15; shakeAmt = 6;
+                    const title = boss.pirate ? '🏴‍☠️ PIRATE CAPTAIN DEFEATED!' : '👑 RAT KING DEFEATED!';
+                    const sub = 'A SILVER PIPE HAS APPEARED!\nENTER IT TO CONTINUE...\n\nSCORE: ' + score;
+                    showOverlay(title, sub);
+                    // Auto-dismiss the overlay after 3 seconds so the player can move
+                    setTimeout(() => { overlay.classList.remove('visible'); }, 3000);
                 }
             }
             return;
@@ -4326,7 +4350,7 @@
         cat.x = level.spawnX * T; cat.y = level.spawnY * T - cat.h;
         cat.vx = 0; cat.vy = 0; cat.grounded = false; cat.dead = false;
         cam.x = Math.max(0, cat.x - W / 3);
-        particles = []; questionHits = []; invincibleTimer = 0; fireballs = []; arrows = []; activeCheckpoint = null; stars = []; powerUps = []; heldShell = null;
+        particles = []; questionHits = []; invincibleTimer = 0; fireballs = []; arrows = []; activeCheckpoint = null; stars = []; powerUps = []; heldShell = null; bossPipeSpawned = false;
         // Keep isBig/isMini across levels — re-apply correct size
         if (isBig) { cat.h = 64; cat.w = 24; }
         else if (isMini) { cat.h = 16; cat.w = 12; }
