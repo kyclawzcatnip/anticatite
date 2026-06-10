@@ -6502,6 +6502,9 @@
         ctx.fillText('• Hit ? blocks from below to get coins, power-ups, and sometimes stars!', W / 2, tipY + 32);
         ctx.fillText('• Between levels, visit the SHOP to buy upgrades with coins.', W / 2, tipY + 46);
         ctx.fillText('• Watch out for rat archers — they shoot arrows at you!', W / 2, tipY + 60);
+        ctx.fillStyle = '#FF6644';
+        ctx.fillText('👑 RAT KING: Get on platforms when spears rise! Dodge the exploding', W / 2, tipY + 80);
+        ctx.fillText('  dagger and stomp fire rats 3 times to kill them!', W / 2, tipY + 94);
 
         ctx.textAlign = 'left';
         ctx.lineWidth = 1;
