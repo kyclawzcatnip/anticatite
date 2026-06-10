@@ -2819,10 +2819,10 @@
                         boss.spearColumns = cols;
                         // Spawn spear warnings
                         for (const col of cols) {
-                            // Find ground Y for this column
+                            // Find ground Y for this column (search bottom-up to find floor, not ceiling)
                             let gy = level.rows * T;
-                            for (let r = 0; r < level.rows; r++) {
-                                if (solid(r, col)) { gy = r * T; break; }
+                            for (let r = level.rows - 1; r >= 0; r--) {
+                                if (!solid(r, col) && solid(r + 1, col)) { gy = (r + 1) * T; break; }
                             }
                             bossSpears.push({
                                 col: col,
@@ -3092,8 +3092,8 @@
         if (!boss) return;
 
         const displayText = bossDialogueText.substring(0, bossDialogueCharIndex);
-        const maxWidth = W - 40;
-        const padding = 14;
+        const maxWidth = 320;
+        const padding = 12;
         const lineHeight = 16;
         ctx.font = '10px "Press Start 2P", monospace';
 
@@ -3103,7 +3103,7 @@
         let currentLine = '';
         for (const word of words) {
             const test = currentLine ? currentLine + ' ' + word : word;
-            if (ctx.measureText(test).width > maxWidth - padding * 2 - 20) {
+            if (ctx.measureText(test).width > maxWidth - padding * 2) {
                 if (currentLine) lines.push(currentLine);
                 currentLine = word;
             } else {
@@ -3113,77 +3113,70 @@
         if (currentLine) lines.push(currentLine);
 
         const boxW = maxWidth;
-        const boxH = Math.max(lines.length * lineHeight + padding * 2 + 20, 70);
+        const boxH = lines.length * lineHeight + padding * 2 + 10;
         const boxX = (W - boxW) / 2;
-        const boxY = H - boxH - 12;
+        const boxY = H - boxH - 40;
 
-        // Undertale-style: solid black box with thick white border
-        ctx.fillStyle = '#000000';
+        // Dark speech bubble
+        ctx.fillStyle = 'rgba(20, 10, 5, 0.92)';
         ctx.fillRect(boxX, boxY, boxW, boxH);
-        ctx.strokeStyle = '#FFFFFF';
-        ctx.lineWidth = 3;
-        ctx.strokeRect(boxX + 2, boxY + 2, boxW - 4, boxH - 4);
+        ctx.strokeStyle = '#FFD700';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(boxX, boxY, boxW, boxH);
 
-        // Name tag — Undertale style with asterisk
+        // Rat King name label
         ctx.fillStyle = '#FFD700';
         ctx.font = 'bold 10px "Press Start 2P", monospace';
         ctx.textAlign = 'left';
-        ctx.fillText('* RAT KING', boxX + padding + 4, boxY + padding + 10);
+        ctx.fillText('👑 RAT KING', boxX + padding, boxY + padding + 8);
 
         // Dialogue text
         ctx.fillStyle = '#FFFFFF';
         ctx.font = '9px "Press Start 2P", monospace';
         for (let i = 0; i < lines.length; i++) {
-            ctx.fillText(lines[i], boxX + padding + 10, boxY + padding + 28 + i * lineHeight);
+            ctx.fillText(lines[i], boxX + padding, boxY + padding + 26 + i * lineHeight);
         }
 
-        // Blinking prompt
+        // Prompt
         if (bossDialogueDone) {
-            // Undertale-style flashing triangle
-            const triX = boxX + boxW - 24;
-            const triY = boxY + boxH - 18;
-            if (frameCount % 30 < 20) {
-                ctx.fillStyle = '#FFD700';
-                ctx.beginPath();
-                ctx.moveTo(triX, triY);
-                ctx.lineTo(triX + 10, triY);
-                ctx.lineTo(triX + 5, triY + 8);
-                ctx.closePath();
-                ctx.fill();
-            }
+            ctx.fillStyle = frameCount % 40 < 20 ? '#FFD700' : '#AA8800';
+            ctx.font = '8px "Press Start 2P", monospace';
+            ctx.textAlign = 'center';
+            ctx.fillText('[ PRESS SPACE ]', W / 2, boxY + boxH + 14);
+            ctx.textAlign = 'left';
         }
     }
 
-    // BOSS TAUNT — Undertale-style black box during attacks (doesn't pause game)
+    // BOSS TAUNT — centered black box during attacks (doesn't pause game)
     function drawBossTaunt() {
         if (!boss || !boss.alive || bossTauntTimer <= 0 || !bossTauntText) return;
         bossTauntTimer--;
 
-        const alpha = bossTauntTimer < 20 ? bossTauntTimer / 20 : 1;
+        const alpha = bossTauntTimer < 20 ? bossTauntTimer / 20 : 1; // fade out
 
         ctx.save();
         ctx.globalAlpha = alpha;
 
+        // Measure text
         ctx.font = '9px "Press Start 2P", monospace';
-        const textW = ctx.measureText('* ' + bossTauntText).width;
-        const padX = 14, padY = 10;
-        const boxW = Math.min(textW + padX * 2 + 10, W - 40);
-        const boxH = 36;
+        const textW = ctx.measureText(bossTauntText).width;
+        const padX = 16, padY = 10;
+        const boxW = textW + padX * 2;
+        const boxH = 14 + padY * 2;
         const boxX = (W - boxW) / 2;
-        const boxY = H - boxH - 12;
+        const boxY = 32;
 
-        // Undertale-style: solid black box, thick white border
+        // Black box
         ctx.fillStyle = '#000000';
         ctx.fillRect(boxX, boxY, boxW, boxH);
-        ctx.strokeStyle = '#FFFFFF';
-        ctx.lineWidth = 3;
-        ctx.strokeRect(boxX + 2, boxY + 2, boxW - 4, boxH - 4);
+        ctx.strokeStyle = '#FFD700';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(boxX, boxY, boxW, boxH);
 
-        // Asterisk + text
-        ctx.fillStyle = '#FFFFFF';
-        ctx.font = '9px "Press Start 2P", monospace';
+        // Crown icon + text
+        ctx.fillStyle = '#FFD700';
         ctx.textAlign = 'center';
-        ctx.fillText('* ' + bossTauntText, W / 2, boxY + padY + 15);
+        ctx.fillText('👑 ' + bossTauntText, W / 2, boxY + padY + 11);
         ctx.textAlign = 'left';
 
         ctx.restore();
