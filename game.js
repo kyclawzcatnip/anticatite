@@ -101,12 +101,12 @@
             "K                                                K",
             "K                                                K",
             "K                                                K",
-            "K                                                K",
-            "K         KKKK                        KKKK       K",
+            "K    KKK              KKK              KKK       K",
+            "K         KKKK                  KKKK             K",
             "K                      KKKK                      K",
-            "K W                                           X  K",
-            "K                KK          KK                  K",
+            "K W              KKK          KKK             X  K",
             "K                                                K",
+            "K       KKK                          KKK         K",
             "K S                                              K",
             "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
             "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
@@ -579,12 +579,12 @@
 
     const SHOP_ITEMS = [
         { name: 'Extra Life', icon: '❤️', desc: '+1 Life', cost: 5, action: () => { lives++; } },
-        { name: 'Fire Power', icon: '🔥', desc: 'Fireball ability', cost: 8, action: () => { hasFire = true; } },
-        { name: 'Pickaxe', icon: '⛏️', desc: 'Boomerang pickaxe (R)', cost: 10, caveOnly: true, action: () => { hasPickaxe = true; } },
+        { name: 'Fire Power', icon: '🔥', desc: 'Fireball ability', cost: 8, action: () => { hasFire = true; if(window.audio) audio.playPowerUp(); } },
+        { name: 'Pickaxe', icon: '⛏️', desc: 'Boomerang pickaxe (R)', cost: 10, caveOnly: true, action: () => { hasPickaxe = true; if(window.audio) audio.playPowerUp(); } },
         { name: 'Speed Boost', icon: '⚡', desc: 'Faster movement', cost: 10, action: () => { speedBoost = Math.min(speedBoost + 1, WALK); } },
         { name: 'Glide', icon: '🪂', desc: 'Hold Q to glide', cost: 12, skyOnly: true, action: () => { hasGlide = true; } },
         { name: 'Shield', icon: '🛡️', desc: 'Absorb 3 hits', cost: 15, action: () => { shieldHits = 3; } },
-        { name: 'Big Mushroom', icon: '🍄', desc: 'Grow big, break bricks', cost: 12, action: () => { isMini = false; isBig = true; cat.y -= 32; cat.h = 64; cat.w = 24; } },
+        { name: 'Big Mushroom', icon: '🍄', desc: 'Grow big, break bricks', cost: 12, action: () => { isMini = false; isBig = true; if(window.audio) audio.playPowerUp(); cat.y -= 32; cat.h = 64; cat.w = 24; } },
         { name: 'Mini Mushroom', icon: '🔹', desc: 'Tiny! Higher jump, fit gaps', cost: 7, action: () => { isBig = false; isMini = true; cat.h = 16; cat.w = 12; } },
         { name: 'Cat Revive', icon: '💖', desc: 'Revive partner +3HP', cost: 10, coopOnly: true, action: () => { p1HP = 3; p2HP = 3; cat.dead = false; cat2.dead = false; } },
     ];
@@ -598,7 +598,38 @@
     let boss = null;
     const BOSS_MAX_HP = 10;
     const PIRATE_BOSS_HP = 12;
+    // Boss dialogue state
+    let bossDialogueActive = false;
+    let bossDialogueText = '';
+    let bossDialogueCharIndex = 0;
+    let bossDialogueTimer = 0;
+    let bossDialogueDone = false; // true after dialogue fully shown
+    let bossDialogueDismissed = false; // true after player presses space
+    // Boss taunt system (quick speech bubble during attacks, doesn't pause game)
+    let bossTauntText = '';
+    let bossTauntTimer = 0;
+    // Boss Phase 1 projectile arrays
+    let bossSpears = [];      // floor spear traps
+    let bossDaggers = [];     // dagger projectiles (large + small)
+    let bossFireballs2 = [];  // boss's bouncing fireballs (separate from player fireballs)
     function createBoss(x, y, isPirate) {
+        // Reset boss projectiles
+        bossSpears = [];
+        bossDaggers = [];
+        bossFireballs2 = [];
+        // Reset dialogue state (only for Rat King, not pirate)
+        if (!isPirate) {
+            bossDialogueActive = true;
+            const skinName = CAT_SKINS[selectedSkin].name;
+            bossDialogueText = 'Well, well, well... if it isn\'t ' + skinName + ' the cat my scouts told me about... NOW YOU DIE.';
+            bossDialogueCharIndex = 0;
+            bossDialogueTimer = 0;
+            bossDialogueDone = false;
+            bossDialogueDismissed = false;
+        } else {
+            bossDialogueActive = false;
+            bossDialogueDismissed = true;
+        }
         return {
             x: x, y: y, w: 64, h: 64,
             vx: 0, vy: 0,
@@ -607,13 +638,17 @@
             alive: true,
             pirate: isPirate || false,
             phase: 'idle',
-            phaseTimer: 60,
+            phaseTimer: 90,
             dir: -1,
             frame: 0,
             flashTimer: 0,
             attackCount: 0,
             grounded: false,
             deathTimer: 0,
+            bossPhase: 1,       // multi-phase: 1, 2, 3
+            currentAttack: 0,   // cycles through 0,1,2 for the 3 attacks
+            spearWarningTimer: 0,
+            spearColumns: [],   // which columns have active spear warnings
         };
     }
 
@@ -719,6 +754,20 @@
                 return;
             }
             return;
+        }
+        // Boss dialogue dismiss
+        if (state === 'playing' && bossDialogueActive && !bossDialogueDismissed) {
+            if (e.code === 'Space' || e.code === 'Enter') {
+                if (bossDialogueDone) {
+                    bossDialogueDismissed = true;
+                    bossDialogueActive = false;
+                } else {
+                    // Skip typewriter — show full text instantly
+                    bossDialogueCharIndex = bossDialogueText.length;
+                    bossDialogueDone = true;
+                }
+            }
+            return; // Block all other input during dialogue
         }
         if (state === 'levelcomplete' && e.code === 'Space') { openShop(); return; }
         if (state === 'shop') {
@@ -913,9 +962,9 @@
         // Jump
         const jumpForce = isMini ? JUMP * 1.15 : JUMP; // mini cats jump higher
         if (keys.jumpPressed && cat.grounded) {
-            cat.vy = jumpForce; cat.grounded = false; cat.jumping = true; cat.canDoubleJump = true;
+            cat.vy = jumpForce; if(window.audio) audio.playJump(); cat.grounded = false; cat.jumping = true; cat.canDoubleJump = true;
         } else if (keys.jumpPressed && !cat.grounded && cat.canDoubleJump) {
-            cat.vy = JUMP * 0.75; cat.canDoubleJump = false;
+            cat.vy = JUMP * 0.75; if(window.audio) audio.playJump(); cat.canDoubleJump = false;
             // Puff particles for double jump
             for (let i = 0; i < 6; i++) {
                 addParticle(cat.x + cat.w / 2, cat.y + cat.h, '#FFFFFF', 2, 3);
@@ -1066,9 +1115,9 @@
         } else if (loot.type !== 'star' && loot.type !== 'coins') {
             let puType = loot.type, puColor = loot.color, puIcon = loot.icon, puApply;
             if (puType === 'life') puApply = () => { lives++; };
-            else if (puType === 'fire') puApply = () => { hasFire = true; };
+            else if (puType === 'fire') puApply = () => { hasFire = true; if(window.audio) audio.playPowerUp(); };
             else if (puType === 'speed') puApply = () => { speedBoost = Math.min(speedBoost + 0.5, WALK); };
-            else if (puType === 'big') puApply = () => { isBig = true; cat.y -= 32; cat.h = 64; };
+            else if (puType === 'big') puApply = () => { isBig = true; if(window.audio) audio.playPowerUp(); cat.y -= 32; cat.h = 64; };
             else if (puType === 'shield') puApply = () => { shieldHits = Math.min(shieldHits + 1, 5); };
             powerUps.push({
                 x: c * T + 4, y: r * T - T, w: 24, h: 24,
@@ -1092,7 +1141,7 @@
         }
         if (shieldHits > 0) {
             shieldHits--;
-            invincibleTimer = 60;
+            invincibleTimer = 60; if(window.audio) audio.playHurt();
             addParticle(cat.x + cat.w / 2, cat.y + cat.h / 2, '#44AAFF', 8, 5);
             addParticle(cat.x + cat.w / 2, cat.y + cat.h / 2, '#AADDFF', 6, 4);
             return;
@@ -1103,7 +1152,7 @@
             const allOut = p1HP <= 0 && p2HP <= 0 && (!fourPlayerMode || (p3HP <= 0 && p4HP <= 0));
             if (allOut) { deathTimer = 90; state = 'over'; }
         } else {
-            lives--;
+            lives--; if(window.audio) audio.playDeath();
             if (lives < 0) { deathTimer = 90; state = 'over'; }
         }
     }
@@ -1136,9 +1185,9 @@
         if (keys2.left) { cat2.vx = -(WALK + speedBoost); cat2.dir = -1; }
         if (keys2.right) { cat2.vx = WALK + speedBoost; cat2.dir = 1; }
         if (keys2.jumpPressed && cat2.grounded) {
-            cat2.vy = JUMP; cat2.grounded = false; cat2.jumping = true; cat2.canDoubleJump = true;
+            cat2.vy = JUMP; if(window.audio) audio.playJump(); cat2.grounded = false; cat2.jumping = true; cat2.canDoubleJump = true;
         } else if (keys2.jumpPressed && !cat2.grounded && cat2.canDoubleJump) {
-            cat2.vy = JUMP * 0.75; cat2.canDoubleJump = false;
+            cat2.vy = JUMP * 0.75; if(window.audio) audio.playJump(); cat2.canDoubleJump = false;
             for (let i = 0; i < 6; i++) addParticle(cat2.x + cat2.w / 2, cat2.y + cat2.h, '#FFFFFF', 2, 3);
         }
         keys2.jumpPressed = false;
@@ -1234,6 +1283,11 @@
                     if (e.type === 'ratter' && e.shell && !heldShell2) {
                         heldShell2 = e; e.vx = 0; e.shellVx = 0;
                         addParticle(e.x + e.w / 2, e.y + e.h / 2, '#44AA44', 6, 4);
+                    } else if (e.type === 'firerat' && e.hp > 1) {
+                        e.hp--; score += 50;
+                        e.flashTimer = 15;
+                        shakeTimer = 4; shakeAmt = 2;
+                        addParticle(e.x + e.w / 2, e.y + e.h / 2, '#FF6600', 8, 4);
                     } else {
                         e.alive = false; score += 200;
                         shakeTimer = 6; shakeAmt = 4;
@@ -1249,7 +1303,7 @@
         }
     }
 
-    function shootFireball2() {
+    function shootFireball2() { if(window.audio) audio.playFireball();
         fireCooldown = 20;
         const fb = {
             x: cat2.x + (cat2.dir === 1 ? cat2.w : -10), y: cat2.y + cat2.h / 2 - 5,
@@ -1278,9 +1332,9 @@
         if (ek.left) { ec.vx = -(WALK + speedBoost); ec.dir = -1; }
         if (ek.right) { ec.vx = WALK + speedBoost; ec.dir = 1; }
         if (ek.jumpPressed && ec.grounded) {
-            ec.vy = JUMP; ec.grounded = false; ec.jumping = true; ec.canDoubleJump = true;
+            ec.vy = JUMP; if(window.audio) audio.playJump(); ec.grounded = false; ec.jumping = true; ec.canDoubleJump = true;
         } else if (ek.jumpPressed && !ec.grounded && ec.canDoubleJump) {
-            ec.vy = JUMP * 0.75; ec.canDoubleJump = false;
+            ec.vy = JUMP * 0.75; if(window.audio) audio.playJump(); ec.canDoubleJump = false;
         }
         ek.jumpPressed = false;
         if (!ek.jump && ec.vy < -3) ec.vy = -3;
@@ -1458,16 +1512,62 @@
                 }
             }
 
+            // FIRE RAT AI: chase player, slow, jump to platforms, despawn
+            if (e.type === 'firerat') {
+                // Despawn timer
+                if (e.despawnTimer !== undefined) {
+                    e.despawnTimer--;
+                    if (e.despawnTimer <= 0) {
+                        e.alive = false;
+                        addParticle(e.x + e.w / 2, e.y + e.h / 2, '#FF4500', 8, 5);
+                        return;
+                    }
+                }
+                // Chase nearest living cat
+                let target = cat;
+                if (coopMode && !cat2.dead && !cat.dead) {
+                    const d1 = Math.abs(cat.x - e.x), d2 = Math.abs(cat2.x - e.x);
+                    target = d2 < d1 ? cat2 : cat;
+                } else if (coopMode && cat.dead && !cat2.dead) {
+                    target = cat2;
+                }
+                if (!target.dead) {
+                    e.vx = target.x < e.x ? -ENEMY_SPEED * 0.6 : ENEMY_SPEED * 0.6;
+                }
+                // Jump to reach platforms (if target is above)
+                if (e.jumpTimer !== undefined) {
+                    e.jumpTimer--;
+                    if (e.jumpTimer <= 0 && !target.dead) {
+                        // Jump if target is above and we're on the ground
+                        const onGround = e.vy === 0 || (e.vy !== undefined && Math.abs(e.vy) < 0.5);
+                        const footR2 = Math.floor((e.y + e.h + 1) / T);
+                        const ec1b = Math.floor((e.x + 4) / T);
+                        const grounded = solid(footR2, ec1b);
+                        if (grounded && target.y < e.y - 20) {
+                            e.vy = -9; // jump
+                            addParticle(e.x + e.w / 2, e.y + e.h, '#FF6600', 4, 3);
+                        }
+                        e.jumpTimer = 60 + Math.floor(Math.random() * 60);
+                    }
+                }
+                // Flame trail particle
+                if (frameCount % 4 === 0) {
+                    addParticle(e.x + e.w / 2, e.y + e.h, '#FF4500', 1, 2);
+                }
+            }
+
             // Reverse at walls or edges
             let frontC = Math.floor((e.vx > 0 ? e.x + e.w : e.x) / T);
             let fR = Math.floor((e.y + e.h) / T);
             let headR = Math.floor((e.y + e.h / 2) / T);
             const isShell = (e.type === 'ratter' || e.type === 'flyratter') && e.shell;
             const isFlying = e.type === 'flyratter';
+            const isFireRat = e.type === 'firerat';
             // Shells only bounce off walls, not edges (so they fall with gravity)
             // Flyratters reverse at walls but don't need ground
+            // Fire rats chase player and don't care about edges
             if (solid(headR, frontC)) e.vx *= -1;
-            else if (!isShell && !isFlying && !solid(fR, frontC)) e.vx *= -1;
+            else if (!isShell && !isFlying && !isFireRat && !solid(fR, frontC)) e.vx *= -1;
 
             // Cat collision (P1)
             if (!cat.dead) {
@@ -1490,11 +1590,11 @@
                                     // Stomp shell: if moving → stop, if stopped → kick
                                     if (e.shellVx !== 0) {
                                         e.shellVx = 0; e.vx = 0;
-                                        cat.vy = JUMP * 0.5; score += 100;
+                                        cat.vy = JUMP * 0.5; if(window.audio) audio.playStomp(); score += 100;
                                     } else {
                                         e.shellVx = cat.x < e.x ? 3 : -3;
                                         e.vx = e.shellVx;
-                                        cat.vy = JUMP * 0.5; score += 100;
+                                        cat.vy = JUMP * 0.5; if(window.audio) audio.playStomp(); score += 100;
                                     }
                                     shakeTimer = 4; shakeAmt = 2;
                                     addParticle(e.x + e.w / 2, e.y + e.h / 2, '#44AA44', 8, 4);
@@ -1514,7 +1614,7 @@
                                         // Lose wings, become grounded ratter
                                         e.type = 'ratter';
                                         e.vy = 0;
-                                        cat.vy = JUMP * 0.6; score += 200;
+                                        cat.vy = JUMP * 0.6; if(window.audio) audio.playStomp(); score += 200;
                                         shakeTimer = 6; shakeAmt = 3;
                                         addParticle(e.x + e.w / 2, e.y, '#FFF', 8, 6);
                                         addParticle(e.x - 8, e.y, '#FFF', 4, 3);
@@ -1522,7 +1622,7 @@
                                     } else {
                                         e.shell = true; e.vx = 0; e.shellVx = 0;
                                         e.h = T; e.y = e.y + 8;
-                                        cat.vy = JUMP * 0.6; score += 200;
+                                        cat.vy = JUMP * 0.6; if(window.audio) audio.playStomp(); score += 200;
                                         shakeTimer = 6; shakeAmt = 3;
                                         addParticle(e.x + e.w / 2, e.y + e.h / 2, '#44AA44', 12, 5);
                                     }
@@ -1532,11 +1632,18 @@
                             }
                             return;
                         }
-                        // Stomp regular rat/archer
+                        // Stomp regular rat/archer/firerat
                         if (cat.vy > 0 && cat.y + cat.h - 8 < e.y + e.h / 2) {
-                            e.alive = false; cat.vy = JUMP * 0.6; score += 200;
-                            shakeTimer = 6; shakeAmt = 3;
-                            addParticle(e.x + e.w / 2, e.y + e.h / 2, '#ff4444', 12, 5);
+                            if (e.type === 'firerat' && e.hp > 1) {
+                                e.hp--; cat.vy = JUMP * 0.6; if(window.audio) audio.playStomp(); score += 50;
+                                e.flashTimer = 15;
+                                shakeTimer = 4; shakeAmt = 2;
+                                addParticle(e.x + e.w / 2, e.y + e.h / 2, '#FF6600', 8, 4);
+                            } else {
+                                e.alive = false; cat.vy = JUMP * 0.6; if(window.audio) audio.playStomp(); score += 200;
+                                shakeTimer = 6; shakeAmt = 3;
+                                addParticle(e.x + e.w / 2, e.y + e.h / 2, '#ff4444', 12, 5);
+                            }
                         } else {
                             killCat();
                         }
@@ -1556,19 +1663,25 @@
                     if (invincibleTimer2 > 0) return;
                     if ((e.type === 'ratter' || e.type === 'flyratter') && e.shell) {
                         if (cat2.vy > 0 && cat2.y + cat2.h - 8 < e.y + e.h / 2) {
-                            if (e.shellVx !== 0) { e.shellVx = 0; e.vx = 0; cat2.vy = JUMP * 0.5; score += 100; }
-                            else { e.shellVx = cat2.x < e.x ? 3 : -3; e.vx = e.shellVx; cat2.vy = JUMP * 0.5; score += 100; }
+                            if (e.shellVx !== 0) { e.shellVx = 0; e.vx = 0; cat2.vy = JUMP * 0.5; if(window.audio) audio.playStomp(); score += 100; }
+                            else { e.shellVx = cat2.x < e.x ? 3 : -3; e.vx = e.shellVx; cat2.vy = JUMP * 0.5; if(window.audio) audio.playStomp(); score += 100; }
                         } else if (e.shellVx !== 0) { killCat2(); }
                         else { heldShell2 = e; e.vx = 0; e.shellVx = 0; invincibleTimer2 = 10; }
                     } else if ((e.type === 'ratter' || e.type === 'flyratter') && !e.shell) {
                         if (cat2.vy > 0 && cat2.y + cat2.h - 8 < e.y + e.h / 2) {
-                            if (e.type === 'flyratter') { e.type = 'ratter'; e.vy = 0; cat2.vy = JUMP * 0.6; score += 200; addParticle(e.x + e.w / 2, e.y, '#FFF', 8, 6); }
-                            else { e.shell = true; e.vx = 0; e.shellVx = 0; e.h = T; e.y = e.y + 8; cat2.vy = JUMP * 0.6; score += 200; addParticle(e.x + e.w / 2, e.y + e.h / 2, '#44AA44', 12, 5); }
+                            if (e.type === 'flyratter') { e.type = 'ratter'; e.vy = 0; cat2.vy = JUMP * 0.6; if(window.audio) audio.playStomp(); score += 200; addParticle(e.x + e.w / 2, e.y, '#FFF', 8, 6); }
+                            else { e.shell = true; e.vx = 0; e.shellVx = 0; e.h = T; e.y = e.y + 8; cat2.vy = JUMP * 0.6; if(window.audio) audio.playStomp(); score += 200; addParticle(e.x + e.w / 2, e.y + e.h / 2, '#44AA44', 12, 5); }
                         } else { killCat2(); }
                     } else {
                         if (cat2.vy > 0 && cat2.y + cat2.h - 8 < e.y + e.h / 2) {
-                            e.alive = false; cat2.vy = JUMP * 0.6; score += 200;
-                            addParticle(e.x + e.w / 2, e.y + e.h / 2, '#ff4444', 12, 5);
+                            if (e.type === 'firerat' && e.hp > 1) {
+                                e.hp--; cat2.vy = JUMP * 0.6; if(window.audio) audio.playStomp(); score += 50;
+                                e.flashTimer = 15;
+                                addParticle(e.x + e.w / 2, e.y + e.h / 2, '#FF6600', 8, 4);
+                            } else {
+                                e.alive = false; cat2.vy = JUMP * 0.6; if(window.audio) audio.playStomp(); score += 200;
+                                addParticle(e.x + e.w / 2, e.y + e.h / 2, '#ff4444', 12, 5);
+                            }
                         } else { killCat2(); }
                     }
                 }
@@ -1804,6 +1917,11 @@
                         heldShell = e;
                         e.vx = 0; e.shellVx = 0;
                         addParticle(e.x + e.w / 2, e.y + e.h / 2, '#44AA44', 6, 4);
+                    } else if (e.type === 'firerat' && e.hp > 1) {
+                        e.hp--; score += 50;
+                        e.flashTimer = 15;
+                        shakeTimer = 4; shakeAmt = 2;
+                        addParticle(e.x + e.w / 2, e.y + e.h / 2, '#FF6600', 8, 4);
                     } else {
                         e.alive = false; score += 200;
                         shakeTimer = 6; shakeAmt = 4;
@@ -1829,14 +1947,14 @@
             cn.anim += COIN_ANIM;
             let ox = cat.x + 4, oy = cat.y + 2, ow = cat.w - 8, oh = cat.h - 2;
             if (ox < cn.x + cn.w && ox + ow > cn.x && oy < cn.y + cn.h && oy + oh > cn.y) {
-                cn.collected = true; score += 100; coinCount++;
+                cn.collected = true; score += 100; coinCount++; if(window.audio) audio.playCoin();
                 addParticle(cn.x + cn.w / 2, cn.y + cn.h / 2, '#FFD700', 8, 4);
             }
             // P2 coin collect
             if (coopMode && !cat2.dead) {
                 let ox2 = cat2.x + 4, oy2 = cat2.y + 2, ow2 = cat2.w - 8, oh2 = cat2.h - 2;
                 if (ox2 < cn.x + cn.w && ox2 + ow2 > cn.x && oy2 < cn.y + cn.h && oy2 + oh2 > cn.y) {
-                    cn.collected = true; score += 100; coinCount++;
+                    cn.collected = true; score += 100; coinCount++; if(window.audio) audio.playCoin();
                     addParticle(cn.x + cn.w / 2, cn.y + cn.h / 2, '#FFD700', 8, 4);
                 }
             }
@@ -1846,7 +1964,7 @@
                     if (!ec.dead && !cn.collected) {
                         let ex = ec.x + 4, ey = ec.y + 2, ew = ec.w - 8, eh = ec.h - 2;
                         if (ex < cn.x + cn.w && ex + ew > cn.x && ey < cn.y + cn.h && ey + eh > cn.y) {
-                            cn.collected = true; score += 100; coinCount++;
+                            cn.collected = true; score += 100; coinCount++; if(window.audio) audio.playCoin();
                             addParticle(cn.x + cn.w / 2, cn.y + cn.h / 2, '#FFD700', 8, 4);
                         }
                     }
@@ -1967,14 +2085,14 @@
             ff.anim += 0.04;
             let ox = cat.x + 4, oy = cat.y + 2, ow = cat.w - 8, oh = cat.h - 2;
             if (ox < ff.x + ff.w && ox + ow > ff.x && oy < ff.y + ff.h && oy + oh > ff.y) {
-                ff.collected = true; hasFire = true; score += 300;
+                ff.collected = true; hasFire = true; if(window.audio) audio.playPowerUp(); score += 300;
                 addParticle(ff.x + ff.w / 2, ff.y + ff.h / 2, '#FF4500', 15, 6);
                 addParticle(ff.x + ff.w / 2, ff.y, '#FFD700', 8, 4);
             }
             if (coopMode && !cat2.dead) {
                 let ox2 = cat2.x + 4, oy2 = cat2.y + 2, ow2 = cat2.w - 8, oh2 = cat2.h - 2;
                 if (ox2 < ff.x + ff.w && ox2 + ow2 > ff.x && oy2 < ff.y + ff.h && oy2 + oh2 > ff.y) {
-                    ff.collected = true; hasFire = true; score += 300;
+                    ff.collected = true; hasFire = true; if(window.audio) audio.playPowerUp(); score += 300;
                     addParticle(ff.x + ff.w / 2, ff.y + ff.h / 2, '#FF4500', 15, 6);
                 }
             }
@@ -1984,7 +2102,7 @@
                     if (!ec.dead && !ff.collected) {
                         let ex = ec.x + 4, ey = ec.y + 2, ew = ec.w - 8, eh = ec.h - 2;
                         if (ex < ff.x + ff.w && ex + ew > ff.x && ey < ff.y + ff.h && ey + eh > ff.y) {
-                            ff.collected = true; hasFire = true; score += 300;
+                            ff.collected = true; hasFire = true; if(window.audio) audio.playPowerUp(); score += 300;
                             addParticle(ff.x + ff.w / 2, ff.y + ff.h / 2, '#FF4500', 15, 6);
                         }
                     }
@@ -2029,7 +2147,7 @@
     }
 
     // FIREBALLS
-    function shootFireball() {
+    function shootFireball() { if(window.audio) audio.playFireball();
         fireCooldown = 15;
         const fb = {
             x: cat.x + (cat.dir === 1 ? cat.w : -8),
@@ -2173,7 +2291,7 @@
     }
 
     // PICKAXE BOOMERANG
-    function throwPickaxe() {
+    function throwPickaxe() { if(window.audio) audio.playFireball();
         pickaxeCooldown = 45; // cooldown between throws
         pickaxeAmmo--;
         // Start reload when out of ammo
@@ -2200,7 +2318,7 @@
     }
 
     // P2 pickaxe throw (returns to cat2)
-    function throwPickaxe2() {
+    function throwPickaxe2() { if(window.audio) audio.playFireball();
         pickaxeCooldown = 45;
         pickaxeAmmo--;
         if (pickaxeAmmo <= 0) {
@@ -2534,6 +2652,18 @@
     // BOSS AI
     function updateBoss() {
         if (!boss) return;
+
+        // Update boss dialogue typewriter
+        updateBossDialogue();
+
+        // Update boss projectiles regardless of dialogue
+        updateBossSpears();
+        updateBossDaggers();
+        updateBossFireballs2();
+
+        // Don't run boss AI during dialogue
+        if (bossDialogueActive && !bossDialogueDismissed) return;
+
         // Handle boss death animation
         if (!boss.alive) {
             if (boss.deathTimer > 0) {
@@ -2546,11 +2676,12 @@
                     bossPipeSpawned = true;
                     score += boss.pirate ? 10000 : 5000;
                     coinCount += boss.pirate ? 200 : 100;
-                    // Find the ground row near the boss death position
+                    // Find the ground row near the boss death position (search DOWN from boss)
                     const pipeCol = Math.floor((boss.x + boss.w / 2) / T);
+                    const bossRow = Math.floor((boss.y + boss.h) / T);
                     let groundRow = level.rows - 1;
-                    for (let r = 0; r < level.rows; r++) {
-                        if (level.grid[r][pipeCol] === 1 || level.grid[r][pipeCol] === 2 || level.grid[r][pipeCol] === 11) {
+                    for (let r = bossRow; r < level.rows; r++) {
+                        if (level.grid[r][pipeCol] === 1 || level.grid[r][pipeCol] === 2 || level.grid[r][pipeCol] === 11 || level.grid[r][pipeCol] === 14) {
                             groundRow = r; break;
                         }
                     }
@@ -2569,6 +2700,10 @@
                         addParticle(pipeCol * T + T, (topRow) * T, ['#C0C0C0', '#FFD700', '#FFFFFF', '#88CCFF'][Math.floor(Math.random() * 4)], 4 + Math.random() * 4, 6);
                     }
                     shakeTimer = 15; shakeAmt = 6;
+                    // Clear any remaining boss projectiles
+                    bossSpears = [];
+                    bossDaggers = [];
+                    bossFireballs2 = [];
                     const title = boss.pirate ? '🏴‍☠️ PIRATE CAPTAIN DEFEATED!' : '👑 RAT KING DEFEATED!';
                     const sub = 'A SILVER PIPE HAS APPEARED!\nENTER IT TO CONTINUE...\n\nSCORE: ' + score;
                     showOverlay(title, sub);
@@ -2624,50 +2759,160 @@
         // Flash timer
         if (boss.flashTimer > 0) boss.flashTimer--;
 
-        // Phase AI
-        boss.phaseTimer--;
-        boss.dir = cat.x < boss.x ? -1 : 1;
-
-        if (boss.phase === 'idle') {
-            boss.vx = 0;
-            if (boss.phaseTimer <= 0) {
-                boss.attackCount++;
-                // Choose attack based on HP
-                if (boss.hp <= 3 && boss.attackCount % 3 === 0) {
-                    boss.phase = 'spawn';
-                    boss.phaseTimer = 60;
-                } else if (boss.attackCount % 2 === 0) {
-                    boss.phase = 'jump';
-                    boss.phaseTimer = 80;
-                } else {
-                    boss.phase = 'charge';
-                    boss.phaseTimer = 90;
+        // === PHASE AI ===
+        // Pirate boss uses the old AI (charge/jump/spawn)
+        if (boss.pirate) {
+            boss.phaseTimer--;
+            boss.dir = cat.x < boss.x ? -1 : 1;
+            if (boss.phase === 'idle') {
+                boss.vx = 0;
+                if (boss.phaseTimer <= 0) {
+                    boss.attackCount++;
+                    if (boss.hp <= 3 && boss.attackCount % 3 === 0) {
+                        boss.phase = 'spawn'; boss.phaseTimer = 60;
+                    } else if (boss.attackCount % 2 === 0) {
+                        boss.phase = 'jump'; boss.phaseTimer = 80;
+                    } else {
+                        boss.phase = 'charge'; boss.phaseTimer = 90;
+                    }
                 }
+            } else if (boss.phase === 'charge') {
+                boss.vx = boss.dir * 4;
+                if (boss.phaseTimer <= 0) { boss.phase = 'idle'; boss.phaseTimer = 40; boss.vx = 0; }
+            } else if (boss.phase === 'jump') {
+                if (boss.phaseTimer === 78 && boss.grounded) { boss.vy = -14; boss.vx = boss.dir * 3; }
+                if (boss.grounded && boss.phaseTimer < 60) { shakeTimer = 8; shakeAmt = 4; boss.phase = 'idle'; boss.phaseTimer = 50; boss.vx = 0; }
+            } else if (boss.phase === 'spawn') {
+                boss.vx = 0;
+                if (boss.phaseTimer === 30) {
+                    level.enemies.push({ x: boss.x - 40, y: boss.y + 32, w: T, h: T, vx: -ENEMY_SPEED * 1.5, vy: 0, type: 'rat', alive: true, frame: 0 });
+                    level.enemies.push({ x: boss.x + boss.w + 8, y: boss.y + 32, w: T, h: T, vx: ENEMY_SPEED * 1.5, vy: 0, type: 'rat', alive: true, frame: 0 });
+                    addParticle(boss.x + boss.w / 2, boss.y + boss.h, '#8B4513', 10, 5);
+                }
+                if (boss.phaseTimer <= 0) { boss.phase = 'idle'; boss.phaseTimer = 60; }
+            } else if (boss.phase === 'hurt') {
+                boss.vx = 0;
+                if (boss.phaseTimer <= 0) { boss.phase = 'idle'; boss.phaseTimer = 30; }
             }
-        } else if (boss.phase === 'charge') {
-            boss.vx = boss.dir * 4;
-            if (boss.phaseTimer <= 0) { boss.phase = 'idle'; boss.phaseTimer = 40; boss.vx = 0; }
-        } else if (boss.phase === 'jump') {
-            if (boss.phaseTimer === 78 && boss.grounded) {
-                boss.vy = -14;
-                boss.vx = boss.dir * 3;
+        } else {
+            // === RAT KING — NEW 3-ATTACK PHASE SYSTEM ===
+            boss.phaseTimer--;
+            boss.dir = cat.x < boss.x ? -1 : 1;
+
+            if (boss.phase === 'idle') {
+                boss.vx = 0;
+                if (boss.phaseTimer <= 0) {
+                    // Cycle through 3 attacks: 0=spears, 1=dagger, 2=fireballs
+                    const attack = boss.currentAttack % 3;
+                    if (attack === 0) {
+                        boss.phase = 'spears';
+                        boss.phaseTimer = 120; // warning + active + cooldown
+                        bossTauntText = "Your death's a speer!"; bossTauntTimer = 90;
+                        // Pick 4-6 random ground columns for spears
+                        const groundRow = level.rows - 3; // row above the floor
+                        const cols = [];
+                        const numSpears = 4 + Math.floor(Math.random() * 3);
+                        for (let s = 0; s < numSpears; s++) {
+                            const col = 2 + Math.floor(Math.random() * (level.cols - 4));
+                            if (!cols.includes(col)) cols.push(col);
+                        }
+                        boss.spearColumns = cols;
+                        // Spawn spear warnings
+                        for (const col of cols) {
+                            // Find ground Y for this column
+                            let gy = level.rows * T;
+                            for (let r = 0; r < level.rows; r++) {
+                                if (solid(r, col)) { gy = r * T; break; }
+                            }
+                            bossSpears.push({
+                                col: col,
+                                groundY: gy,
+                                height: T * 3, // 3 tiles tall
+                                state: 'warning',
+                                timer: 40, // warning duration
+                                y: gy
+                            });
+                        }
+                    } else if (attack === 1) {
+                        boss.phase = 'dagger';
+                        boss.phaseTimer = 80;
+                        bossTauntText = 'My dager will be your end!'; bossTauntTimer = 90;
+                    } else {
+                        boss.phase = 'fireballs';
+                        boss.phaseTimer = 80;
+                        bossTauntText = 'Your fur will light the flame...OF DEATH!'; bossTauntTimer = 120;
+                    }
+                    boss.currentAttack++;
+                }
+            } else if (boss.phase === 'spears') {
+                // Boss stays idle during spear attack, just waits
+                boss.vx = 0;
+                if (boss.phaseTimer <= 0) {
+                    boss.phase = 'idle';
+                    boss.phaseTimer = 50;
+                }
+            } else if (boss.phase === 'dagger') {
+                boss.vx = 0;
+                // Throw dagger at the midpoint of the phase
+                if (boss.phaseTimer === 50) {
+                    // Aim at the player's current position
+                    const tx = cat.x + cat.w / 2;
+                    const ty = cat.y + cat.h / 2;
+                    const bx = boss.x + boss.w / 2;
+                    const by = boss.y + boss.h / 2;
+                    const dx = tx - bx;
+                    const dy = ty - by;
+                    const len = Math.sqrt(dx * dx + dy * dy) || 1;
+                    const speed = ENEMY_SPEED; // "at the speed of a rat"
+                    bossDaggers.push({
+                        x: bx - 8, y: by - 8,
+                        w: 16, h: 16,
+                        vx: (dx / len) * speed,
+                        vy: (dy / len) * speed,
+                        life: 180,
+                        angle: Math.atan2(dy, dx),
+                        spin: 0.15,
+                        large: true
+                    });
+                    addParticle(bx, by, '#AAA', 6, 4);
+                    if (window.audio) audio.playStomp();
+                }
+                if (boss.phaseTimer <= 0) {
+                    boss.phase = 'idle';
+                    boss.phaseTimer = 40;
+                }
+            } else if (boss.phase === 'fireballs') {
+                boss.vx = 0;
+                // Launch 3 fireballs at the midpoint
+                if (boss.phaseTimer === 50) {
+                    const bx = boss.x + boss.w / 2;
+                    const by = boss.y + 10;
+                    // Arc spread: -30°, 0°, +30° relative to player direction
+                    for (let i = -1; i <= 1; i++) {
+                        const baseAngle = Math.atan2(cat.y - by, cat.x - bx);
+                        const angle = baseAngle + i * 0.4;
+                        const speed = 3.5;
+                        bossFireballs2.push({
+                            x: bx - 6, y: by - 6,
+                            w: 12, h: 12,
+                            vx: Math.cos(angle) * speed,
+                            vy: Math.sin(angle) * speed - 2, // arc upward a bit
+                            bounces: 0,
+                            life: 300,
+                            angle: 0
+                        });
+                    }
+                    addParticle(bx, by, '#FF6600', 10, 5);
+                    if (window.audio) audio.playStomp();
+                }
+                if (boss.phaseTimer <= 0) {
+                    boss.phase = 'idle';
+                    boss.phaseTimer = 45;
+                }
+            } else if (boss.phase === 'hurt') {
+                boss.vx = 0;
+                if (boss.phaseTimer <= 0) { boss.phase = 'idle'; boss.phaseTimer = 30; }
             }
-            if (boss.grounded && boss.phaseTimer < 60) {
-                shakeTimer = 8; shakeAmt = 4;
-                boss.phase = 'idle'; boss.phaseTimer = 50; boss.vx = 0;
-            }
-        } else if (boss.phase === 'spawn') {
-            boss.vx = 0;
-            if (boss.phaseTimer === 30) {
-                // Spawn 2 rat minions
-                level.enemies.push({ x: boss.x - 40, y: boss.y + 32, w: T, h: T, vx: -ENEMY_SPEED * 1.5, vy: 0, type: 'rat', alive: true, frame: 0 });
-                level.enemies.push({ x: boss.x + boss.w + 8, y: boss.y + 32, w: T, h: T, vx: ENEMY_SPEED * 1.5, vy: 0, type: 'rat', alive: true, frame: 0 });
-                addParticle(boss.x + boss.w / 2, boss.y + boss.h, '#8B4513', 10, 5);
-            }
-            if (boss.phaseTimer <= 0) { boss.phase = 'idle'; boss.phaseTimer = 60; }
-        } else if (boss.phase === 'hurt') {
-            boss.vx = 0;
-            if (boss.phaseTimer <= 0) { boss.phase = 'idle'; boss.phaseTimer = 30; }
         }
 
         // Cat collision
@@ -2677,13 +2922,13 @@
                 if (starPowerTimer > 0) {
                     // Star power: deal 1 damage to boss
                     damageBoss(1);
-                    cat.vy = JUMP * 0.5;
+                    cat.vy = JUMP * 0.5; if(window.audio) audio.playStomp();
                     invincibleTimer = 30;
                     addParticle(boss.x + boss.w / 2, boss.y + boss.h / 2, '#FFD700', 15, 6);
                 } else if (invincibleTimer <= 0) {
                     if (cat.vy > 0 && cat.y + cat.h - 10 < boss.y + 20) {
                         damageBoss(1);
-                        cat.vy = JUMP * 0.7;
+                        cat.vy = JUMP * 0.7; if(window.audio) audio.playStomp();
                     } else {
                         killCat();
                     }
@@ -2829,7 +3074,423 @@
         ctx.fillText(boss.pirate ? 'PIRATE CAPTAIN' : 'RAT KING', barX, barY - 5);
     }
 
-    // FLAG / CASTLE CHECK
+    // BOSS DIALOGUE — typewriter text with speech bubble
+    function updateBossDialogue() {
+        if (!bossDialogueActive || bossDialogueDismissed) return;
+        bossDialogueTimer++;
+        // Advance typewriter every 2 frames
+        if (bossDialogueTimer % 2 === 0 && bossDialogueCharIndex < bossDialogueText.length) {
+            bossDialogueCharIndex++;
+            if (bossDialogueCharIndex >= bossDialogueText.length) {
+                bossDialogueDone = true;
+            }
+        }
+    }
+
+    function drawBossDialogue() {
+        if (!bossDialogueActive || bossDialogueDismissed) return;
+        if (!boss) return;
+
+        const displayText = bossDialogueText.substring(0, bossDialogueCharIndex);
+        const maxWidth = 320;
+        const padding = 12;
+        const lineHeight = 16;
+        ctx.font = '10px "Press Start 2P", monospace';
+
+        // Word wrap
+        const words = displayText.split(' ');
+        const lines = [];
+        let currentLine = '';
+        for (const word of words) {
+            const test = currentLine ? currentLine + ' ' + word : word;
+            if (ctx.measureText(test).width > maxWidth - padding * 2) {
+                if (currentLine) lines.push(currentLine);
+                currentLine = word;
+            } else {
+                currentLine = test;
+            }
+        }
+        if (currentLine) lines.push(currentLine);
+
+        const boxW = maxWidth;
+        const boxH = lines.length * lineHeight + padding * 2 + 10;
+        const boxX = (W - boxW) / 2;
+        const boxY = H - boxH - 40;
+
+        // Dark speech bubble
+        ctx.fillStyle = 'rgba(20, 10, 5, 0.92)';
+        ctx.fillRect(boxX, boxY, boxW, boxH);
+        ctx.strokeStyle = '#FFD700';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(boxX, boxY, boxW, boxH);
+
+        // Rat King name label
+        ctx.fillStyle = '#FFD700';
+        ctx.font = 'bold 10px "Press Start 2P", monospace';
+        ctx.textAlign = 'left';
+        ctx.fillText('👑 RAT KING', boxX + padding, boxY + padding + 8);
+
+        // Dialogue text
+        ctx.fillStyle = '#FFFFFF';
+        ctx.font = '9px "Press Start 2P", monospace';
+        for (let i = 0; i < lines.length; i++) {
+            ctx.fillText(lines[i], boxX + padding, boxY + padding + 26 + i * lineHeight);
+        }
+
+        // Prompt
+        if (bossDialogueDone) {
+            ctx.fillStyle = frameCount % 40 < 20 ? '#FFD700' : '#AA8800';
+            ctx.font = '8px "Press Start 2P", monospace';
+            ctx.textAlign = 'center';
+            ctx.fillText('[ PRESS SPACE ]', W / 2, boxY + boxH + 14);
+            ctx.textAlign = 'left';
+        }
+    }
+
+    // BOSS TAUNT — quick speech bubble during attacks (doesn't pause game)
+    function drawBossTaunt() {
+        if (!boss || !boss.alive || bossTauntTimer <= 0 || !bossTauntText) return;
+        bossTauntTimer--;
+
+        const alpha = bossTauntTimer < 20 ? bossTauntTimer / 20 : 1; // fade out
+        const bx = Math.round(boss.x - cam.x) + boss.w / 2;
+        const by = Math.round(boss.y) - 20;
+
+        ctx.save();
+        ctx.globalAlpha = alpha;
+
+        // Measure text
+        ctx.font = '8px "Press Start 2P", monospace';
+        const textW = ctx.measureText(bossTauntText).width;
+        const padX = 8, padY = 6;
+        const bubbleW = textW + padX * 2;
+        const bubbleH = 16 + padY * 2;
+        const bubbleX = bx - bubbleW / 2;
+        const bubbleY = by - bubbleH;
+
+        // Speech bubble
+        ctx.fillStyle = 'rgba(30, 15, 5, 0.9)';
+        ctx.fillRect(bubbleX, bubbleY, bubbleW, bubbleH);
+        ctx.strokeStyle = '#FFD700';
+        ctx.lineWidth = 1.5;
+        ctx.strokeRect(bubbleX, bubbleY, bubbleW, bubbleH);
+
+        // Speech bubble tail (triangle pointing down to boss)
+        ctx.fillStyle = 'rgba(30, 15, 5, 0.9)';
+        ctx.beginPath();
+        ctx.moveTo(bx - 6, bubbleY + bubbleH);
+        ctx.lineTo(bx, bubbleY + bubbleH + 8);
+        ctx.lineTo(bx + 6, bubbleY + bubbleH);
+        ctx.closePath();
+        ctx.fill();
+
+        // Text
+        ctx.fillStyle = '#FFF';
+        ctx.textAlign = 'center';
+        ctx.fillText(bossTauntText, bx, bubbleY + padY + 11);
+        ctx.textAlign = 'left';
+
+        ctx.restore();
+    }
+
+    // BOSS PROJECTILES — Spears, Daggers, Boss Fireballs
+    function updateBossSpears() {
+        for (let i = bossSpears.length - 1; i >= 0; i--) {
+            const s = bossSpears[i];
+            s.timer--;
+            if (s.state === 'warning') {
+                // Warning phase: flash for 40 frames then activate
+                if (s.timer <= 0) {
+                    s.state = 'active';
+                    s.timer = 50; // stay up for 50 frames
+                    s.y = s.groundY - s.height; // spear rises to full height
+                    if (window.audio) audio.playStomp();
+                    shakeTimer = 4; shakeAmt = 2;
+                }
+            } else if (s.state === 'active') {
+                // Active: damage players
+                if (s.timer <= 0) {
+                    s.state = 'retract';
+                    s.timer = 15;
+                }
+                // Check collision with cats
+                const sx = s.col * T;
+                const sy = s.groundY - s.height;
+                const sw = T;
+                const sh = s.height;
+                if (!cat.dead && invincibleTimer <= 0 && starPowerTimer <= 0) {
+                    if (cat.x + 4 < sx + sw && cat.x + cat.w - 4 > sx && cat.y + 4 < sy + sh && cat.y + cat.h - 4 > sy) {
+                        killCat();
+                    }
+                }
+                if (coopMode && !cat2.dead && invincibleTimer2 <= 0) {
+                    if (cat2.x + 4 < sx + sw && cat2.x + cat2.w - 4 > sx && cat2.y + 4 < sy + sh && cat2.y + cat2.h - 4 > sy) {
+                        killCat2();
+                    }
+                }
+            } else if (s.state === 'retract') {
+                if (s.timer <= 0) {
+                    bossSpears.splice(i, 1);
+                }
+            }
+        }
+    }
+
+    function drawBossSpears() {
+        for (const s of bossSpears) {
+            const sx = Math.round(s.col * T - cam.x);
+            if (s.state === 'warning') {
+                // Flashing red warning on ground tile
+                if (frameCount % 6 < 3) {
+                    ctx.fillStyle = 'rgba(255, 0, 0, 0.5)';
+                    ctx.fillRect(sx, s.groundY - T, T, T);
+                    // Exclamation mark
+                    ctx.fillStyle = '#FF0000';
+                    ctx.font = 'bold 16px monospace';
+                    ctx.textAlign = 'center';
+                    ctx.fillText('!', sx + T / 2, s.groundY - T / 2 + 6);
+                    ctx.textAlign = 'left';
+                }
+            } else if (s.state === 'active') {
+                // Draw spear rising from floor
+                const progress = Math.min(1, (50 - s.timer) / 8); // quick rise
+                const drawH = s.height * progress;
+                const dy = s.groundY - drawH;
+                // Spear shaft
+                ctx.fillStyle = '#777';
+                ctx.fillRect(sx + T / 2 - 3, dy, 6, drawH);
+                // Spear tip
+                ctx.fillStyle = '#C0C0C0';
+                ctx.beginPath();
+                ctx.moveTo(sx + T / 2, dy - 8);
+                ctx.lineTo(sx + T / 2 - 6, dy + 4);
+                ctx.lineTo(sx + T / 2 + 6, dy + 4);
+                ctx.closePath();
+                ctx.fill();
+                // Metallic shine
+                ctx.fillStyle = '#FFF';
+                ctx.fillRect(sx + T / 2 - 1, dy, 2, drawH * 0.4);
+            } else if (s.state === 'retract') {
+                // Retracting: shrink downward
+                const progress = s.timer / 15;
+                const drawH = s.height * progress;
+                const dy = s.groundY - drawH;
+                ctx.fillStyle = '#666';
+                ctx.fillRect(sx + T / 2 - 3, dy, 6, drawH);
+            }
+        }
+    }
+
+    function updateBossDaggers() {
+        for (let i = bossDaggers.length - 1; i >= 0; i--) {
+            const d = bossDaggers[i];
+            d.x += d.vx;
+            d.y += d.vy;
+            d.life--;
+            d.angle += d.spin;
+
+            // Large dagger: check for wall/distance/player collision → explode
+            if (d.large) {
+                // Check wall collision
+                const tc = Math.floor((d.x + d.w / 2) / T);
+                const tr = Math.floor((d.y + d.h / 2) / T);
+                const hitWall = (tr >= 0 && tr < level.rows && tc >= 0 && tc < level.cols && solid(tr, tc));
+
+                if (d.life <= 0 || hitWall) {
+                    // EXPLODE into 15 small daggers
+                    for (let j = 0; j < 15; j++) {
+                        const angle = (j / 15) * Math.PI * 2;
+                        const speed = 2.5 + Math.random() * 1.5;
+                        bossDaggers.push({
+                            x: d.x, y: d.y,
+                            w: 8, h: 8,
+                            vx: Math.cos(angle) * speed,
+                            vy: Math.sin(angle) * speed,
+                            life: 40 + Math.floor(Math.random() * 20),
+                            angle: angle,
+                            spin: 0.3,
+                            large: false
+                        });
+                    }
+                    addParticle(d.x, d.y, '#AAA', 10, 6);
+                    addParticle(d.x, d.y, '#FF4444', 6, 4);
+                    if (window.audio) audio.playStomp();
+                    shakeTimer = 6; shakeAmt = 3;
+                    bossDaggers.splice(i, 1);
+                    continue;
+                }
+            }
+
+            // Despawn
+            if (d.life <= 0) {
+                bossDaggers.splice(i, 1);
+                continue;
+            }
+
+            // Hit player
+            if (!cat.dead && invincibleTimer <= 0 && starPowerTimer <= 0) {
+                if (cat.x + 4 < d.x + d.w && cat.x + cat.w - 4 > d.x && cat.y + 4 < d.y + d.h && cat.y + cat.h - 4 > d.y) {
+                    killCat();
+                    if (!d.large) { bossDaggers.splice(i, 1); continue; }
+                }
+            }
+            if (coopMode && !cat2.dead && invincibleTimer2 <= 0) {
+                if (cat2.x + 4 < d.x + d.w && cat2.x + cat2.w - 4 > d.x && cat2.y + 4 < d.y + d.h && cat2.y + cat2.h - 4 > d.y) {
+                    killCat2();
+                    if (!d.large) { bossDaggers.splice(i, 1); continue; }
+                }
+            }
+        }
+    }
+
+    function drawBossDaggers() {
+        for (const d of bossDaggers) {
+            const dx = Math.round(d.x - cam.x);
+            const dy = Math.round(d.y);
+            ctx.save();
+            ctx.translate(dx + d.w / 2, dy + d.h / 2);
+            ctx.rotate(d.angle);
+            if (d.large) {
+                // Large dagger
+                ctx.fillStyle = '#555';
+                ctx.fillRect(-4, -12, 8, 20); // blade
+                ctx.fillStyle = '#C0C0C0';
+                ctx.fillRect(-3, -12, 6, 16);
+                ctx.fillStyle = '#8B4513';
+                ctx.fillRect(-3, 8, 6, 6); // handle
+                // Tip
+                ctx.fillStyle = '#DDD';
+                ctx.beginPath();
+                ctx.moveTo(0, -16);
+                ctx.lineTo(-4, -10);
+                ctx.lineTo(4, -10);
+                ctx.closePath();
+                ctx.fill();
+            } else {
+                // Small dagger (shard)
+                ctx.fillStyle = '#AAA';
+                ctx.fillRect(-2, -5, 4, 10);
+                ctx.fillStyle = '#DDD';
+                ctx.beginPath();
+                ctx.moveTo(0, -7);
+                ctx.lineTo(-3, -3);
+                ctx.lineTo(3, -3);
+                ctx.closePath();
+                ctx.fill();
+                // Red trail
+                ctx.fillStyle = 'rgba(255, 50, 50, 0.4)';
+                ctx.fillRect(-3, 2, 6, 6);
+            }
+            ctx.restore();
+        }
+    }
+
+    function updateBossFireballs2() {
+        for (let i = bossFireballs2.length - 1; i >= 0; i--) {
+            const fb = bossFireballs2[i];
+            fb.x += fb.vx;
+            fb.y += fb.vy;
+            fb.vy += 0.2; // gravity
+            fb.life--;
+            fb.angle += 0.15;
+
+            // Bounce off walls
+            const tc = Math.floor((fb.x + fb.w / 2) / T);
+            const tr = Math.floor((fb.y + fb.h / 2) / T);
+            // Floor bounce
+            const footR = Math.floor((fb.y + fb.h) / T);
+            const footC = Math.floor((fb.x + fb.w / 2) / T);
+            if (footR >= 0 && footR < level.rows && footC >= 0 && footC < level.cols && solid(footR, footC)) {
+                fb.y = footR * T - fb.h;
+                fb.vy = -Math.abs(fb.vy) * 0.85;
+                fb.bounces++;
+                addParticle(fb.x + fb.w / 2, fb.y + fb.h, '#FF6600', 3, 3);
+            }
+            // Wall bounce
+            if (fb.vx > 0) {
+                const wc = Math.floor((fb.x + fb.w) / T);
+                const wr = Math.floor((fb.y + fb.h / 2) / T);
+                if (wc >= 0 && wc < level.cols && wr >= 0 && wr < level.rows && solid(wr, wc)) {
+                    fb.vx = -fb.vx;
+                    fb.bounces++;
+                    addParticle(fb.x + fb.w, fb.y + fb.h / 2, '#FF6600', 3, 3);
+                }
+            } else {
+                const wc = Math.floor(fb.x / T);
+                const wr = Math.floor((fb.y + fb.h / 2) / T);
+                if (wc >= 0 && wc < level.cols && wr >= 0 && wr < level.rows && solid(wr, wc)) {
+                    fb.vx = -fb.vx;
+                    fb.bounces++;
+                    addParticle(fb.x, fb.y + fb.h / 2, '#FF6600', 3, 3);
+                }
+            }
+
+            // After 3 bounces → spawn fire rat
+            if (fb.bounces >= 3) {
+                // Spawn a fire rat enemy
+                level.enemies.push({
+                    x: fb.x, y: fb.y - T,
+                    w: T, h: T,
+                    vx: (Math.random() > 0.5 ? 1 : -1) * ENEMY_SPEED * 0.6,
+                    vy: -3,
+                    type: 'firerat',
+                    alive: true,
+                    frame: 0,
+                    hp: 3,
+                    despawnTimer: 480, // ~8 seconds
+                    jumpTimer: 60 + Math.floor(Math.random() * 60)
+                });
+                addParticle(fb.x + fb.w / 2, fb.y + fb.h / 2, '#FF4500', 12, 6);
+                addParticle(fb.x + fb.w / 2, fb.y + fb.h / 2, '#FFD700', 8, 4);
+                bossFireballs2.splice(i, 1);
+                continue;
+            }
+
+            if (fb.life <= 0) {
+                bossFireballs2.splice(i, 1);
+                continue;
+            }
+
+            // Hit player
+            if (!cat.dead && invincibleTimer <= 0 && starPowerTimer <= 0) {
+                if (cat.x + 4 < fb.x + fb.w && cat.x + cat.w - 4 > fb.x && cat.y + 4 < fb.y + fb.h && cat.y + cat.h - 4 > fb.y) {
+                    killCat();
+                }
+            }
+            if (coopMode && !cat2.dead && invincibleTimer2 <= 0) {
+                if (cat2.x + 4 < fb.x + fb.w && cat2.x + cat2.w - 4 > fb.x && cat2.y + 4 < fb.y + fb.h && cat2.y + cat2.h - 4 > fb.y) {
+                    killCat2();
+                }
+            }
+        }
+    }
+
+    function drawBossFireballs2() {
+        for (const fb of bossFireballs2) {
+            const fx = Math.round(fb.x - cam.x);
+            const fy = Math.round(fb.y);
+            // Glow
+            ctx.fillStyle = 'rgba(255, 100, 0, 0.3)';
+            ctx.beginPath();
+            ctx.arc(fx + fb.w / 2, fy + fb.h / 2, fb.w, 0, Math.PI * 2);
+            ctx.fill();
+            // Core
+            ctx.fillStyle = '#FF6600';
+            ctx.beginPath();
+            ctx.arc(fx + fb.w / 2, fy + fb.h / 2, fb.w / 2, 0, Math.PI * 2);
+            ctx.fill();
+            // Hot center
+            ctx.fillStyle = '#FFCC00';
+            ctx.beginPath();
+            ctx.arc(fx + fb.w / 2, fy + fb.h / 2, fb.w / 4, 0, Math.PI * 2);
+            ctx.fill();
+            // Ember particles
+            if (frameCount % 3 === 0) {
+                addParticle(fb.x + fb.w / 2, fb.y + fb.h / 2, '#FF4500', 1, 2);
+            }
+        }
+    }
+
     function checkFlag() {
         if (!level) return;
         // Boss level has no flag — victory handled by boss death
@@ -3624,6 +4285,49 @@
             ctx.fillRect(ex + 9 + dir * 4, ey + 1, 14, 3);
             // Bandana tail
             ctx.fillRect(ex + (dir === 1 ? 8 : 20), ey + 2, 3, 5);
+            return;
+        }
+
+        // === FIRE RAT (from boss fireballs) ===
+        if (e.type === 'firerat') {
+            // Damage flash
+            if (e.flashTimer && e.flashTimer > 0) {
+                e.flashTimer--;
+                if (e.flashTimer % 4 < 2) return; // blink
+            }
+            // Flame aura glow
+            ctx.globalAlpha = 0.25;
+            ctx.fillStyle = '#FF4500';
+            ctx.beginPath(); ctx.arc(ex + e.w / 2, ey + e.h / 2, e.w * 0.9, 0, Math.PI * 2); ctx.fill();
+            ctx.globalAlpha = 1;
+            // Body (dark red)
+            ctx.fillStyle = '#8B0000'; ctx.fillRect(ex + 4, ey + 8, 24, 18);
+            ctx.fillStyle = '#AA2200'; ctx.fillRect(ex + 6, ey + 10, 20, 14);
+            // Head
+            ctx.fillStyle = '#8B0000'; ctx.fillRect(ex + 20, ey + 4, 10, 14);
+            // Ears
+            ctx.fillStyle = '#660000'; ctx.fillRect(ex + 22, ey, 4, 6); ctx.fillRect(ex + 28, ey, 4, 6);
+            // Eyes (glowing yellow-orange)
+            ctx.fillStyle = '#FFCC00'; ctx.fillRect(ex + 24, ey + 8, 3, 3);
+            // Glowing eye effect
+            ctx.globalAlpha = 0.4; ctx.fillStyle = '#FFCC00';
+            ctx.beginPath(); ctx.arc(ex + 25.5, ey + 9.5, 5, 0, Math.PI * 2); ctx.fill();
+            ctx.globalAlpha = 1;
+            // Tail (flame-like)
+            const ftw = Math.sin(e.frame * 5) * 3;
+            ctx.fillStyle = '#FF6600'; ctx.fillRect(ex - 2, ey + 14 + ftw, 8, 3);
+            ctx.fillStyle = '#FF4500'; ctx.fillRect(ex - 5, ey + 13 + ftw, 4, 3);
+            // Legs
+            const fll = Math.sin(e.frame * 5) * 2;
+            ctx.fillStyle = '#660000';
+            ctx.fillRect(ex + 8, ey + 26, 4, 4 + fll); ctx.fillRect(ex + 18, ey + 26, 4, 4 - fll);
+            // HP indicator: small dots above
+            if (e.hp !== undefined) {
+                for (let i = 0; i < e.hp; i++) {
+                    ctx.fillStyle = '#FF4500';
+                    ctx.fillRect(ex + 10 + i * 6, ey - 4, 4, 3);
+                }
+            }
             return;
         }
 
@@ -5527,6 +6231,10 @@
             // Boss
             drawBoss();
             drawBossHP();
+            // Boss projectiles
+            drawBossSpears();
+            drawBossDaggers();
+            drawBossFireballs2();
             // Cat
             drawCatSprite();
             if (coopMode) drawCat2Sprite();
@@ -5584,6 +6292,10 @@
                 ctx.font = '7px "Press Start 2P", monospace';
                 ctx.fillText('🌐 ONLINE', W - 90, H - 8);
             }
+
+            // Boss dialogue overlay
+            drawBossDialogue();
+            drawBossTaunt();
 
             // ===== DEV MODE OVERLAY =====
             if (devMode) drawDevOverlay();
