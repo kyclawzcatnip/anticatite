@@ -452,22 +452,22 @@
             "MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM()MMMMMMM",
             "MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM",
         ],
-        // Level 26 — Mine 5: Bedrock
+        // Level 26 — MINER BOSS ARENA (Mine Boss)
         [
-            "MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM",
-            "M                                                                                                          M",
-            "M  S       C C C       L         C C C       C C C       W           C C C        R          C C C          M",
-            "M    R    BBBBBBB   MMMMM       BBBZBBB  R  BBBBBBB   MMMMM   C C  BBBBBBB    MMMMM        BBBZBBB         M",
-            "MMMMMMM A  V    MM     V  A   MM    V  MMMMM   V    Q   V  A BBBBB    V  A  MM    V  A   MM    V    <>     M",
-            "M         BBB     BBB      BBB       BBB      BBB  MMMMM    BBB  BBB     BBB     BBB      BBB    BBB ()     M",
-            "M                                                                      H                           ()     M",
-            "M   MM      MM      MM  =   MM  Q   MM      MM   MMMMM  MM      MMMMM   MM      MM  Q   MM    MMMMMMM    M",
-            "M                    =====       MMMMMM                                              MMMMMM                M",
-            "M      BBB     BBB    =  BBB      BBB    BBB     BBB      BBB     BBB      BBB     BBB      BBB            M",
-            "M                                                                                                          M",
-            "MMM C  C  C  C  C  C  C  C  C  C  C  C  C  C  C  C  C  C  C  C  C  C  C  C  C  C  C  MMMMMMMMMMMMMMMMMMMMM",
-            "MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM",
-            "MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM",
+            "MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM",
+            "M                                                M",
+            "M                                                M",
+            "M                                                M",
+            "M    MMM              MMM              MMM       M",
+            "M         MMMM                  MMMM             M",
+            "M                      MMMM                      M",
+            "M W              MMM          MMM             X  M",
+            "M                                                M",
+            "M       MMM                          MMM         M",
+            "M S                                              M",
+            "MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM",
+            "MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM",
+            "MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM",
         ]
     ];
 
@@ -598,6 +598,7 @@
     let boss = null;
     const BOSS_MAX_HP = 10;
     const PIRATE_BOSS_HP = 12;
+    const MINER_BOSS_HP = 14;
     // Boss dialogue state
     let bossDialogueActive = false;
     let bossDialogueText = '';
@@ -621,13 +622,20 @@
     let bossYarnBalls = [];   // { x, y, vx, vy, life } tracking yarn balls
     let bossCross = null;     // { x, y, warningTimer, fireTimer, firing }
     const BOSS_ATTACK_COOLDOWN = 180; // 3 seconds at 60fps
-    function createBoss(x, y, isPirate) {
+    function createBoss(x, y, isPirate, isMiner) {
         // Reset boss projectiles
         bossSpears = [];
         bossDaggers = [];
         bossFireballs2 = [];
         // Reset dialogue state
-        if (!isPirate) {
+        if (isMiner) {
+            bossDialogueActive = true;
+            bossDialogueText = 'You dare trespass in MY mine?! I\'ve been digging these tunnels for years... and I\'ll bury you in them!';
+            bossDialogueCharIndex = 0;
+            bossDialogueTimer = 0;
+            bossDialogueDone = false;
+            bossDialogueDismissed = false;
+        } else if (!isPirate) {
             bossDialogueActive = true;
             const skinName = CAT_SKINS[selectedSkin].name;
             bossDialogueText = 'Well, well, well... if it isn\'t ' + skinName + ' the cat my scouts told me about... NOW YOU DIE.';
@@ -644,13 +652,15 @@
             bossDialogueDone = false;
             bossDialogueDismissed = false;
         }
+        const bossHP = isMiner ? MINER_BOSS_HP : isPirate ? PIRATE_BOSS_HP : BOSS_MAX_HP;
         return {
             x: x, y: y, w: 64, h: 64,
             vx: 0, vy: 0,
-            hp: isPirate ? PIRATE_BOSS_HP : BOSS_MAX_HP,
-            maxHp: isPirate ? PIRATE_BOSS_HP : BOSS_MAX_HP,
+            hp: bossHP,
+            maxHp: bossHP,
             alive: true,
             pirate: isPirate || false,
+            miner: isMiner || false,
             phase: 'idle',
             phaseTimer: 90,
             dir: -1,
@@ -2793,7 +2803,7 @@
                         if (attack === 0) {
                             boss.phase = 'spears';
                             boss.phaseTimer = 120;
-                            bossTauntText = boss.pirate ? 'Taste me harpoons!' : "Your death's a speer!"; bossTauntTimer = 90;
+                            bossTauntText = boss.miner ? 'Stalactites, fall!' : boss.pirate ? 'Taste me harpoons!' : "Your death's a speer!"; bossTauntTimer = 90;
                             const cols = [];
                             const numSpears = 4 + Math.floor(Math.random() * 3);
                             for (let s = 0; s < numSpears; s++) {
@@ -2810,11 +2820,11 @@
                         } else if (attack === 1) {
                             boss.phase = 'dagger';
                             boss.phaseTimer = 80;
-                            bossTauntText = boss.pirate ? 'Me cutlass finds its mark!' : 'My dagger will be your end!'; bossTauntTimer = 90;
+                            bossTauntText = boss.miner ? 'Eat pickaxe!' : boss.pirate ? 'Me cutlass finds its mark!' : 'My dagger will be your end!'; bossTauntTimer = 90;
                         } else {
                             boss.phase = 'fireballs';
                             boss.phaseTimer = 80;
-                            bossTauntText = boss.pirate ? 'Fire the cannons!' : 'Your fur will light the flame...OF DEATH!'; bossTauntTimer = 120;
+                            bossTauntText = boss.miner ? 'Dynamite incoming!' : boss.pirate ? 'Fire the cannons!' : 'Your fur will light the flame...OF DEATH!'; bossTauntTimer = 120;
                         }
                         boss.currentAttack++;
                     } else {
@@ -2825,7 +2835,7 @@
                         if (attack === 0) {
                             boss.phase = 'spears';
                             boss.phaseTimer = 120;
-                            bossTauntText = boss.pirate ? 'Taste me harpoons!' : "Your death's a speer!"; bossTauntTimer = 90;
+                            bossTauntText = boss.miner ? 'Stalactites, fall!' : boss.pirate ? 'Taste me harpoons!' : "Your death's a speer!"; bossTauntTimer = 90;
                             const cols = [];
                             const numSpears = boss.bossPhase >= 3 ? 6 + Math.floor(Math.random() * 4) : 5 + Math.floor(Math.random() * 4);
                             for (let s = 0; s < numSpears; s++) {
@@ -2842,15 +2852,15 @@
                         } else if (attack === 1) {
                             boss.phase = 'dagger';
                             boss.phaseTimer = 80;
-                            bossTauntText = boss.pirate ? 'Me cutlass finds its mark!' : 'My dagger will be your end!'; bossTauntTimer = 90;
+                            bossTauntText = boss.miner ? 'Eat pickaxe!' : boss.pirate ? 'Me cutlass finds its mark!' : 'My dagger will be your end!'; bossTauntTimer = 90;
                         } else if (attack === 2) {
                             boss.phase = 'fireballs';
                             boss.phaseTimer = 80;
-                            bossTauntText = boss.pirate ? 'Fire the cannons!' : 'Your fur will light the flame...OF DEATH!'; bossTauntTimer = 120;
+                            bossTauntText = boss.miner ? 'Dynamite incoming!' : boss.pirate ? 'Fire the cannons!' : 'Your fur will light the flame...OF DEATH!'; bossTauntTimer = 120;
                         } else if (attack === 3) {
                             boss.phase = 'colorwalls';
                             boss.phaseTimer = 200;
-                            bossTauntText = boss.pirate ? 'Steady as she goes...' : "Don't. Move."; bossTauntTimer = 120;
+                            bossTauntText = boss.miner ? 'Don\'t touch the ore veins!' : boss.pirate ? 'Steady as she goes...' : "Don't. Move."; bossTauntTimer = 120;
                             const arenaRight = level.cols * T;
                             for (let w = 0; w < 5; w++) {
                                 bossColorWalls.push({
@@ -2861,14 +2871,14 @@
                         } else if (attack === 4) {
                             boss.phase = 'barrier';
                             boss.phaseTimer = 180;
-                            bossTauntText = boss.pirate ? 'Broadside!' : 'Nowhere to hide!'; bossTauntTimer = 90;
+                            bossTauntText = boss.miner ? 'CAVE-IN!' : boss.pirate ? 'Broadside!' : 'Nowhere to hide!'; bossTauntTimer = 90;
                             const thirdH = Math.floor(level.rows * T / 3);
                             const slot = Math.floor(Math.random() * 3);
                             bossBarrier = { x: -40, y: slot * thirdH, w: 40, h: thirdH, vx: 3, life: 300 };
                         } else if (attack === 5) {
                             boss.phase = 'darkcat';
                             boss.phaseTimer = 60;
-                            bossTauntText = boss.pirate ? 'Sic em, me ghost cat!' : 'Meet your shadow...'; bossTauntTimer = 100;
+                            bossTauntText = boss.miner ? 'Rise, mine spirit!' : boss.pirate ? 'Sic em, me ghost cat!' : 'Meet your shadow...'; bossTauntTimer = 100;
                             bossDarkCats.push({
                                 x: boss.x + boss.w / 2 - 12, y: boss.y,
                                 w: 24, h: 32, vx: 0, vy: -3, dir: -1, frame: 0,
@@ -2880,7 +2890,7 @@
                             // RAT RAYGUN
                             boss.phase = 'raygun';
                             boss.phaseTimer = 300;
-                            bossTauntText = boss.pirate ? 'Me cannon locks on ye, ' + skinName + '!' : 'This will finish you, ' + skinName + '!'; bossTauntTimer = 120;
+                            bossTauntText = boss.miner ? 'Laser drill, engage ' + skinName + '!' : boss.pirate ? 'Me cannon locks on ye, ' + skinName + '!' : 'This will finish you, ' + skinName + '!'; bossTauntTimer = 120;
                             bossRaygun = {
                                 state: 'aiming', aimTimer: 60,
                                 targetX: cat.x + cat.w / 2, targetY: cat.y + cat.h / 2,
@@ -2890,7 +2900,7 @@
                             // ANTI-CAT YARN BALLS
                             boss.phase = 'yarnballs';
                             boss.phaseTimer = 120;
-                            bossTauntText = boss.pirate ? 'Chain shot, away!' : "Let's see you resist the yarn!"; bossTauntTimer = 100;
+                            bossTauntText = boss.miner ? 'Ore bombs, away!' : boss.pirate ? 'Chain shot, away!' : "Let's see you resist the yarn!"; bossTauntTimer = 100;
                             for (let b = 0; b < 3; b++) {
                                 bossYarnBalls.push({
                                     x: boss.x + boss.w / 2 + (b - 1) * 30,
@@ -2906,7 +2916,7 @@
                             // THE CROSS
                             boss.phase = 'cross';
                             boss.phaseTimer = 200;
-                            bossTauntText = boss.pirate ? 'WALK THE PLANK!!!' : 'DIIIEEE!!!'; bossTauntTimer = 100;
+                            bossTauntText = boss.miner ? 'DRILL THROUGH EVERYTHING!!!' : boss.pirate ? 'WALK THE PLANK!!!' : 'DIIIEEE!!!'; bossTauntTimer = 100;
                             bossCross = { state: 'warning', warningTimer: 120, fireTimer: 0 };
                         }
                     }
@@ -3053,7 +3063,7 @@
             if (boss.bossPhase === 1) {
                 // Enter Phase 2!
                 boss.bossPhase = 2;
-                boss.hp = boss.pirate ? 24 : 20;
+                boss.hp = boss.miner ? 28 : boss.pirate ? 24 : 20;
                 boss.maxHp = boss.hp;
                 boss.phase = 'idle';
                 boss.phaseTimer = 90;
@@ -3063,9 +3073,11 @@
                 bossColorWalls = []; bossBarrier = null; bossDarkCats = [];
                 bossRaygun = null; bossYarnBalls = []; bossCross = null;
                 bossDialogueActive = true;
-                bossDialogueText = boss.pirate
-                    ? 'Argh! Ye scratched me hull! But I\'ve weathered worse storms than you, kitty!'
-                    : 'H-h-how d-d-did you h-hi-t me... No matter... You\'ll die now!';
+                bossDialogueText = boss.miner
+                    ? 'You broke me pickaxe! But I\'ve got plenty more tools where that came from!'
+                    : boss.pirate
+                        ? 'Argh! Ye scratched me hull! But I\'ve weathered worse storms than you, kitty!'
+                        : 'H-h-how d-d-did you h-hi-t me... No matter... You\'ll die now!';
                 bossDialogueCharIndex = 0; bossDialogueTimer = 0;
                 bossDialogueDone = false; bossDialogueDismissed = false;
                 shakeTimer = 30; shakeAmt = 8;
@@ -3077,7 +3089,7 @@
             } else if (boss.bossPhase === 2) {
                 // Enter Phase 3!
                 boss.bossPhase = 3;
-                boss.hp = boss.pirate ? 36 : 30;
+                boss.hp = boss.miner ? 42 : boss.pirate ? 36 : 30;
                 boss.maxHp = boss.hp;
                 boss.phase = 'idle';
                 boss.phaseTimer = 90;
@@ -3087,9 +3099,11 @@
                 bossColorWalls = []; bossBarrier = null; bossDarkCats = [];
                 bossRaygun = null; bossYarnBalls = []; bossCross = null;
                 bossDialogueActive = true;
-                bossDialogueText = boss.pirate
-                    ? 'ENOUGH!!! No mangy cat sinks Captain Rattail! I\'ll send ye to DAVY JONES!!!'
-                    : 'NOOOOO!!!! HOW! HOW DID YOU DO THIS! YOU COULD HAVE SURRENDERED BUT NOOO YOU HAD TO MESS IT UP!!! NOW DIIIEEE!!!';
+                bossDialogueText = boss.miner
+                    ? 'THAT\'S IT!!! I\'LL COLLAPSE THIS ENTIRE MINE ON YOUR HEAD!!! CAVE-IN TIME!!!'
+                    : boss.pirate
+                        ? 'ENOUGH!!! No mangy cat sinks Captain Rattail! I\'ll send ye to DAVY JONES!!!'
+                        : 'NOOOOO!!!! HOW! HOW DID YOU DO THIS! YOU COULD HAVE SURRENDERED BUT NOOO YOU HAD TO MESS IT UP!!! NOW DIIIEEE!!!';
                 bossDialogueCharIndex = 0; bossDialogueTimer = 0;
                 bossDialogueDone = false; bossDialogueDismissed = false;
                 shakeTimer = 50; shakeAmt = 12;
@@ -3223,6 +3237,40 @@
             bpx(28, 36, 3, 3, '#FFD700');
             bpx(28, 44, 3, 3, '#FFD700');
         }
+
+        // Miner boss overlay
+        if (boss.miner) {
+            // Hard hat (yellow)
+            bpx(8, -8, 48, 8, '#FFD700');   // hat brim
+            bpx(14, -14, 36, 8, '#FFC107'); // hat dome
+            bpx(28, -18, 8, 6, '#FF5722');  // headlamp
+            // Headlamp glow
+            if (frameCount % 40 < 30) {
+                ctx.globalAlpha = 0.3;
+                ctx.fillStyle = '#FFFF00';
+                ctx.beginPath();
+                ctx.arc(bx + 32, by - 15, 8, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.globalAlpha = 1;
+            }
+            // Pickaxe on back
+            ctx.strokeStyle = '#8B4513';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(bx + (d === 1 ? 50 : 14), by + 10);
+            ctx.lineTo(bx + (d === 1 ? 60 : 4), by - 5);
+            ctx.stroke();
+            // Pickaxe head
+            ctx.fillStyle = '#888';
+            ctx.fillRect(bx + (d === 1 ? 56 : 0), by - 8, 10, 6);
+            // Dusty boots
+            bpx(10, 56, 12, 4, '#8B6914');
+            bpx(42, 56, 12, 4, '#8B6914');
+            // Dirty smudges
+            ctx.fillStyle = '#5C4033';
+            ctx.fillRect(bx + 20, by + 25, 4, 3);
+            ctx.fillRect(bx + 38, by + 30, 5, 3);
+        }
     }
 
     function drawBossHP() {
@@ -3246,7 +3294,7 @@
         // Label
         ctx.fillStyle = '#FFF';
         ctx.font = '8px "Press Start 2P", monospace';
-        ctx.fillText(boss.pirate ? 'PIRATE CAPTAIN' : 'RAT KING', barX, barY - 5);
+        ctx.fillText(boss.miner ? 'MINE FOREMAN' : boss.pirate ? 'PIRATE CAPTAIN' : 'RAT KING', barX, barY - 5);
     }
 
     // BOSS DIALOGUE — typewriter text with speech bubble
@@ -5853,13 +5901,14 @@
                 isBig4 = false; cat4.h = 32; heldShell4 = null;
             }
         }
-        // Spawn boss on boss arena (index 4) or pirate boss (index 10)
-        if (idx === 4 || idx === 10) {
+        // Spawn boss on boss arena (index 4), pirate boss (index 10), or miner boss (index 25)
+        if (idx === 4 || idx === 10 || idx === 25) {
             const isPirate = idx === 10;
+            const isMiner = idx === 25;
             const raw = LEVEL_DATA[idx];
             for (let r = 0; r < raw.length; r++) {
                 for (let c = 0; c < raw[r].length; c++) {
-                    if (raw[r][c] === 'X') { boss = createBoss(c * T - 16, r * T - 64 + T, isPirate); }
+                    if (raw[r][c] === 'X') { boss = createBoss(c * T - 16, r * T - 64 + T, isPirate, isMiner); }
                 }
             }
         } else {
