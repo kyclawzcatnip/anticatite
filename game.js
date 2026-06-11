@@ -588,6 +588,7 @@
         { name: 'Big Mushroom', icon: '🍄', desc: 'Grow big, break bricks', cost: 12, action: () => { isMini = false; isBig = true; if(window.audio) audio.playPowerUp(); cat.y -= 32; cat.h = 64; cat.w = 24; } },
         { name: 'Mini Mushroom', icon: '🔹', desc: 'Tiny! Higher jump, fit gaps', cost: 7, action: () => { isBig = false; isMini = true; cat.h = 16; cat.w = 12; } },
         { name: 'Cat Revive', icon: '💖', desc: 'Revive partner +3HP', cost: 10, coopOnly: true, action: () => { p1HP = 3; p2HP = 3; cat.dead = false; cat2.dead = false; } },
+        { name: 'Fire Protector', icon: '🔶', desc: 'Fire immunity 3 min', cost: 15, action: () => { fireProtectTimer = 10800; if(window.audio) audio.playPowerUp(); } },
     ];
     function getVisibleShopItems() {
         const isSky = currentLevel >= 5;
