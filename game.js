@@ -3960,8 +3960,8 @@
 
     function checkFlag() {
         if (!level) return;
-        // Boss level has no flag — victory handled by boss death
-        if (boss) return;
+        // Boss level — skip flag logic, but still check silver pipe after boss dies
+        if (boss && boss.alive) return;
 
         // Helper: check if a cat touches a door tile
         function touchesDoor(c) {
