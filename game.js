@@ -760,7 +760,7 @@
             }
             return;
         }
-        // Boss dialogue dismiss
+        // Boss dialogue dismiss (non-blocking — game keeps running)
         if (state === 'playing' && bossDialogueActive && !bossDialogueDismissed) {
             if (e.code === 'Space' || e.code === 'Enter') {
                 if (bossDialogueDone) {
@@ -772,7 +772,7 @@
                     bossDialogueDone = true;
                 }
             }
-            return; // Block all other input during dialogue
+            // Don't block input — game keeps running during dialogue
         }
         if (state === 'levelcomplete' && e.code === 'Space') { openShop(); return; }
         if (state === 'shop') {
@@ -2670,8 +2670,7 @@
         updateBarrier();
         updateDarkCats();
 
-        // Don't run boss AI during dialogue
-        if (bossDialogueActive && !bossDialogueDismissed) return;
+        // Boss dialogue doesn't block AI — game keeps running
 
         // Handle boss death animation
         if (!boss.alive) {
@@ -3237,6 +3236,14 @@
             bossDialogueCharIndex++;
             if (bossDialogueCharIndex >= bossDialogueText.length) {
                 bossDialogueDone = true;
+                bossDialogueTimer = 0; // reset for auto-dismiss countdown
+            }
+        }
+        // Auto-dismiss 3 seconds after text finishes
+        if (bossDialogueDone) {
+            if (bossDialogueTimer >= 180) { // 3 seconds
+                bossDialogueDismissed = true;
+                bossDialogueActive = false;
             }
         }
     }
