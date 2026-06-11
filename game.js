@@ -5530,6 +5530,11 @@
         cat.vx = 0; cat.vy = 0; cat.grounded = false; cat.dead = false;
         cam.x = Math.max(0, cat.x - W / 3);
         particles = []; questionHits = []; invincibleTimer = 0; fireballs = []; arrows = []; activeCheckpoint = null; stars = []; powerUps = []; heldShell = null; bossPipeSpawned = false;
+        // Clear ALL boss projectiles (Phase 1 + Phase 2)
+        bossSpears = []; bossDaggers = []; bossFireballs2 = [];
+        bossColorWalls = []; bossBarrier = null; bossDarkCats = [];
+        bossDialogueActive = false; bossDialogueDismissed = true;
+        bossTauntText = ''; bossTauntTimer = 0;
         // Keep isBig/isMini across levels — re-apply correct size
         if (isBig) { cat.h = 64; cat.w = 24; }
         else if (isMini) { cat.h = 16; cat.w = 12; }
