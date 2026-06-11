@@ -616,6 +616,10 @@
     let bossColorWalls = [];  // { x, color: 'blue'|'red', w, h }
     let bossBarrier = null;   // { x, y, w, h, vx } sweeping wall
     let bossDarkCats = [];    // shadow cats that chase player
+    // Boss Phase 3 state
+    let bossRaygun = null;    // { targetX, targetY, aimTimer, fireTimer, firing }
+    let bossYarnBalls = [];   // { x, y, vx, vy, life } tracking yarn balls
+    let bossCross = null;     // { x, y, warningTimer, fireTimer, firing }
     const BOSS_ATTACK_COOLDOWN = 180; // 3 seconds at 60fps
     function createBoss(x, y, isPirate) {
         // Reset boss projectiles
@@ -2669,6 +2673,10 @@
         updateColorWalls();
         updateBarrier();
         updateDarkCats();
+        // Phase 3 projectiles
+        updateRaygun();
+        updateYarnBalls();
+        updateCross();
 
         // Boss dialogue doesn't block AI — game keeps running
 
@@ -2840,15 +2848,16 @@
                         }
                         boss.currentAttack++;
                     } else {
-                        // Phase 2: Randomly pick from all 6 attacks
-                        const attack = Math.floor(Math.random() * 6);
+                        // Phase 2+: Random attacks. Phase 2 = 6 attacks, Phase 3 = 9 attacks
+                        const maxAttack = boss.bossPhase >= 3 ? 9 : 6;
+                        const attack = Math.floor(Math.random() * maxAttack);
+                        const skinName = typeof CAT_SKINS !== 'undefined' ? CAT_SKINS[selectedSkin].name : 'cat';
                         if (attack === 0) {
-                            // Spears
                             boss.phase = 'spears';
                             boss.phaseTimer = 120;
                             bossTauntText = "Your death's a speer!"; bossTauntTimer = 90;
                             const cols = [];
-                            const numSpears = 5 + Math.floor(Math.random() * 4);
+                            const numSpears = boss.bossPhase >= 3 ? 6 + Math.floor(Math.random() * 4) : 5 + Math.floor(Math.random() * 4);
                             for (let s = 0; s < numSpears; s++) {
                                 const col = 2 + Math.floor(Math.random() * (level.cols - 4));
                                 if (!cols.includes(col)) cols.push(col);
@@ -2863,62 +2872,72 @@
                         } else if (attack === 1) {
                             boss.phase = 'dagger';
                             boss.phaseTimer = 80;
-                            bossTauntText = 'My dager will be your end!'; bossTauntTimer = 90;
+                            bossTauntText = 'My dagger will be your end!'; bossTauntTimer = 90;
                         } else if (attack === 2) {
                             boss.phase = 'fireballs';
                             boss.phaseTimer = 80;
                             bossTauntText = 'Your fur will light the flame...OF DEATH!'; bossTauntTimer = 120;
                         } else if (attack === 3) {
-                            // COLOR WALLS
                             boss.phase = 'colorwalls';
                             boss.phaseTimer = 200;
                             bossTauntText = "Don't. Move."; bossTauntTimer = 120;
-                            // Spawn 5 walls from the right edge, spaced apart
                             const arenaRight = level.cols * T;
                             for (let w = 0; w < 5; w++) {
                                 bossColorWalls.push({
-                                    x: arenaRight + w * 120,
-                                    w: 30,
-                                    vx: -3,
-                                    color: Math.random() > 0.5 ? 'blue' : 'red',
-                                    hit: false
+                                    x: arenaRight + w * 120, w: 30, vx: -3,
+                                    color: Math.random() > 0.5 ? 'blue' : 'red', hit: false
                                 });
                             }
                         } else if (attack === 4) {
-                            // SWEEPING BARRIER WALL
                             boss.phase = 'barrier';
                             boss.phaseTimer = 180;
                             bossTauntText = 'Nowhere to hide!'; bossTauntTimer = 90;
-                            // Pick random vertical position (top, middle, or bottom third)
                             const thirdH = Math.floor(level.rows * T / 3);
-                            const slot = Math.floor(Math.random() * 3); // 0=top, 1=mid, 2=bottom
-                            bossBarrier = {
-                                x: -40,
-                                y: slot * thirdH,
-                                w: 40,
-                                h: thirdH,
-                                vx: 3,
-                                life: 300
-                            };
-                        } else {
-                            // DARK CAT
+                            const slot = Math.floor(Math.random() * 3);
+                            bossBarrier = { x: -40, y: slot * thirdH, w: 40, h: thirdH, vx: 3, life: 300 };
+                        } else if (attack === 5) {
                             boss.phase = 'darkcat';
                             boss.phaseTimer = 60;
                             bossTauntText = 'Meet your shadow...'; bossTauntTimer = 100;
                             bossDarkCats.push({
-                                x: boss.x + boss.w / 2 - 12,
-                                y: boss.y,
-                                w: 24, h: 32,
-                                vx: 0, vy: -3,
-                                dir: -1,
-                                frame: 0,
-                                hp: 2,
-                                despawnTimer: 900, // 15 seconds at 60fps
-                                jumpTimer: 50,
-                                grounded: false,
-                                flashTimer: 0
+                                x: boss.x + boss.w / 2 - 12, y: boss.y,
+                                w: 24, h: 32, vx: 0, vy: -3, dir: -1, frame: 0,
+                                hp: 2, despawnTimer: 900, jumpTimer: 50,
+                                grounded: false, flashTimer: 0
                             });
                             addParticle(boss.x + boss.w / 2, boss.y + boss.h / 2, '#1a1a2e', 15, 6);
+                        } else if (attack === 6) {
+                            // RAT RAYGUN
+                            boss.phase = 'raygun';
+                            boss.phaseTimer = 300;
+                            bossTauntText = 'This will finish you, ' + skinName + '!'; bossTauntTimer = 120;
+                            bossRaygun = {
+                                state: 'aiming', aimTimer: 60,
+                                targetX: cat.x + cat.w / 2, targetY: cat.y + cat.h / 2,
+                                lockedX: 0, lockedY: 0, lockTimer: 0, fireTimer: 0
+                            };
+                        } else if (attack === 7) {
+                            // ANTI-CAT YARN BALLS
+                            boss.phase = 'yarnballs';
+                            boss.phaseTimer = 120;
+                            bossTauntText = "Let's see you resist the yarn!"; bossTauntTimer = 100;
+                            for (let b = 0; b < 3; b++) {
+                                bossYarnBalls.push({
+                                    x: boss.x + boss.w / 2 + (b - 1) * 30,
+                                    y: boss.y - 20,
+                                    vx: (Math.random() - 0.5) * 4,
+                                    vy: -2 - Math.random() * 2,
+                                    life: 480, // 8 seconds
+                                    angle: Math.random() * 6.28
+                                });
+                            }
+                            addParticle(boss.x + boss.w / 2, boss.y, '#FF1493', 12, 5);
+                        } else {
+                            // THE CROSS
+                            boss.phase = 'cross';
+                            boss.phaseTimer = 200;
+                            bossTauntText = 'DIIIEEE!!!'; bossTauntTimer = 100;
+                            bossCross = { state: 'warning', warningTimer: 120, fireTimer: 0 };
                         }
                     }
                 }
@@ -2992,6 +3011,26 @@
                     boss.phase = 'idle';
                     boss.phaseTimer = BOSS_ATTACK_COOLDOWN;
                 }
+            } else if (boss.phase === 'raygun') {
+                boss.vx = 0;
+                if (boss.phaseTimer <= 0 || !bossRaygun) {
+                    boss.phase = 'idle';
+                    boss.phaseTimer = BOSS_ATTACK_COOLDOWN;
+                    bossRaygun = null;
+                }
+            } else if (boss.phase === 'yarnballs') {
+                boss.vx = 0;
+                if (boss.phaseTimer <= 0) {
+                    boss.phase = 'idle';
+                    boss.phaseTimer = BOSS_ATTACK_COOLDOWN;
+                }
+            } else if (boss.phase === 'cross') {
+                boss.vx = 0;
+                if (boss.phaseTimer <= 0 || !bossCross) {
+                    boss.phase = 'idle';
+                    boss.phaseTimer = BOSS_ATTACK_COOLDOWN;
+                    bossCross = null;
+                }
             } else if (boss.phase === 'hurt') {
                 boss.vx = 0;
                 if (boss.phaseTimer <= 0) { boss.phase = 'idle'; boss.phaseTimer = 30; }
@@ -3040,52 +3079,61 @@
         addParticle(boss.x + boss.w / 2, boss.y + boss.h / 2, '#FF0000', 15, 7);
         score += 100;
         if (boss.hp <= 0) {
-            // RAT KING — Phase transition
+            // RAT KING — Phase transitions
             if (!boss.pirate && boss.bossPhase === 1) {
                 // Enter Phase 2!
                 boss.bossPhase = 2;
                 boss.hp = 20;
                 boss.maxHp = 20;
                 boss.phase = 'idle';
-                boss.phaseTimer = 90; // brief pause before attacks resume
+                boss.phaseTimer = 90;
                 boss.currentAttack = 0;
-                boss.flashTimer = 60; // long flash for dramatic effect
-                // Clear Phase 1 projectiles
-                bossSpears = [];
-                bossDaggers = [];
-                bossFireballs2 = [];
-                bossColorWalls = [];
-                bossBarrier = null;
-                bossDarkCats = [];
-                // Phase 2 transition dialogue
+                boss.flashTimer = 60;
+                bossSpears = []; bossDaggers = []; bossFireballs2 = [];
+                bossColorWalls = []; bossBarrier = null; bossDarkCats = [];
+                bossRaygun = null; bossYarnBalls = []; bossCross = null;
                 bossDialogueActive = true;
-                bossDialogueText = 'h-h-how d-d-did you h-hi-t me no matter y-youll die now';
-                bossDialogueCharIndex = 0;
-                bossDialogueTimer = 0;
-                bossDialogueDone = false;
-                bossDialogueDismissed = false;
-                // Big dramatic effect
+                bossDialogueText = 'H-h-how d-d-did you h-hi-t me... No matter... You\'ll die now!';
+                bossDialogueCharIndex = 0; bossDialogueTimer = 0;
+                bossDialogueDone = false; bossDialogueDismissed = false;
                 shakeTimer = 30; shakeAmt = 8;
                 for (let i = 0; i < 30; i++) {
                     addParticle(boss.x + Math.random() * boss.w, boss.y + Math.random() * boss.h, ['#FF0000', '#FFD700', '#FF4500'][Math.floor(Math.random() * 3)], 4 + Math.random() * 4, 6);
                 }
-                addParticle(boss.x + boss.w / 2, boss.y + boss.h / 2, '#FF0000', 30, 10);
                 score += 2000;
                 bossTauntText = ''; bossTauntTimer = 0;
+            } else if (!boss.pirate && boss.bossPhase === 2) {
+                // Enter Phase 3!
+                boss.bossPhase = 3;
+                boss.hp = 30;
+                boss.maxHp = 30;
+                boss.phase = 'idle';
+                boss.phaseTimer = 90;
+                boss.currentAttack = 0;
+                boss.flashTimer = 80;
+                bossSpears = []; bossDaggers = []; bossFireballs2 = [];
+                bossColorWalls = []; bossBarrier = null; bossDarkCats = [];
+                bossRaygun = null; bossYarnBalls = []; bossCross = null;
+                bossDialogueActive = true;
+                bossDialogueText = 'NOOOOO!!!! HOW! HOW DID YOU DO THIS! YOU COULD HAVE SURRENDERED BUT NOOO YOU HAD TO MESS IT UP!!! NOW DIIIEEE!!!';
+                bossDialogueCharIndex = 0; bossDialogueTimer = 0;
+                bossDialogueDone = false; bossDialogueDismissed = false;
+                shakeTimer = 50; shakeAmt = 12;
+                for (let i = 0; i < 50; i++) {
+                    addParticle(boss.x + Math.random() * boss.w, boss.y + Math.random() * boss.h, ['#FF0000', '#8B0000', '#FF4500', '#FFD700'][Math.floor(Math.random() * 4)], 4 + Math.random() * 6, 8);
+                }
+                score += 3000;
+                bossTauntText = ''; bossTauntTimer = 0;
             } else {
-                // Actually die (pirate boss or Phase 2 completed)
+                // Actually die (pirate boss or Phase 3 completed)
                 boss.alive = false;
                 boss.deathTimer = 120;
                 addParticle(boss.x + boss.w / 2, boss.y + boss.h / 2, '#FFD700', 30, 10);
                 addParticle(boss.x + boss.w / 2, boss.y + boss.h / 2, '#FF4500', 20, 8);
                 score += 5000;
-                // Clear all boss projectiles on death
-                bossSpears = [];
-                bossDaggers = [];
-                bossFireballs2 = [];
-                bossColorWalls = [];
-                bossBarrier = null;
-                bossDarkCats = [];
+                bossSpears = []; bossDaggers = []; bossFireballs2 = [];
+                bossColorWalls = []; bossBarrier = null; bossDarkCats = [];
+                bossRaygun = null; bossYarnBalls = []; bossCross = null;
             }
         }
     }
@@ -3962,6 +4010,275 @@
                 }
             }
             ctx.globalAlpha = 1;
+        }
+    }
+
+    // === PHASE 3 ATTACKS ===
+
+    // RAT RAYGUN — aims at cat, pauses 3 sec, then fires a beam
+    function updateRaygun() {
+        if (!bossRaygun || !boss || !boss.alive) return;
+        const r = bossRaygun;
+
+        if (r.state === 'aiming') {
+            // Track the cat's position
+            r.targetX = cat.x + cat.w / 2;
+            r.targetY = cat.y + cat.h / 2;
+            r.aimTimer--;
+            if (r.aimTimer <= 0) {
+                // Lock position and wait 3 seconds
+                r.state = 'locked';
+                r.lockTimer = 180; // 3 seconds
+                r.lockedX = r.targetX;
+                r.lockedY = r.targetY;
+            }
+        } else if (r.state === 'locked') {
+            r.lockTimer--;
+            if (r.lockTimer <= 0) {
+                r.state = 'firing';
+                r.fireTimer = 40;
+                shakeTimer = 15; shakeAmt = 6;
+                if (window.audio) audio.playStomp();
+            }
+        } else if (r.state === 'firing') {
+            r.fireTimer--;
+            // Check collision — beam is a line from boss to locked position
+            const bx = boss.x + boss.w / 2, by = boss.y + boss.h / 2;
+            const dx = r.lockedX - bx, dy = r.lockedY - by;
+            const len = Math.sqrt(dx * dx + dy * dy) || 1;
+
+            // Check all players against the beam (thick line collision)
+            function hitByBeam(c) {
+                if (c.dead) return false;
+                const cx = c.x + c.w / 2, cy = c.y + c.h / 2;
+                // Distance from point to line segment
+                const t = Math.max(0, Math.min(1, ((cx - bx) * dx + (cy - by) * dy) / (len * len)));
+                const px = bx + t * dx, py = by + t * dy;
+                const dist = Math.sqrt((cx - px) * (cx - px) + (cy - py) * (cy - py));
+                return dist < 20; // beam width
+            }
+            if (!cat.dead && invincibleTimer <= 0 && starPowerTimer <= 0 && hitByBeam(cat)) killCat();
+            if (coopMode && !cat2.dead && invincibleTimer2 <= 0 && hitByBeam(cat2)) killCat2();
+
+            if (r.fireTimer <= 0) bossRaygun = null;
+        }
+    }
+
+    function drawRaygun() {
+        if (!bossRaygun || !boss || !boss.alive) return;
+        const r = bossRaygun;
+        const bx = Math.round(boss.x - cam.x) + boss.w / 2;
+        const by = Math.round(boss.y) + boss.h / 2;
+
+        if (r.state === 'aiming') {
+            // Draw aiming laser (thin red dotted line)
+            const tx = Math.round(r.targetX - cam.x), ty = Math.round(r.targetY);
+            ctx.strokeStyle = '#FF0000';
+            ctx.lineWidth = 1;
+            ctx.setLineDash([4, 4]);
+            ctx.beginPath(); ctx.moveTo(bx, by); ctx.lineTo(tx, ty); ctx.stroke();
+            ctx.setLineDash([]);
+            // Target reticle
+            ctx.strokeStyle = '#FF0000';
+            ctx.lineWidth = 2;
+            ctx.beginPath(); ctx.arc(tx, ty, 12, 0, Math.PI * 2); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(tx - 16, ty); ctx.lineTo(tx + 16, ty); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(tx, ty - 16); ctx.lineTo(tx, ty + 16); ctx.stroke();
+        } else if (r.state === 'locked') {
+            // Flashing locked indicator
+            const tx = Math.round(r.lockedX - cam.x), ty = Math.round(r.lockedY);
+            if (frameCount % 10 < 5) {
+                ctx.strokeStyle = '#FF4444';
+                ctx.lineWidth = 3;
+                ctx.beginPath(); ctx.arc(tx, ty, 15, 0, Math.PI * 2); ctx.stroke();
+                ctx.fillStyle = '#FF0000';
+                ctx.font = 'bold 10px monospace';
+                ctx.textAlign = 'center';
+                ctx.fillText('⚠️', tx, ty - 20);
+                ctx.textAlign = 'left';
+            }
+            // Countdown indicator
+            ctx.fillStyle = '#FF0000';
+            ctx.font = 'bold 14px monospace';
+            ctx.textAlign = 'center';
+            ctx.fillText(Math.ceil(r.lockTimer / 60), tx, ty + 5);
+            ctx.textAlign = 'left';
+        } else if (r.state === 'firing') {
+            // FIRE THE BEAM!
+            const tx = Math.round(r.lockedX - cam.x), ty = Math.round(r.lockedY);
+            // Glow
+            ctx.globalAlpha = 0.3;
+            ctx.strokeStyle = '#FF0000';
+            ctx.lineWidth = 30;
+            ctx.beginPath(); ctx.moveTo(bx, by); ctx.lineTo(tx, ty); ctx.stroke();
+            // Core beam
+            ctx.globalAlpha = 1;
+            ctx.strokeStyle = '#FFFF00';
+            ctx.lineWidth = 8;
+            ctx.beginPath(); ctx.moveTo(bx, by); ctx.lineTo(tx, ty); ctx.stroke();
+            ctx.strokeStyle = '#FFF';
+            ctx.lineWidth = 3;
+            ctx.beginPath(); ctx.moveTo(bx, by); ctx.lineTo(tx, ty); ctx.stroke();
+            // Impact particles
+            if (frameCount % 2 === 0) {
+                addParticle(r.lockedX, r.lockedY, '#FFFF00', 3, 4);
+                addParticle(r.lockedX, r.lockedY, '#FF4500', 2, 3);
+            }
+        }
+    }
+
+    // ANTI-CAT YARN BALLS — floating balls that track the cat
+    function updateYarnBalls() {
+        for (let i = bossYarnBalls.length - 1; i >= 0; i--) {
+            const yb = bossYarnBalls[i];
+            yb.life--;
+            yb.angle += 0.1;
+
+            if (yb.life <= 0) { bossYarnBalls.splice(i, 1); continue; }
+
+            // Track nearest player
+            let tx = cat.x + cat.w / 2, ty = cat.y + cat.h / 2;
+            if (coopMode && !cat2.dead && !cat.dead) {
+                const d1 = Math.abs(cat.x - yb.x), d2 = Math.abs(cat2.x - yb.x);
+                if (d2 < d1) { tx = cat2.x + cat2.w / 2; ty = cat2.y + cat2.h / 2; }
+            } else if (cat.dead && coopMode && !cat2.dead) {
+                tx = cat2.x + cat2.w / 2; ty = cat2.y + cat2.h / 2;
+            }
+
+            // Gentle homing — accelerate toward target
+            const dx = tx - yb.x, dy = ty - yb.y;
+            const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+            yb.vx += (dx / dist) * 0.15;
+            yb.vy += (dy / dist) * 0.15;
+            // Cap speed
+            const spd = Math.sqrt(yb.vx * yb.vx + yb.vy * yb.vy);
+            if (spd > 3) { yb.vx = (yb.vx / spd) * 3; yb.vy = (yb.vy / spd) * 3; }
+
+            yb.x += yb.vx;
+            yb.y += yb.vy;
+
+            // Hit player
+            if (!cat.dead && invincibleTimer <= 0 && starPowerTimer <= 0) {
+                if (Math.abs(cat.x + cat.w / 2 - yb.x) < 16 && Math.abs(cat.y + cat.h / 2 - yb.y) < 16) {
+                    killCat(); bossYarnBalls.splice(i, 1); continue;
+                }
+            }
+            if (coopMode && !cat2.dead && invincibleTimer2 <= 0) {
+                if (Math.abs(cat2.x + cat2.w / 2 - yb.x) < 16 && Math.abs(cat2.y + cat2.h / 2 - yb.y) < 16) {
+                    killCat2(); bossYarnBalls.splice(i, 1); continue;
+                }
+            }
+        }
+    }
+
+    function drawYarnBalls() {
+        for (const yb of bossYarnBalls) {
+            const sx = Math.round(yb.x - cam.x), sy = Math.round(yb.y);
+            // Glow
+            ctx.globalAlpha = 0.3;
+            ctx.fillStyle = '#FF69B4';
+            ctx.beginPath(); ctx.arc(sx, sy, 14, 0, Math.PI * 2); ctx.fill();
+            ctx.globalAlpha = 1;
+            // Yarn ball body
+            ctx.fillStyle = '#FF1493';
+            ctx.beginPath(); ctx.arc(sx, sy, 8, 0, Math.PI * 2); ctx.fill();
+            // Yarn string pattern
+            ctx.strokeStyle = '#FFB6C1';
+            ctx.lineWidth = 1;
+            for (let a = 0; a < 3; a++) {
+                const ang = yb.angle + a * 2.1;
+                ctx.beginPath();
+                ctx.arc(sx, sy, 6, ang, ang + 1.5);
+                ctx.stroke();
+            }
+            // Flashing when about to despawn
+            if (yb.life < 120) {
+                ctx.globalAlpha = yb.life % 20 < 10 ? 0.4 : 1;
+            }
+            ctx.globalAlpha = 1;
+        }
+    }
+
+    // THE CROSS — cross-shaped death beam with red warning
+    function updateCross() {
+        if (!bossCross || !boss || !boss.alive) return;
+        const cr = bossCross;
+
+        if (cr.state === 'warning') {
+            cr.warningTimer--;
+            if (cr.warningTimer <= 0) {
+                cr.state = 'firing';
+                cr.fireTimer = 60;
+                shakeTimer = 20; shakeAmt = 8;
+                if (window.audio) audio.playStomp();
+            }
+        } else if (cr.state === 'firing') {
+            cr.fireTimer--;
+            // Cross beam collision — horizontal and vertical full-width beams from boss center
+            const cx = boss.x + boss.w / 2;
+            const cy = boss.y + boss.h / 2;
+            const beamW = 24; // beam width
+
+            function hitByCross(c) {
+                if (c.dead) return false;
+                const px = c.x + c.w / 2, py = c.y + c.h / 2;
+                // Hit by horizontal beam (full width, centered on boss Y)
+                if (Math.abs(py - cy) < beamW) return true;
+                // Hit by vertical beam (full height, centered on boss X)
+                if (Math.abs(px - cx) < beamW) return true;
+                return false;
+            }
+            if (!cat.dead && invincibleTimer <= 0 && starPowerTimer <= 0 && hitByCross(cat)) killCat();
+            if (coopMode && !cat2.dead && invincibleTimer2 <= 0 && hitByCross(cat2)) killCat2();
+
+            if (cr.fireTimer <= 0) bossCross = null;
+        }
+    }
+
+    function drawCross() {
+        if (!bossCross || !boss || !boss.alive) return;
+        const cr = bossCross;
+        const cx = Math.round(boss.x - cam.x) + boss.w / 2;
+        const cy = Math.round(boss.y) + boss.h / 2;
+
+        if (cr.state === 'warning') {
+            // Red highlight warning zones
+            const alpha = (cr.warningTimer % 20 < 10) ? 0.3 : 0.15;
+            ctx.globalAlpha = alpha;
+            ctx.fillStyle = '#FF0000';
+            // Horizontal band
+            ctx.fillRect(0, cy - 24, W, 48);
+            // Vertical band
+            ctx.fillRect(cx - 24, 0, 48, H);
+            ctx.globalAlpha = 1;
+            // Warning text
+            ctx.fillStyle = '#FF0000';
+            ctx.font = 'bold 12px monospace';
+            ctx.textAlign = 'center';
+            ctx.fillText('⚠️ DANGER ⚠️', cx, cy - 30);
+            ctx.textAlign = 'left';
+        } else if (cr.state === 'firing') {
+            // CROSS BEAM!
+            // Outer glow
+            ctx.globalAlpha = 0.4;
+            ctx.fillStyle = '#FF0000';
+            ctx.fillRect(0, cy - 30, W, 60);
+            ctx.fillRect(cx - 30, 0, 60, H);
+            // Core beam
+            ctx.globalAlpha = 0.9;
+            ctx.fillStyle = '#FFFF00';
+            ctx.fillRect(0, cy - 12, W, 24);
+            ctx.fillRect(cx - 12, 0, 24, H);
+            // White core
+            ctx.fillStyle = '#FFF';
+            ctx.fillRect(0, cy - 4, W, 8);
+            ctx.fillRect(cx - 4, 0, 8, H);
+            ctx.globalAlpha = 1;
+            // Particles
+            if (frameCount % 2 === 0) {
+                addParticle(Math.random() * level.cols * T, cy, '#FFFF00', 2, 3);
+                addParticle(boss.x + boss.w / 2, Math.random() * level.rows * T, '#FFFF00', 2, 3);
+            }
         }
     }
 
@@ -5530,9 +5847,10 @@
         cat.vx = 0; cat.vy = 0; cat.grounded = false; cat.dead = false;
         cam.x = Math.max(0, cat.x - W / 3);
         particles = []; questionHits = []; invincibleTimer = 0; fireballs = []; arrows = []; activeCheckpoint = null; stars = []; powerUps = []; heldShell = null; bossPipeSpawned = false;
-        // Clear ALL boss projectiles (Phase 1 + Phase 2)
+        // Clear ALL boss projectiles (Phase 1 + Phase 2 + Phase 3)
         bossSpears = []; bossDaggers = []; bossFireballs2 = [];
         bossColorWalls = []; bossBarrier = null; bossDarkCats = [];
+        bossRaygun = null; bossYarnBalls = []; bossCross = null;
         bossDialogueActive = false; bossDialogueDismissed = true;
         bossTauntText = ''; bossTauntTimer = 0;
         // Keep isBig/isMini across levels — re-apply correct size
@@ -6718,6 +7036,10 @@
             drawColorWalls();
             drawBarrier();
             drawDarkCats();
+            // Phase 3 projectiles
+            drawRaygun();
+            drawYarnBalls();
+            drawCross();
             // Cat
             drawCatSprite();
             if (coopMode) drawCat2Sprite();
