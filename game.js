@@ -2924,8 +2924,7 @@
             } else if (boss.phase === 'spears') {
                 boss.vx = 0;
                 if (boss.phaseTimer <= 0) {
-                    boss.phase = 'idle';
-                    boss.phaseTimer = BOSS_ATTACK_COOLDOWN;
+                    if (Math.random() < 0.35) { boss.phase = 'tired'; boss.phaseTimer = 180; } else { boss.phase = 'idle'; boss.phaseTimer = 30; }
                 }
             } else if (boss.phase === 'dagger') {
                 boss.vx = 0;
@@ -2947,8 +2946,7 @@
                     if (window.audio) audio.playStomp();
                 }
                 if (boss.phaseTimer <= 0) {
-                    boss.phase = 'idle';
-                    boss.phaseTimer = BOSS_ATTACK_COOLDOWN;
+                    if (Math.random() < 0.35) { boss.phase = 'tired'; boss.phaseTimer = 180; } else { boss.phase = 'idle'; boss.phaseTimer = 30; }
                 }
             } else if (boss.phase === 'fireballs') {
                 boss.vx = 0;
@@ -2969,47 +2967,47 @@
                     if (window.audio) audio.playStomp();
                 }
                 if (boss.phaseTimer <= 0) {
-                    boss.phase = 'idle';
-                    boss.phaseTimer = BOSS_ATTACK_COOLDOWN;
+                    if (Math.random() < 0.35) { boss.phase = 'tired'; boss.phaseTimer = 180; } else { boss.phase = 'idle'; boss.phaseTimer = 30; }
                 }
             } else if (boss.phase === 'colorwalls') {
                 boss.vx = 0;
                 if (boss.phaseTimer <= 0 || bossColorWalls.length === 0) {
-                    boss.phase = 'idle';
-                    boss.phaseTimer = BOSS_ATTACK_COOLDOWN;
+                    if (Math.random() < 0.35) { boss.phase = 'tired'; boss.phaseTimer = 180; } else { boss.phase = 'idle'; boss.phaseTimer = 30; }
                 }
             } else if (boss.phase === 'barrier') {
                 boss.vx = 0;
                 if (boss.phaseTimer <= 0 || !bossBarrier) {
-                    boss.phase = 'idle';
-                    boss.phaseTimer = BOSS_ATTACK_COOLDOWN;
+                    if (Math.random() < 0.35) { boss.phase = 'tired'; boss.phaseTimer = 180; } else { boss.phase = 'idle'; boss.phaseTimer = 30; }
                     bossBarrier = null;
                 }
             } else if (boss.phase === 'darkcat') {
                 boss.vx = 0;
                 if (boss.phaseTimer <= 0) {
-                    boss.phase = 'idle';
-                    boss.phaseTimer = BOSS_ATTACK_COOLDOWN;
+                    if (Math.random() < 0.35) { boss.phase = 'tired'; boss.phaseTimer = 180; } else { boss.phase = 'idle'; boss.phaseTimer = 30; }
                 }
             } else if (boss.phase === 'raygun') {
                 boss.vx = 0;
                 if (boss.phaseTimer <= 0 || !bossRaygun) {
-                    boss.phase = 'idle';
-                    boss.phaseTimer = BOSS_ATTACK_COOLDOWN;
+                    if (Math.random() < 0.35) { boss.phase = 'tired'; boss.phaseTimer = 180; } else { boss.phase = 'idle'; boss.phaseTimer = 30; }
                     bossRaygun = null;
                 }
             } else if (boss.phase === 'yarnballs') {
                 boss.vx = 0;
                 if (boss.phaseTimer <= 0) {
-                    boss.phase = 'idle';
-                    boss.phaseTimer = BOSS_ATTACK_COOLDOWN;
+                    if (Math.random() < 0.35) { boss.phase = 'tired'; boss.phaseTimer = 180; } else { boss.phase = 'idle'; boss.phaseTimer = 30; }
                 }
             } else if (boss.phase === 'cross') {
                 boss.vx = 0;
                 if (boss.phaseTimer <= 0 || !bossCross) {
-                    boss.phase = 'idle';
-                    boss.phaseTimer = BOSS_ATTACK_COOLDOWN;
+                    if (Math.random() < 0.35) { boss.phase = 'tired'; boss.phaseTimer = 180; } else { boss.phase = 'idle'; boss.phaseTimer = 30; }
                     bossCross = null;
+                }
+            } else if (boss.phase === 'tired') {
+                // VULNERABLE — boss is exhausted after attacking, can be stomped!
+                boss.vx = 0;
+                if (boss.phaseTimer <= 0) {
+                    boss.phase = 'idle';
+                    boss.phaseTimer = 30; // brief pause then next attack
                 }
             } else if (boss.phase === 'hurt') {
                 boss.vx = 0;
@@ -3021,29 +3019,45 @@
         if (!cat.dead) {
             let ox = cat.x + 4, oy = cat.y + 2, ow = cat.w - 8, oh = cat.h - 4;
             if (ox < boss.x + boss.w && ox + ow > boss.x && oy < boss.y + boss.h && oy + oh > boss.y) {
-                if (starPowerTimer > 0) {
-                    // Star power: deal 1 damage to boss
-                    damageBoss(1);
-                    cat.vy = JUMP * 0.5; if(window.audio) audio.playStomp();
-                    invincibleTimer = 30;
-                    addParticle(boss.x + boss.w / 2, boss.y + boss.h / 2, '#FFD700', 15, 6);
-                } else if (invincibleTimer <= 0) {
-                    if (cat.vy > 0 && cat.y + cat.h - 10 < boss.y + 20) {
+                if (boss.phase === 'tired') {
+                    // Boss is tired — vulnerable!
+                    if (starPowerTimer > 0) {
                         damageBoss(1);
-                        cat.vy = JUMP * 0.7; if(window.audio) audio.playStomp();
-                    } else {
-                        killCat();
+                        cat.vy = JUMP * 0.5; if(window.audio) audio.playStomp();
+                        invincibleTimer = 30;
+                        addParticle(boss.x + boss.w / 2, boss.y + boss.h / 2, '#FFD700', 15, 6);
+                    } else if (invincibleTimer <= 0) {
+                        if (cat.vy > 0 && cat.y + cat.h - 10 < boss.y + 20) {
+                            damageBoss(1);
+                            cat.vy = JUMP * 0.7; if(window.audio) audio.playStomp();
+                        } else {
+                            killCat();
+                        }
                     }
+                } else if (invincibleTimer <= 0 && starPowerTimer <= 0) {
+                    // Boss is NOT tired — can't damage, touching = death
+                    killCat();
+                } else if (starPowerTimer > 0) {
+                    // Star power bounces off non-tired boss
+                    cat.vy = JUMP * 0.5;
+                    invincibleTimer = 30;
+                    addParticle(boss.x + boss.w / 2, boss.y + boss.h / 2, '#888', 8, 4);
+                    bossTauntText = 'Nice try!'; bossTauntTimer = 60;
                 }
             }
         }
 
-        // Fireball collision
+        // Fireball collision — only when tired
         for (let i = fireballs.length - 1; i >= 0; i--) {
             const fb = fireballs[i];
             if (fb.x < boss.x + boss.w && fb.x + fb.w > boss.x && fb.y < boss.y + boss.h && fb.y + fb.h > boss.y) {
-                damageBoss(2);
-                addParticle(fb.x + fb.w / 2, fb.y + fb.h / 2, '#FF4500', 8, 4);
+                if (boss.phase === 'tired') {
+                    damageBoss(2);
+                    addParticle(fb.x + fb.w / 2, fb.y + fb.h / 2, '#FF4500', 8, 4);
+                } else {
+                    // Fireball deflects off non-tired boss
+                    addParticle(fb.x + fb.w / 2, fb.y + fb.h / 2, '#888', 5, 3);
+                }
                 fireballs.splice(i, 1);
             }
         }
@@ -3183,6 +3197,32 @@
         // Attack indicators
         if (boss.phase === 'charge') {
             if (frameCount % 3 === 0) addParticle(boss.x + (d === 1 ? 0 : boss.w), boss.y + boss.h, '#8B6914', 2, 3);
+        }
+
+        // Tired state visual — spinning stars + yellow tint
+        if (boss.phase === 'tired') {
+            // Yellow exhaustion tint
+            ctx.globalAlpha = 0.2;
+            ctx.fillStyle = '#FFFF00';
+            ctx.fillRect(bx, by, boss.w, boss.h);
+            ctx.globalAlpha = 1;
+            // Spinning stars above head
+            for (let s = 0; s < 3; s++) {
+                const angle = frameCount * 0.05 + s * (Math.PI * 2 / 3);
+                const sx = bx + boss.w / 2 + Math.cos(angle) * 20;
+                const sy = by - 12 + Math.sin(angle) * 6;
+                ctx.fillStyle = '#FFD700';
+                ctx.font = '10px serif';
+                ctx.fillText('★', sx - 4, sy + 4);
+            }
+            // "TIRED!" text flashing
+            if (frameCount % 40 < 25) {
+                ctx.fillStyle = '#FFFF00';
+                ctx.font = 'bold 8px "Press Start 2P", monospace';
+                ctx.textAlign = 'center';
+                ctx.fillText('TIRED!', bx + boss.w / 2, by - 22);
+                ctx.textAlign = 'left';
+            }
         }
 
         // Phase 2+ scar — big diagonal slash across body (both bosses)
