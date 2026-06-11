@@ -3586,11 +3586,11 @@
                     s.state = 'retract';
                     s.timer = 15;
                 }
-                // Check collision with cats
-                const sx = s.col * T;
-                const sy = s.groundY - s.height;
-                const sw = T;
-                const sh = s.height;
+                // Check collision with cats — use tight hitbox matching the visual shaft
+                const sx = s.col * T + T / 2 - 7; // centered on shaft (14px wide)
+                const sy = s.groundY - s.height + 8; // slight top margin
+                const sw = 14;
+                const sh = s.height - 8;
                 if (!cat.dead && invincibleTimer <= 0 && starPowerTimer <= 0) {
                     if (cat.x + 4 < sx + sw && cat.x + cat.w - 4 > sx && cat.y + 4 < sy + sh && cat.y + cat.h - 4 > sy) {
                         killCat();
