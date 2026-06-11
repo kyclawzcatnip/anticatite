@@ -675,6 +675,7 @@
             currentAttack: 0,   // cycles through 0,1,2 for the 3 attacks
             spearWarningTimer: 0,
             spearColumns: [],   // which columns have active spear warnings
+            teleportCooldown: 0, // cooldown for Phase 4 teleport (frames)
         };
     }
 
@@ -2802,13 +2803,14 @@
         // === PHASE AI (shared by Rat King + Pirate Captain) ===
         {
             boss.phaseTimer--;
+            if (boss.teleportCooldown > 0) boss.teleportCooldown--;
             boss.dir = cat.x < boss.x ? -1 : 1;
 
             if (boss.phase === 'idle') {
                 boss.vx = 0;
                 if (boss.phaseTimer <= 0) {
-                    // Phase 4: Teleport before attacking!
-                    if (boss.bossPhase >= 4) {
+                    // Phase 4: Teleport before attacking (15s cooldown)
+                    if (boss.bossPhase >= 4 && boss.teleportCooldown <= 0) {
                         // Vanish particles at old position
                         for (let i = 0; i < 15; i++) {
                             addParticle(boss.x + Math.random() * boss.w, boss.y + Math.random() * boss.h, '#8B00FF', 3 + Math.random() * 3, 5);
@@ -2829,6 +2831,7 @@
                             addParticle(boss.x + Math.random() * boss.w, boss.y + Math.random() * boss.h, '#DA70D6', 3 + Math.random() * 3, 5);
                         }
                         shakeTimer = 5; shakeAmt = 3;
+                        boss.teleportCooldown = 900; // 15 sec cooldown
                     }
                     if (boss.bossPhase === 1) {
                         // Phase 1: Cycle through 3 attacks
