@@ -3393,16 +3393,16 @@
 
         // Miner boss overlay
         if (boss.miner) {
-            // Hard hat (yellow)
-            bpx(8, -8, 48, 8, '#FFD700');   // hat brim
-            bpx(14, -14, 36, 8, '#FFC107'); // hat dome
-            bpx(28, -18, 8, 6, '#FF5722');  // headlamp
+            // Hard hat (yellow) — compact
+            bpx(16, -4, 32, 5, '#FFD700');   // hat brim
+            bpx(20, -9, 24, 6, '#FFC107');   // hat dome
+            bpx(30, -11, 5, 4, '#FF5722');   // headlamp
             // Headlamp glow
             if (frameCount % 40 < 30) {
-                ctx.globalAlpha = 0.3;
+                ctx.globalAlpha = 0.25;
                 ctx.fillStyle = '#FFFF00';
                 ctx.beginPath();
-                ctx.arc(bx + 32, by - 15, 8, 0, Math.PI * 2);
+                ctx.arc(bx + 32, by - 8, 5, 0, Math.PI * 2);
                 ctx.fill();
                 ctx.globalAlpha = 1;
             }
