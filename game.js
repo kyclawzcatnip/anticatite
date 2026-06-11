@@ -626,7 +626,7 @@
         bossSpears = [];
         bossDaggers = [];
         bossFireballs2 = [];
-        // Reset dialogue state (only for Rat King, not pirate)
+        // Reset dialogue state
         if (!isPirate) {
             bossDialogueActive = true;
             const skinName = CAT_SKINS[selectedSkin].name;
@@ -636,8 +636,13 @@
             bossDialogueDone = false;
             bossDialogueDismissed = false;
         } else {
-            bossDialogueActive = false;
-            bossDialogueDismissed = true;
+            bossDialogueActive = true;
+            const skinName = CAT_SKINS[selectedSkin].name;
+            bossDialogueText = 'Arr harr harr! So ' + skinName + ' made it past me rats, did ye? Time to walk the plank!';
+            bossDialogueCharIndex = 0;
+            bossDialogueTimer = 0;
+            bossDialogueDone = false;
+            bossDialogueDismissed = false;
         }
         return {
             x: x, y: y, w: 64, h: 64,
@@ -2774,43 +2779,8 @@
         // Flash timer
         if (boss.flashTimer > 0) boss.flashTimer--;
 
-        // === PHASE AI ===
-        // Pirate boss uses the old AI (charge/jump/spawn)
-        if (boss.pirate) {
-            boss.phaseTimer--;
-            boss.dir = cat.x < boss.x ? -1 : 1;
-            if (boss.phase === 'idle') {
-                boss.vx = 0;
-                if (boss.phaseTimer <= 0) {
-                    boss.attackCount++;
-                    if (boss.hp <= 3 && boss.attackCount % 3 === 0) {
-                        boss.phase = 'spawn'; boss.phaseTimer = 60;
-                    } else if (boss.attackCount % 2 === 0) {
-                        boss.phase = 'jump'; boss.phaseTimer = 80;
-                    } else {
-                        boss.phase = 'charge'; boss.phaseTimer = 90;
-                    }
-                }
-            } else if (boss.phase === 'charge') {
-                boss.vx = boss.dir * 4;
-                if (boss.phaseTimer <= 0) { boss.phase = 'idle'; boss.phaseTimer = 40; boss.vx = 0; }
-            } else if (boss.phase === 'jump') {
-                if (boss.phaseTimer === 78 && boss.grounded) { boss.vy = -14; boss.vx = boss.dir * 3; }
-                if (boss.grounded && boss.phaseTimer < 60) { shakeTimer = 8; shakeAmt = 4; boss.phase = 'idle'; boss.phaseTimer = 50; boss.vx = 0; }
-            } else if (boss.phase === 'spawn') {
-                boss.vx = 0;
-                if (boss.phaseTimer === 30) {
-                    level.enemies.push({ x: boss.x - 40, y: boss.y + 32, w: T, h: T, vx: -ENEMY_SPEED * 1.5, vy: 0, type: 'rat', alive: true, frame: 0 });
-                    level.enemies.push({ x: boss.x + boss.w + 8, y: boss.y + 32, w: T, h: T, vx: ENEMY_SPEED * 1.5, vy: 0, type: 'rat', alive: true, frame: 0 });
-                    addParticle(boss.x + boss.w / 2, boss.y + boss.h, '#8B4513', 10, 5);
-                }
-                if (boss.phaseTimer <= 0) { boss.phase = 'idle'; boss.phaseTimer = 60; }
-            } else if (boss.phase === 'hurt') {
-                boss.vx = 0;
-                if (boss.phaseTimer <= 0) { boss.phase = 'idle'; boss.phaseTimer = 30; }
-            }
-        } else {
-            // === RAT KING — NEW 3-ATTACK PHASE SYSTEM ===
+        // === PHASE AI (shared by Rat King + Pirate Captain) ===
+        {
             boss.phaseTimer--;
             boss.dir = cat.x < boss.x ? -1 : 1;
 
@@ -2823,7 +2793,7 @@
                         if (attack === 0) {
                             boss.phase = 'spears';
                             boss.phaseTimer = 120;
-                            bossTauntText = "Your death's a speer!"; bossTauntTimer = 90;
+                            bossTauntText = boss.pirate ? 'Taste me harpoons!' : "Your death's a speer!"; bossTauntTimer = 90;
                             const cols = [];
                             const numSpears = 4 + Math.floor(Math.random() * 3);
                             for (let s = 0; s < numSpears; s++) {
@@ -2840,11 +2810,11 @@
                         } else if (attack === 1) {
                             boss.phase = 'dagger';
                             boss.phaseTimer = 80;
-                            bossTauntText = 'My dager will be your end!'; bossTauntTimer = 90;
+                            bossTauntText = boss.pirate ? 'Me cutlass finds its mark!' : 'My dagger will be your end!'; bossTauntTimer = 90;
                         } else {
                             boss.phase = 'fireballs';
                             boss.phaseTimer = 80;
-                            bossTauntText = 'Your fur will light the flame...OF DEATH!'; bossTauntTimer = 120;
+                            bossTauntText = boss.pirate ? 'Fire the cannons!' : 'Your fur will light the flame...OF DEATH!'; bossTauntTimer = 120;
                         }
                         boss.currentAttack++;
                     } else {
@@ -2855,7 +2825,7 @@
                         if (attack === 0) {
                             boss.phase = 'spears';
                             boss.phaseTimer = 120;
-                            bossTauntText = "Your death's a speer!"; bossTauntTimer = 90;
+                            bossTauntText = boss.pirate ? 'Taste me harpoons!' : "Your death's a speer!"; bossTauntTimer = 90;
                             const cols = [];
                             const numSpears = boss.bossPhase >= 3 ? 6 + Math.floor(Math.random() * 4) : 5 + Math.floor(Math.random() * 4);
                             for (let s = 0; s < numSpears; s++) {
@@ -2872,15 +2842,15 @@
                         } else if (attack === 1) {
                             boss.phase = 'dagger';
                             boss.phaseTimer = 80;
-                            bossTauntText = 'My dagger will be your end!'; bossTauntTimer = 90;
+                            bossTauntText = boss.pirate ? 'Me cutlass finds its mark!' : 'My dagger will be your end!'; bossTauntTimer = 90;
                         } else if (attack === 2) {
                             boss.phase = 'fireballs';
                             boss.phaseTimer = 80;
-                            bossTauntText = 'Your fur will light the flame...OF DEATH!'; bossTauntTimer = 120;
+                            bossTauntText = boss.pirate ? 'Fire the cannons!' : 'Your fur will light the flame...OF DEATH!'; bossTauntTimer = 120;
                         } else if (attack === 3) {
                             boss.phase = 'colorwalls';
                             boss.phaseTimer = 200;
-                            bossTauntText = "Don't. Move."; bossTauntTimer = 120;
+                            bossTauntText = boss.pirate ? 'Steady as she goes...' : "Don't. Move."; bossTauntTimer = 120;
                             const arenaRight = level.cols * T;
                             for (let w = 0; w < 5; w++) {
                                 bossColorWalls.push({
@@ -2891,14 +2861,14 @@
                         } else if (attack === 4) {
                             boss.phase = 'barrier';
                             boss.phaseTimer = 180;
-                            bossTauntText = 'Nowhere to hide!'; bossTauntTimer = 90;
+                            bossTauntText = boss.pirate ? 'Broadside!' : 'Nowhere to hide!'; bossTauntTimer = 90;
                             const thirdH = Math.floor(level.rows * T / 3);
                             const slot = Math.floor(Math.random() * 3);
                             bossBarrier = { x: -40, y: slot * thirdH, w: 40, h: thirdH, vx: 3, life: 300 };
                         } else if (attack === 5) {
                             boss.phase = 'darkcat';
                             boss.phaseTimer = 60;
-                            bossTauntText = 'Meet your shadow...'; bossTauntTimer = 100;
+                            bossTauntText = boss.pirate ? 'Sic em, me ghost cat!' : 'Meet your shadow...'; bossTauntTimer = 100;
                             bossDarkCats.push({
                                 x: boss.x + boss.w / 2 - 12, y: boss.y,
                                 w: 24, h: 32, vx: 0, vy: -3, dir: -1, frame: 0,
@@ -2910,7 +2880,7 @@
                             // RAT RAYGUN
                             boss.phase = 'raygun';
                             boss.phaseTimer = 300;
-                            bossTauntText = 'This will finish you, ' + skinName + '!'; bossTauntTimer = 120;
+                            bossTauntText = boss.pirate ? 'Me cannon locks on ye, ' + skinName + '!' : 'This will finish you, ' + skinName + '!'; bossTauntTimer = 120;
                             bossRaygun = {
                                 state: 'aiming', aimTimer: 60,
                                 targetX: cat.x + cat.w / 2, targetY: cat.y + cat.h / 2,
@@ -2920,7 +2890,7 @@
                             // ANTI-CAT YARN BALLS
                             boss.phase = 'yarnballs';
                             boss.phaseTimer = 120;
-                            bossTauntText = "Let's see you resist the yarn!"; bossTauntTimer = 100;
+                            bossTauntText = boss.pirate ? 'Chain shot, away!' : "Let's see you resist the yarn!"; bossTauntTimer = 100;
                             for (let b = 0; b < 3; b++) {
                                 bossYarnBalls.push({
                                     x: boss.x + boss.w / 2 + (b - 1) * 30,
@@ -2936,7 +2906,7 @@
                             // THE CROSS
                             boss.phase = 'cross';
                             boss.phaseTimer = 200;
-                            bossTauntText = 'DIIIEEE!!!'; bossTauntTimer = 100;
+                            bossTauntText = boss.pirate ? 'WALK THE PLANK!!!' : 'DIIIEEE!!!'; bossTauntTimer = 100;
                             bossCross = { state: 'warning', warningTimer: 120, fireTimer: 0 };
                         }
                     }
@@ -3079,12 +3049,12 @@
         addParticle(boss.x + boss.w / 2, boss.y + boss.h / 2, '#FF0000', 15, 7);
         score += 100;
         if (boss.hp <= 0) {
-            // RAT KING — Phase transitions
-            if (!boss.pirate && boss.bossPhase === 1) {
+            // Phase transitions (both Rat King and Pirate Captain)
+            if (boss.bossPhase === 1) {
                 // Enter Phase 2!
                 boss.bossPhase = 2;
-                boss.hp = 20;
-                boss.maxHp = 20;
+                boss.hp = boss.pirate ? 24 : 20;
+                boss.maxHp = boss.hp;
                 boss.phase = 'idle';
                 boss.phaseTimer = 90;
                 boss.currentAttack = 0;
@@ -3093,7 +3063,9 @@
                 bossColorWalls = []; bossBarrier = null; bossDarkCats = [];
                 bossRaygun = null; bossYarnBalls = []; bossCross = null;
                 bossDialogueActive = true;
-                bossDialogueText = 'H-h-how d-d-did you h-hi-t me... No matter... You\'ll die now!';
+                bossDialogueText = boss.pirate
+                    ? 'Argh! Ye scratched me hull! But I\'ve weathered worse storms than you, kitty!'
+                    : 'H-h-how d-d-did you h-hi-t me... No matter... You\'ll die now!';
                 bossDialogueCharIndex = 0; bossDialogueTimer = 0;
                 bossDialogueDone = false; bossDialogueDismissed = false;
                 shakeTimer = 30; shakeAmt = 8;
@@ -3102,11 +3074,11 @@
                 }
                 score += 2000;
                 bossTauntText = ''; bossTauntTimer = 0;
-            } else if (!boss.pirate && boss.bossPhase === 2) {
+            } else if (boss.bossPhase === 2) {
                 // Enter Phase 3!
                 boss.bossPhase = 3;
-                boss.hp = 30;
-                boss.maxHp = 30;
+                boss.hp = boss.pirate ? 36 : 30;
+                boss.maxHp = boss.hp;
                 boss.phase = 'idle';
                 boss.phaseTimer = 90;
                 boss.currentAttack = 0;
@@ -3115,7 +3087,9 @@
                 bossColorWalls = []; bossBarrier = null; bossDarkCats = [];
                 bossRaygun = null; bossYarnBalls = []; bossCross = null;
                 bossDialogueActive = true;
-                bossDialogueText = 'NOOOOO!!!! HOW! HOW DID YOU DO THIS! YOU COULD HAVE SURRENDERED BUT NOOO YOU HAD TO MESS IT UP!!! NOW DIIIEEE!!!';
+                bossDialogueText = boss.pirate
+                    ? 'ENOUGH!!! No mangy cat sinks Captain Rattail! I\'ll send ye to DAVY JONES!!!'
+                    : 'NOOOOO!!!! HOW! HOW DID YOU DO THIS! YOU COULD HAVE SURRENDERED BUT NOOO YOU HAD TO MESS IT UP!!! NOW DIIIEEE!!!';
                 bossDialogueCharIndex = 0; bossDialogueTimer = 0;
                 bossDialogueDone = false; bossDialogueDismissed = false;
                 shakeTimer = 50; shakeAmt = 12;
@@ -3125,7 +3099,7 @@
                 score += 3000;
                 bossTauntText = ''; bossTauntTimer = 0;
             } else {
-                // Actually die (pirate boss or Phase 3 completed)
+                // Actually die — Phase 3 completed
                 boss.alive = false;
                 boss.deathTimer = 120;
                 addParticle(boss.x + boss.w / 2, boss.y + boss.h / 2, '#FFD700', 30, 10);
@@ -3197,8 +3171,8 @@
             if (frameCount % 3 === 0) addParticle(boss.x + (d === 1 ? 0 : boss.w), boss.y + boss.h, '#8B6914', 2, 3);
         }
 
-        // Phase 2 scar — big diagonal slash across body
-        if (boss.bossPhase >= 2 && !boss.pirate) {
+        // Phase 2+ scar — big diagonal slash across body (both bosses)
+        if (boss.bossPhase >= 2) {
             ctx.strokeStyle = '#8B0000';
             ctx.lineWidth = 3;
             ctx.beginPath();
