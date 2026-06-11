@@ -4122,11 +4122,11 @@
             // Gentle homing — accelerate toward target
             const dx = tx - yb.x, dy = ty - yb.y;
             const dist = Math.sqrt(dx * dx + dy * dy) || 1;
-            yb.vx += (dx / dist) * 0.15;
-            yb.vy += (dy / dist) * 0.15;
+            yb.vx += (dx / dist) * 0.06;
+            yb.vy += (dy / dist) * 0.06;
             // Cap speed
             const spd = Math.sqrt(yb.vx * yb.vx + yb.vy * yb.vy);
-            if (spd > 3) { yb.vx = (yb.vx / spd) * 3; yb.vy = (yb.vy / spd) * 3; }
+            if (spd > 1.5) { yb.vx = (yb.vx / spd) * 1.5; yb.vy = (yb.vy / spd) * 1.5; }
 
             yb.x += yb.vx;
             yb.y += yb.vy;
