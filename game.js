@@ -531,6 +531,7 @@
     let hasPickaxe = false, pickaxes = [], pickaxeCooldown = 0; // pickaxe boomerang
     let pickaxeAmmo = 5, pickaxeReloading = false, pickaxeReloadTimer = 0; // ammo: 5 throws then 3s reload
     let starPowerTimer = 0; // super star invincibility timer (frames)
+    let fireProtectTimer = 0; // fire protector immunity timer (frames)
     let isBig = false; // big mushroom power-up (2 blocks tall, break bricks)
     let isMini = false; // mini mushroom power-up (half size, higher jump, fits 1-block gaps)
     // Dev mode — activated by Konami code: ↑↑↓↓←→←→BA
@@ -1102,7 +1103,8 @@
                     else if (roll < 0.55) blockLoot[key] = { type: 'fire', icon: '🔥', color: '#FF4500' };
                     else if (roll < 0.8) blockLoot[key] = { type: 'speed', icon: '⚡', color: '#00FFFF' };
                     else if (roll < 0.9) blockLoot[key] = { type: 'big', icon: '🍄', color: '#FF2222' };
-                    else blockLoot[key] = { type: 'shield', icon: '🛡️', color: '#4488FF' };
+                    else if (roll < 0.95) blockLoot[key] = { type: 'shield', icon: '🛡️', color: '#4488FF' };
+                    else blockLoot[key] = { type: 'fireprotect', icon: '🔶', color: '#FF6B00' };
                 } else {
                     const nc = Math.floor(Math.random() * 5) + 1;
                     blockLoot[key] = { type: 'coins', icon: nc + '🪙', color: '#FFD700', count: nc };
@@ -1143,6 +1145,7 @@
             else if (puType === 'speed') puApply = () => { speedBoost = Math.min(speedBoost + 0.5, WALK); };
             else if (puType === 'big') puApply = () => { isBig = true; if(window.audio) audio.playPowerUp(); cat.y -= 32; cat.h = 64; };
             else if (puType === 'shield') puApply = () => { shieldHits = Math.min(shieldHits + 1, 5); };
+            else if (puType === 'fireprotect') puApply = () => { fireProtectTimer = 10800; if(window.audio) audio.playPowerUp(); }; // 3 min at 60fps
             powerUps.push({
                 x: c * T + 4, y: r * T - T, w: 24, h: 24,
                 vx: (Math.random() > 0.5 ? 1 : -1) * 1.5, vy: -5,
@@ -1669,7 +1672,13 @@
                                 addParticle(e.x + e.w / 2, e.y + e.h / 2, '#ff4444', 12, 5);
                             }
                         } else {
-                            killCat();
+                            if (e.type === 'firerat' && fireProtectTimer > 0) {
+                                // Fire protected — fire rat can't hurt you, kill it instead
+                                e.alive = false; score += 200;
+                                addParticle(e.x + e.w / 2, e.y + e.h / 2, '#FF6B00', 12, 5);
+                            } else {
+                                killCat();
+                            }
                         }
                     } // end invincibleTimer check
                 }
@@ -3817,6 +3826,11 @@
             // Hit player
             if (!cat.dead && invincibleTimer <= 0 && starPowerTimer <= 0) {
                 if (cat.x + 4 < fb.x + fb.w && cat.x + cat.w - 4 > fb.x && cat.y + 4 < fb.y + fb.h && cat.y + cat.h - 4 > fb.y) {
+                    if (fireProtectTimer > 0) {
+                        // Fire protected — absorb the fireball
+                        addParticle(fb.x + fb.w / 2, fb.y + fb.h / 2, '#FF6B00', 8, 4);
+                        bossFireballs2.splice(i, 1); continue;
+                    }
                     killCat();
                 }
             }
@@ -4805,6 +4819,33 @@
             // Sparkle trail
             if (frameCount % 2 === 0) {
                 addParticle(cat.x + Math.random() * cat.w, cat.y + Math.random() * cat.h, rainbow[Math.floor(Math.random() * 6)], 2, 4);
+            }
+        }
+        // Fire protector orange shield glow
+        if (fireProtectTimer > 0) {
+            const pulse = 0.25 + Math.sin(frameCount * 0.06) * 0.1;
+            ctx.globalAlpha = pulse;
+            ctx.fillStyle = '#FF6B00';
+            const cx = Math.round(cat.x - cam.x), cy = Math.round(cat.y);
+            ctx.beginPath();
+            ctx.ellipse(cx + cat.w / 2, cy + cat.h / 2, cat.w / 2 + 4, cat.h / 2 + 4, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.globalAlpha = 1;
+            // Flame particles
+            if (frameCount % 6 === 0) {
+                addParticle(cat.x + Math.random() * cat.w, cat.y + cat.h, ['#FF4500', '#FF6B00', '#FFD700'][Math.floor(Math.random() * 3)], 2, 3);
+            }
+            // Timer display (seconds remaining)
+            const secs = Math.ceil(fireProtectTimer / 60);
+            if (secs <= 10) {
+                // Flash when almost out
+                if (frameCount % 20 < 14) {
+                    ctx.fillStyle = '#FF6B00';
+                    ctx.font = 'bold 7px "Press Start 2P", monospace';
+                    ctx.textAlign = 'center';
+                    ctx.fillText('🔶' + secs + 's', cx + cat.w / 2, cy - 6);
+                    ctx.textAlign = 'left';
+                }
             }
         }
         // Glide wing visual
@@ -6977,6 +7018,7 @@
         updateStars();
         updatePowerUps();
         if (starPowerTimer > 0) starPowerTimer--;
+        if (fireProtectTimer > 0) fireProtectTimer--;
         // Void
         if (frameCount % 2 === 0) spawnVoidParticles();
         updateVoidParticles();
