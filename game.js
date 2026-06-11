@@ -612,6 +612,11 @@
     let bossSpears = [];      // floor spear traps
     let bossDaggers = [];     // dagger projectiles (large + small)
     let bossFireballs2 = [];  // boss's bouncing fireballs (separate from player fireballs)
+    // Boss Phase 2 state
+    let bossColorWalls = [];  // { x, color: 'blue'|'red', w, h }
+    let bossBarrier = null;   // { x, y, w, h, vx } sweeping wall
+    let bossDarkCats = [];    // shadow cats that chase player
+    const BOSS_ATTACK_COOLDOWN = 180; // 3 seconds at 60fps
     function createBoss(x, y, isPirate) {
         // Reset boss projectiles
         bossSpears = [];
@@ -2660,6 +2665,10 @@
         updateBossSpears();
         updateBossDaggers();
         updateBossFireballs2();
+        // Phase 2 projectiles
+        updateColorWalls();
+        updateBarrier();
+        updateDarkCats();
 
         // Don't run boss AI during dialogue
         if (bossDialogueActive && !bossDialogueDismissed) return;
@@ -2676,13 +2685,12 @@
                     bossPipeSpawned = true;
                     score += boss.pirate ? 10000 : 5000;
                     coinCount += boss.pirate ? 200 : 100;
-                    // Find the ground row near the boss death position (search DOWN from boss)
+                    // Find the ground row near the boss death position (search bottom-up for floor)
                     const pipeCol = Math.floor((boss.x + boss.w / 2) / T);
-                    const bossRow = Math.floor((boss.y + boss.h) / T);
                     let groundRow = level.rows - 1;
-                    for (let r = bossRow; r < level.rows; r++) {
-                        if (level.grid[r][pipeCol] === 1 || level.grid[r][pipeCol] === 2 || level.grid[r][pipeCol] === 11 || level.grid[r][pipeCol] === 14) {
-                            groundRow = r; break;
+                    for (let r = level.rows - 1; r >= 0; r--) {
+                        if (!solid(r, pipeCol) && r + 1 < level.rows && solid(r + 1, pipeCol)) {
+                            groundRow = r + 1; break;
                         }
                     }
                     // Place 3-block-tall silver pipe on top of ground
@@ -2802,60 +2810,128 @@
             if (boss.phase === 'idle') {
                 boss.vx = 0;
                 if (boss.phaseTimer <= 0) {
-                    // Cycle through 3 attacks: 0=spears, 1=dagger, 2=fireballs
-                    const attack = boss.currentAttack % 3;
-                    if (attack === 0) {
-                        boss.phase = 'spears';
-                        boss.phaseTimer = 120; // warning + active + cooldown
-                        bossTauntText = "Your death's a speer!"; bossTauntTimer = 90;
-                        // Pick 4-6 random ground columns for spears
-                        const groundRow = level.rows - 3; // row above the floor
-                        const cols = [];
-                        const numSpears = 4 + Math.floor(Math.random() * 3);
-                        for (let s = 0; s < numSpears; s++) {
-                            const col = 2 + Math.floor(Math.random() * (level.cols - 4));
-                            if (!cols.includes(col)) cols.push(col);
-                        }
-                        boss.spearColumns = cols;
-                        // Spawn spear warnings
-                        for (const col of cols) {
-                            // Find ground Y for this column (search bottom-up to find floor, not ceiling)
-                            let gy = level.rows * T;
-                            for (let r = level.rows - 1; r >= 0; r--) {
-                                if (!solid(r, col) && solid(r + 1, col)) { gy = (r + 1) * T; break; }
+                    if (boss.bossPhase === 1) {
+                        // Phase 1: Cycle through 3 attacks
+                        const attack = boss.currentAttack % 3;
+                        if (attack === 0) {
+                            boss.phase = 'spears';
+                            boss.phaseTimer = 120;
+                            bossTauntText = "Your death's a speer!"; bossTauntTimer = 90;
+                            const cols = [];
+                            const numSpears = 4 + Math.floor(Math.random() * 3);
+                            for (let s = 0; s < numSpears; s++) {
+                                const col = 2 + Math.floor(Math.random() * (level.cols - 4));
+                                if (!cols.includes(col)) cols.push(col);
                             }
-                            bossSpears.push({
-                                col: col,
-                                groundY: gy,
-                                height: T * 3, // 3 tiles tall
-                                state: 'warning',
-                                timer: 40, // warning duration
-                                y: gy
-                            });
+                            for (const col of cols) {
+                                let gy = level.rows * T;
+                                for (let r = level.rows - 1; r >= 0; r--) {
+                                    if (!solid(r, col) && solid(r + 1, col)) { gy = (r + 1) * T; break; }
+                                }
+                                bossSpears.push({ col, groundY: gy, height: T * 3, state: 'warning', timer: 40, y: gy });
+                            }
+                        } else if (attack === 1) {
+                            boss.phase = 'dagger';
+                            boss.phaseTimer = 80;
+                            bossTauntText = 'My dager will be your end!'; bossTauntTimer = 90;
+                        } else {
+                            boss.phase = 'fireballs';
+                            boss.phaseTimer = 80;
+                            bossTauntText = 'Your fur will light the flame...OF DEATH!'; bossTauntTimer = 120;
                         }
-                    } else if (attack === 1) {
-                        boss.phase = 'dagger';
-                        boss.phaseTimer = 80;
-                        bossTauntText = 'My dager will be your end!'; bossTauntTimer = 90;
+                        boss.currentAttack++;
                     } else {
-                        boss.phase = 'fireballs';
-                        boss.phaseTimer = 80;
-                        bossTauntText = 'Your fur will light the flame...OF DEATH!'; bossTauntTimer = 120;
+                        // Phase 2: Randomly pick from all 6 attacks
+                        const attack = Math.floor(Math.random() * 6);
+                        if (attack === 0) {
+                            // Spears
+                            boss.phase = 'spears';
+                            boss.phaseTimer = 120;
+                            bossTauntText = "Your death's a speer!"; bossTauntTimer = 90;
+                            const cols = [];
+                            const numSpears = 5 + Math.floor(Math.random() * 4);
+                            for (let s = 0; s < numSpears; s++) {
+                                const col = 2 + Math.floor(Math.random() * (level.cols - 4));
+                                if (!cols.includes(col)) cols.push(col);
+                            }
+                            for (const col of cols) {
+                                let gy = level.rows * T;
+                                for (let r = level.rows - 1; r >= 0; r--) {
+                                    if (!solid(r, col) && solid(r + 1, col)) { gy = (r + 1) * T; break; }
+                                }
+                                bossSpears.push({ col, groundY: gy, height: T * 3, state: 'warning', timer: 40, y: gy });
+                            }
+                        } else if (attack === 1) {
+                            boss.phase = 'dagger';
+                            boss.phaseTimer = 80;
+                            bossTauntText = 'My dager will be your end!'; bossTauntTimer = 90;
+                        } else if (attack === 2) {
+                            boss.phase = 'fireballs';
+                            boss.phaseTimer = 80;
+                            bossTauntText = 'Your fur will light the flame...OF DEATH!'; bossTauntTimer = 120;
+                        } else if (attack === 3) {
+                            // COLOR WALLS
+                            boss.phase = 'colorwalls';
+                            boss.phaseTimer = 200;
+                            bossTauntText = "Don't. Move."; bossTauntTimer = 120;
+                            // Spawn 5 walls from the right edge, spaced apart
+                            const arenaRight = level.cols * T;
+                            for (let w = 0; w < 5; w++) {
+                                bossColorWalls.push({
+                                    x: arenaRight + w * 120,
+                                    w: 30,
+                                    vx: -3,
+                                    color: Math.random() > 0.5 ? 'blue' : 'red',
+                                    hit: false
+                                });
+                            }
+                        } else if (attack === 4) {
+                            // SWEEPING BARRIER WALL
+                            boss.phase = 'barrier';
+                            boss.phaseTimer = 180;
+                            bossTauntText = 'Nowhere to hide!'; bossTauntTimer = 90;
+                            // Pick random vertical position (top, middle, or bottom third)
+                            const thirdH = Math.floor(level.rows * T / 3);
+                            const slot = Math.floor(Math.random() * 3); // 0=top, 1=mid, 2=bottom
+                            bossBarrier = {
+                                x: -40,
+                                y: slot * thirdH,
+                                w: 40,
+                                h: thirdH,
+                                vx: 3,
+                                life: 300
+                            };
+                        } else {
+                            // DARK CAT
+                            boss.phase = 'darkcat';
+                            boss.phaseTimer = 60;
+                            bossTauntText = 'Meet your shadow...'; bossTauntTimer = 100;
+                            bossDarkCats.push({
+                                x: boss.x + boss.w / 2 - 12,
+                                y: boss.y,
+                                w: 24, h: 32,
+                                vx: 0, vy: -3,
+                                dir: -1,
+                                frame: 0,
+                                hp: 2,
+                                despawnTimer: 900, // 15 seconds at 60fps
+                                jumpTimer: 50,
+                                grounded: false,
+                                flashTimer: 0
+                            });
+                            addParticle(boss.x + boss.w / 2, boss.y + boss.h / 2, '#1a1a2e', 15, 6);
+                        }
                     }
-                    boss.currentAttack++;
                 }
             } else if (boss.phase === 'spears') {
-                // Boss stays idle during spear attack, just waits
                 boss.vx = 0;
                 if (boss.phaseTimer <= 0) {
                     boss.phase = 'idle';
-                    boss.phaseTimer = 50;
+                    boss.phaseTimer = BOSS_ATTACK_COOLDOWN;
                 }
             } else if (boss.phase === 'dagger') {
                 boss.vx = 0;
-                // Throw dagger at the midpoint of the phase
                 if (boss.phaseTimer === 50) {
-                    // Aim at the player's current position
                     const tx = cat.x + cat.w / 2;
                     const ty = cat.y + cat.h / 2;
                     const bx = boss.x + boss.w / 2;
@@ -2863,43 +2939,32 @@
                     const dx = tx - bx;
                     const dy = ty - by;
                     const len = Math.sqrt(dx * dx + dy * dy) || 1;
-                    const speed = ENEMY_SPEED; // "at the speed of a rat"
+                    const speed = ENEMY_SPEED;
                     bossDaggers.push({
-                        x: bx - 8, y: by - 8,
-                        w: 16, h: 16,
-                        vx: (dx / len) * speed,
-                        vy: (dy / len) * speed,
-                        life: 180,
-                        angle: Math.atan2(dy, dx),
-                        spin: 0.15,
-                        large: true
+                        x: bx - 8, y: by - 8, w: 16, h: 16,
+                        vx: (dx / len) * speed, vy: (dy / len) * speed,
+                        life: 180, angle: Math.atan2(dy, dx), spin: 0.15, large: true
                     });
                     addParticle(bx, by, '#AAA', 6, 4);
                     if (window.audio) audio.playStomp();
                 }
                 if (boss.phaseTimer <= 0) {
                     boss.phase = 'idle';
-                    boss.phaseTimer = 40;
+                    boss.phaseTimer = BOSS_ATTACK_COOLDOWN;
                 }
             } else if (boss.phase === 'fireballs') {
                 boss.vx = 0;
-                // Launch 3 fireballs at the midpoint
                 if (boss.phaseTimer === 50) {
                     const bx = boss.x + boss.w / 2;
                     const by = boss.y + 10;
-                    // Arc spread: -30°, 0°, +30° relative to player direction
                     for (let i = -1; i <= 1; i++) {
                         const baseAngle = Math.atan2(cat.y - by, cat.x - bx);
                         const angle = baseAngle + i * 0.4;
                         const speed = 3.5;
                         bossFireballs2.push({
-                            x: bx - 6, y: by - 6,
-                            w: 12, h: 12,
-                            vx: Math.cos(angle) * speed,
-                            vy: Math.sin(angle) * speed - 2, // arc upward a bit
-                            bounces: 0,
-                            life: 300,
-                            angle: 0
+                            x: bx - 6, y: by - 6, w: 12, h: 12,
+                            vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed - 2,
+                            bounces: 0, life: 300, angle: 0
                         });
                     }
                     addParticle(bx, by, '#FF6600', 10, 5);
@@ -2907,7 +2972,26 @@
                 }
                 if (boss.phaseTimer <= 0) {
                     boss.phase = 'idle';
-                    boss.phaseTimer = 45;
+                    boss.phaseTimer = BOSS_ATTACK_COOLDOWN;
+                }
+            } else if (boss.phase === 'colorwalls') {
+                boss.vx = 0;
+                if (boss.phaseTimer <= 0 || bossColorWalls.length === 0) {
+                    boss.phase = 'idle';
+                    boss.phaseTimer = BOSS_ATTACK_COOLDOWN;
+                }
+            } else if (boss.phase === 'barrier') {
+                boss.vx = 0;
+                if (boss.phaseTimer <= 0 || !bossBarrier) {
+                    boss.phase = 'idle';
+                    boss.phaseTimer = BOSS_ATTACK_COOLDOWN;
+                    bossBarrier = null;
+                }
+            } else if (boss.phase === 'darkcat') {
+                boss.vx = 0;
+                if (boss.phaseTimer <= 0) {
+                    boss.phase = 'idle';
+                    boss.phaseTimer = BOSS_ATTACK_COOLDOWN;
                 }
             } else if (boss.phase === 'hurt') {
                 boss.vx = 0;
@@ -2957,11 +3041,53 @@
         addParticle(boss.x + boss.w / 2, boss.y + boss.h / 2, '#FF0000', 15, 7);
         score += 100;
         if (boss.hp <= 0) {
-            boss.alive = false;
-            boss.deathTimer = 120;
-            addParticle(boss.x + boss.w / 2, boss.y + boss.h / 2, '#FFD700', 30, 10);
-            addParticle(boss.x + boss.w / 2, boss.y + boss.h / 2, '#FF4500', 20, 8);
-            score += 5000;
+            // RAT KING — Phase transition
+            if (!boss.pirate && boss.bossPhase === 1) {
+                // Enter Phase 2!
+                boss.bossPhase = 2;
+                boss.hp = 20;
+                boss.maxHp = 20;
+                boss.phase = 'idle';
+                boss.phaseTimer = 90; // brief pause before attacks resume
+                boss.currentAttack = 0;
+                boss.flashTimer = 60; // long flash for dramatic effect
+                // Clear Phase 1 projectiles
+                bossSpears = [];
+                bossDaggers = [];
+                bossFireballs2 = [];
+                bossColorWalls = [];
+                bossBarrier = null;
+                bossDarkCats = [];
+                // Phase 2 transition dialogue
+                bossDialogueActive = true;
+                bossDialogueText = 'h-h-how d-d-did you h-hi-t me no matter y-youll die now';
+                bossDialogueCharIndex = 0;
+                bossDialogueTimer = 0;
+                bossDialogueDone = false;
+                bossDialogueDismissed = false;
+                // Big dramatic effect
+                shakeTimer = 30; shakeAmt = 8;
+                for (let i = 0; i < 30; i++) {
+                    addParticle(boss.x + Math.random() * boss.w, boss.y + Math.random() * boss.h, ['#FF0000', '#FFD700', '#FF4500'][Math.floor(Math.random() * 3)], 4 + Math.random() * 4, 6);
+                }
+                addParticle(boss.x + boss.w / 2, boss.y + boss.h / 2, '#FF0000', 30, 10);
+                score += 2000;
+                bossTauntText = ''; bossTauntTimer = 0;
+            } else {
+                // Actually die (pirate boss or Phase 2 completed)
+                boss.alive = false;
+                boss.deathTimer = 120;
+                addParticle(boss.x + boss.w / 2, boss.y + boss.h / 2, '#FFD700', 30, 10);
+                addParticle(boss.x + boss.w / 2, boss.y + boss.h / 2, '#FF4500', 20, 8);
+                score += 5000;
+                // Clear all boss projectiles on death
+                bossSpears = [];
+                bossDaggers = [];
+                bossFireballs2 = [];
+                bossColorWalls = [];
+                bossBarrier = null;
+                bossDarkCats = [];
+            }
         }
     }
 
@@ -3022,6 +3148,34 @@
         // Attack indicators
         if (boss.phase === 'charge') {
             if (frameCount % 3 === 0) addParticle(boss.x + (d === 1 ? 0 : boss.w), boss.y + boss.h, '#8B6914', 2, 3);
+        }
+
+        // Phase 2 scar — big diagonal slash across body
+        if (boss.bossPhase >= 2 && !boss.pirate) {
+            ctx.strokeStyle = '#8B0000';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(bx + 15, by + 8);
+            ctx.lineTo(bx + 50, by + 52);
+            ctx.stroke();
+            // Scar detail lines
+            ctx.strokeStyle = '#CC3333';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(bx + 13, by + 10);
+            ctx.lineTo(bx + 48, by + 54);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(bx + 17, by + 6);
+            ctx.lineTo(bx + 52, by + 50);
+            ctx.stroke();
+            // Angry red glow when Phase 2
+            if (frameCount % 60 < 30) {
+                ctx.globalAlpha = 0.15;
+                ctx.fillStyle = '#FF0000';
+                ctx.fillRect(bx, by, boss.w, boss.h);
+                ctx.globalAlpha = 1;
+            }
         }
 
         // Pirate boss overlay accessories
@@ -3477,6 +3631,330 @@
             if (frameCount % 3 === 0) {
                 addParticle(fb.x + fb.w / 2, fb.y + fb.h / 2, '#FF4500', 1, 2);
             }
+        }
+    }
+
+    // === PHASE 2 ATTACKS ===
+
+    // COLOR WALLS — 5 vertical walls scroll right-to-left, blue=die if moving, red=TP back
+    function updateColorWalls() {
+        for (let i = bossColorWalls.length - 1; i >= 0; i--) {
+            const w = bossColorWalls[i];
+            w.x += w.vx;
+            // Check if wall passes through player
+            if (!cat.dead) {
+                const wallLeft = w.x;
+                const wallRight = w.x + w.w;
+                const catCenter = cat.x + cat.w / 2;
+                if (catCenter >= wallLeft && catCenter <= wallRight) {
+                    // Is the player moving?
+                    const isMoving = Math.abs(cat.vx) > 0.5 || keys.left || keys.right;
+                    if (isMoving && invincibleTimer <= 0 && starPowerTimer <= 0) {
+                        if (w.color === 'blue') {
+                            killCat();
+                        } else {
+                            // Red: teleport 5 tiles back
+                            cat.x -= T * 5;
+                            if (cat.x < T) cat.x = T;
+                            shakeTimer = 6; shakeAmt = 4;
+                            addParticle(cat.x + cat.w / 2, cat.y + cat.h / 2, '#FF0000', 10, 5);
+                        }
+                        w.hit = true; // don't hit again
+                    }
+                }
+            }
+            // Co-op
+            if (coopMode && !cat2.dead) {
+                const catCenter2 = cat2.x + cat2.w / 2;
+                if (catCenter2 >= w.x && catCenter2 <= w.x + w.w) {
+                    const isMoving2 = Math.abs(cat2.vx) > 0.5;
+                    if (isMoving2 && invincibleTimer2 <= 0 && !w.hit) {
+                        if (w.color === 'blue') {
+                            killCat2();
+                        } else {
+                            cat2.x -= T * 5;
+                            if (cat2.x < T) cat2.x = T;
+                            addParticle(cat2.x + cat2.w / 2, cat2.y + cat2.h / 2, '#FF0000', 10, 5);
+                        }
+                    }
+                }
+            }
+            // Remove when off-screen left
+            if (w.x + w.w < 0) {
+                bossColorWalls.splice(i, 1);
+            }
+        }
+    }
+
+    function drawColorWalls() {
+        for (const w of bossColorWalls) {
+            const wx = Math.round(w.x - cam.x);
+            // Semi-transparent colored wall
+            ctx.globalAlpha = 0.6;
+            ctx.fillStyle = w.color === 'blue' ? '#0044FF' : '#FF2200';
+            ctx.fillRect(wx, 0, w.w, H);
+            // Glowing edge
+            ctx.globalAlpha = 0.9;
+            ctx.fillStyle = w.color === 'blue' ? '#44AAFF' : '#FF6644';
+            ctx.fillRect(wx, 0, 3, H);
+            ctx.fillRect(wx + w.w - 3, 0, 3, H);
+            // Warning icon
+            ctx.globalAlpha = 1;
+            ctx.fillStyle = '#FFF';
+            ctx.font = 'bold 14px monospace';
+            ctx.textAlign = 'center';
+            if (w.color === 'blue') {
+                ctx.fillText('☠️', wx + w.w / 2, H / 2);
+            } else {
+                ctx.fillText('⏪', wx + w.w / 2, H / 2);
+            }
+            ctx.textAlign = 'left';
+            ctx.globalAlpha = 1;
+        }
+    }
+
+    // SWEEPING BARRIER WALL — covers 1/3 of arena height, sweeps across
+    function updateBarrier() {
+        if (!bossBarrier) return;
+        bossBarrier.x += bossBarrier.vx;
+        bossBarrier.life--;
+
+        // Collision with player
+        if (!cat.dead && invincibleTimer <= 0 && starPowerTimer <= 0) {
+            if (cat.x + 4 < bossBarrier.x + bossBarrier.w && cat.x + cat.w - 4 > bossBarrier.x &&
+                cat.y + 4 < bossBarrier.y + bossBarrier.h && cat.y + cat.h - 4 > bossBarrier.y) {
+                killCat();
+            }
+        }
+        if (coopMode && !cat2.dead && invincibleTimer2 <= 0) {
+            if (cat2.x + 4 < bossBarrier.x + bossBarrier.w && cat2.x + cat2.w - 4 > bossBarrier.x &&
+                cat2.y + 4 < bossBarrier.y + bossBarrier.h && cat2.y + cat2.h - 4 > bossBarrier.y) {
+                killCat2();
+            }
+        }
+
+        // Remove when off-screen or expired
+        if (bossBarrier.life <= 0 || bossBarrier.x > level.cols * T + 100 || bossBarrier.x < -200) {
+            bossBarrier = null;
+        }
+    }
+
+    function drawBarrier() {
+        if (!bossBarrier) return;
+        const bx = Math.round(bossBarrier.x - cam.x);
+        const by = Math.round(bossBarrier.y);
+        // Dark wall with danger stripes
+        ctx.fillStyle = '#222';
+        ctx.fillRect(bx, by, bossBarrier.w, bossBarrier.h);
+        // Danger stripes
+        ctx.fillStyle = '#FFD700';
+        for (let i = 0; i < bossBarrier.h; i += 20) {
+            ctx.fillRect(bx, by + i, bossBarrier.w, 4);
+        }
+        // Red glow edges
+        ctx.fillStyle = 'rgba(255, 0, 0, 0.5)';
+        ctx.fillRect(bx - 4, by, 4, bossBarrier.h);
+        ctx.fillRect(bx + bossBarrier.w, by, 4, bossBarrier.h);
+        // Skull warning
+        ctx.fillStyle = '#FF0000';
+        ctx.font = 'bold 16px monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText('💀', bx + bossBarrier.w / 2, by + bossBarrier.h / 2 + 6);
+        ctx.textAlign = 'left';
+    }
+
+    // DARK CAT — shadow cat that chases player, 15s despawn, lose 1 life on hit (no respawn at start)
+    function updateDarkCats() {
+        for (let i = bossDarkCats.length - 1; i >= 0; i--) {
+            const dc = bossDarkCats[i];
+            dc.frame += 0.05;
+            dc.despawnTimer--;
+
+            // Despawn
+            if (dc.despawnTimer <= 0) {
+                addParticle(dc.x + dc.w / 2, dc.y + dc.h / 2, '#333', 8, 4);
+                bossDarkCats.splice(i, 1);
+                continue;
+            }
+
+            // Chase nearest player
+            let target = cat;
+            if (coopMode && !cat2.dead && !cat.dead) {
+                const d1 = Math.abs(cat.x - dc.x), d2 = Math.abs(cat2.x - dc.x);
+                target = d2 < d1 ? cat2 : cat;
+            } else if (coopMode && cat.dead && !cat2.dead) {
+                target = cat2;
+            }
+            if (!target.dead) {
+                dc.dir = target.x < dc.x ? -1 : 1;
+                dc.vx = dc.dir * ENEMY_SPEED * 0.8;
+            }
+
+            // Movement
+            dc.x += dc.vx;
+
+            // Gravity
+            dc.vy = Math.min((dc.vy || 0) + 0.4, MAX_FALL);
+            dc.y += dc.vy;
+
+            // Ground collision
+            let footR = Math.floor((dc.y + dc.h) / T);
+            let ec1 = Math.floor((dc.x + 4) / T);
+            if (footR >= 0 && footR < level.rows && ec1 >= 0 && ec1 < level.cols && solid(footR, ec1)) {
+                dc.y = footR * T - dc.h;
+                dc.vy = 0;
+                dc.grounded = true;
+            } else {
+                dc.grounded = false;
+            }
+
+            // Jump when target is above
+            if (dc.grounded && !target.dead && target.y < dc.y - 30) {
+                dc.jumpTimer--;
+                if (dc.jumpTimer <= 0) {
+                    dc.vy = -10;
+                    dc.jumpTimer = 40 + Math.floor(Math.random() * 30);
+                    addParticle(dc.x + dc.w / 2, dc.y + dc.h, '#333', 3, 2);
+                }
+            }
+
+            // Wall collision
+            let frontC = Math.floor((dc.vx > 0 ? dc.x + dc.w : dc.x) / T);
+            let headR = Math.floor((dc.y + dc.h / 2) / T);
+            if (solid(headR, frontC)) dc.vx *= -1;
+
+            // Fell off map
+            if (dc.y > level.rows * T + 100) {
+                bossDarkCats.splice(i, 1);
+                continue;
+            }
+
+            // Shadow trail
+            if (frameCount % 5 === 0) {
+                addParticle(dc.x + dc.w / 2, dc.y + dc.h, '#1a1a2e', 1, 2);
+            }
+
+            // Hit player — lose 1 life but DON'T respawn at start (boss levels only)
+            if (!cat.dead && invincibleTimer <= 0 && starPowerTimer <= 0) {
+                if (cat.x + 4 < dc.x + dc.w && cat.x + cat.w - 4 > dc.x &&
+                    cat.y + 4 < dc.y + dc.h && cat.y + cat.h - 4 > dc.y) {
+                    // Stomp check
+                    if (cat.vy > 0 && cat.y + cat.h - 8 < dc.y + dc.h / 2) {
+                        if (dc.hp > 1) {
+                            dc.hp--;
+                            cat.vy = JUMP * 0.6;
+                            if (window.audio) audio.playStomp();
+                            dc.flashTimer = 15;
+                            addParticle(dc.x + dc.w / 2, dc.y + dc.h / 2, '#333', 8, 4);
+                        } else {
+                            bossDarkCats.splice(i, 1);
+                            cat.vy = JUMP * 0.6;
+                            if (window.audio) audio.playStomp();
+                            score += 300;
+                            addParticle(dc.x + dc.w / 2, dc.y + dc.h / 2, '#1a1a2e', 15, 6);
+                            shakeTimer = 6; shakeAmt = 3;
+                        }
+                    } else {
+                        // Lose 1 life but stay where you are
+                        lives--;
+                        invincibleTimer = 90;
+                        shakeTimer = 10; shakeAmt = 6;
+                        addParticle(cat.x + cat.w / 2, cat.y + cat.h / 2, '#FF0000', 12, 5);
+                        if (window.audio) audio.playStomp();
+                        if (lives <= 0) {
+                            killCat();
+                        }
+                    }
+                    continue;
+                }
+            }
+            // P2 collision
+            if (coopMode && !cat2.dead && invincibleTimer2 <= 0) {
+                if (cat2.x + 4 < dc.x + dc.w && cat2.x + cat2.w - 4 > dc.x &&
+                    cat2.y + 4 < dc.y + dc.h && cat2.y + cat2.h - 4 > dc.y) {
+                    if (cat2.vy > 0 && cat2.y + cat2.h - 8 < dc.y + dc.h / 2) {
+                        if (dc.hp > 1) {
+                            dc.hp--;
+                            cat2.vy = JUMP * 0.6;
+                            dc.flashTimer = 15;
+                        } else {
+                            bossDarkCats.splice(i, 1);
+                            cat2.vy = JUMP * 0.6;
+                            score += 300;
+                            addParticle(dc.x + dc.w / 2, dc.y + dc.h / 2, '#1a1a2e', 15, 6);
+                        }
+                    } else {
+                        lives--;
+                        invincibleTimer2 = 90;
+                        shakeTimer = 10; shakeAmt = 6;
+                        addParticle(cat2.x + cat2.w / 2, cat2.y + cat2.h / 2, '#FF0000', 12, 5);
+                        if (lives <= 0) killCat2();
+                    }
+                    continue;
+                }
+            }
+        }
+    }
+
+    function drawDarkCats() {
+        for (const dc of bossDarkCats) {
+            if (dc.flashTimer && dc.flashTimer > 0) {
+                dc.flashTimer--;
+                if (dc.flashTimer % 4 < 2) continue;
+            }
+            const dx = Math.round(dc.x - cam.x), dy = Math.round(dc.y);
+            // Shadow aura
+            ctx.globalAlpha = 0.3;
+            ctx.fillStyle = '#000';
+            ctx.beginPath();
+            ctx.arc(dx + dc.w / 2, dy + dc.h / 2, dc.w * 0.8, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.globalAlpha = 1;
+            // Dark cat body
+            ctx.fillStyle = '#1a1a2e';
+            ctx.fillRect(dx + 4, dy + 8, 16, 18);
+            // Head
+            ctx.fillStyle = '#1a1a2e';
+            ctx.fillRect(dx + 6, dy + 2, 12, 10);
+            // Evil red eyes
+            ctx.fillStyle = '#FF0000';
+            ctx.fillRect(dx + 8, dy + 5, 3, 3);
+            ctx.fillRect(dx + 14, dy + 5, 3, 3);
+            // Eye glow
+            ctx.globalAlpha = 0.4;
+            ctx.fillStyle = '#FF0000';
+            ctx.beginPath();
+            ctx.arc(dx + 9.5, dy + 6.5, 4, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(dx + 15.5, dy + 6.5, 4, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.globalAlpha = 1;
+            // Ears
+            ctx.fillStyle = '#111';
+            ctx.fillRect(dx + 5, dy - 1, 4, 5);
+            ctx.fillRect(dx + 15, dy - 1, 4, 5);
+            // Legs
+            const walk = Math.sin(dc.frame * 6) * 2;
+            ctx.fillStyle = '#111';
+            ctx.fillRect(dx + 6, dy + 26, 4, 4 + walk);
+            ctx.fillRect(dx + 14, dy + 26, 4, 4 - walk);
+            // Tail
+            const tw = Math.sin(dc.frame * 3) * 3;
+            ctx.fillStyle = '#111';
+            ctx.fillRect(dx + (dc.dir === 1 ? -2 : 18), dy + 14 + tw, 6, 3);
+            // Despawn indicator (flash when almost gone)
+            if (dc.despawnTimer < 180) { // last 3 seconds
+                ctx.globalAlpha = dc.despawnTimer % 20 < 10 ? 0.5 : 1;
+            }
+            // HP dots
+            if (dc.hp !== undefined && dc.hp > 0) {
+                for (let h = 0; h < dc.hp; h++) {
+                    ctx.fillStyle = '#FF0000';
+                    ctx.fillRect(dx + 6 + h * 6, dy - 4, 4, 3);
+                }
+            }
+            ctx.globalAlpha = 1;
         }
     }
 
@@ -6224,6 +6702,10 @@
             drawBossSpears();
             drawBossDaggers();
             drawBossFireballs2();
+            // Phase 2 projectiles
+            drawColorWalls();
+            drawBarrier();
+            drawDarkCats();
             // Cat
             drawCatSprite();
             if (coopMode) drawCat2Sprite();
