@@ -934,8 +934,11 @@
         }
     });
 
-    // Mobile
-    const btnL = document.getElementById('btn-left'), btnR = document.getElementById('btn-right'), btnJ = document.getElementById('btn-jump');
+    // Mobile touch controls
+    const btnL = document.getElementById('btn-left'), btnR = document.getElementById('btn-right');
+    const btnJ = document.getElementById('btn-jump'), btnAtk = document.getElementById('btn-attack');
+    const btnAct = document.getElementById('btn-action');
+    const isMobile = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
     if (btnL) {
         btnL.addEventListener('touchstart', e => { e.preventDefault(); keys.left = true; }, { passive: false });
         btnL.addEventListener('touchend', () => { keys.left = false; });
@@ -943,6 +946,45 @@
         btnR.addEventListener('touchend', () => { keys.right = false; });
         btnJ.addEventListener('touchstart', e => { e.preventDefault(); keys.jump = true; keys.jumpPressed = true; }, { passive: false });
         btnJ.addEventListener('touchend', () => { keys.jump = false; });
+        if (btnAtk) {
+            btnAtk.addEventListener('touchstart', e => {
+                e.preventDefault();
+                // Fire or scratch attack
+                if (hasFire && scratchCooldown <= 0) {
+                    fireballs.push({ x: cat.x + (cat.dir === 1 ? cat.w : -8), y: cat.y + 8, w: 12, h: 12, vx: cat.dir * 6, vy: 0, bounces: 0 });
+                    if (window.audio) audio.playStomp();
+                } else if (scratchCooldown <= 0) {
+                    scratchTimer = 10; scratchCooldown = 20;
+                }
+            }, { passive: false });
+        }
+        if (btnAct) {
+            btnAct.addEventListener('touchstart', e => {
+                e.preventDefault();
+                keys.glide = true;
+                // Also trigger space-like actions for menus
+                if (state === 'title' || state === 'gameover') {
+                    state = 'playing'; lives = 3; score = 0; coinCount = 0; currentLevel = 0; loadLevel(0);
+                } else if (state === 'levelcomplete') {
+                    openShop();
+                } else if (state === 'shop') {
+                    tryBuyItem(shopSelection);
+                }
+            }, { passive: false });
+            btnAct.addEventListener('touchend', () => { keys.glide = false; });
+        }
+    }
+    // Tap canvas to start/retry on mobile
+    if (isMobile) {
+        canvas.addEventListener('touchstart', e => {
+            if (state === 'title' || state === 'gameover') {
+                e.preventDefault();
+                state = 'playing'; lives = 3; score = 0; coinCount = 0; currentLevel = 0; loadLevel(0);
+            } else if (state === 'levelcomplete') {
+                e.preventDefault();
+                openShop();
+            }
+        }, { passive: false });
     }
 
     // TILE COLLISION
