@@ -675,7 +675,6 @@
             currentAttack: 0,   // cycles through 0,1,2 for the 3 attacks
             spearWarningTimer: 0,
             spearColumns: [],   // which columns have active spear warnings
-            teleportCooldown: 0, // cooldown for Phase 4 teleport (frames)
         };
     }
 
@@ -2845,36 +2844,11 @@
         // === PHASE AI (shared by Rat King + Pirate Captain) ===
         {
             boss.phaseTimer--;
-            if (boss.teleportCooldown > 0) boss.teleportCooldown--;
             boss.dir = cat.x < boss.x ? -1 : 1;
 
             if (boss.phase === 'idle') {
                 boss.vx = 0;
                 if (boss.phaseTimer <= 0) {
-                    // Phase 4: Teleport before attacking (15s cooldown)
-                    if (boss.bossPhase >= 4 && boss.teleportCooldown <= 0) {
-                        // Vanish particles at old position
-                        for (let i = 0; i < 15; i++) {
-                            addParticle(boss.x + Math.random() * boss.w, boss.y + Math.random() * boss.h, '#8B00FF', 3 + Math.random() * 3, 5);
-                        }
-                        // Teleport to random position in arena
-                        const margin = T * 3;
-                        boss.x = margin + Math.random() * (level.cols * T - boss.w - margin * 2);
-                        // Find ground at this X position
-                        const col = Math.floor((boss.x + boss.w / 2) / T);
-                        let groundY = (level.rows - 3) * T;
-                        for (let r = level.rows - 1; r >= 0; r--) {
-                            if (!solid(r, col) && solid(r + 1, col)) { groundY = r * T; break; }
-                        }
-                        boss.y = groundY - boss.h;
-                        boss.vy = 0;
-                        // Appear particles at new position
-                        for (let i = 0; i < 15; i++) {
-                            addParticle(boss.x + Math.random() * boss.w, boss.y + Math.random() * boss.h, '#DA70D6', 3 + Math.random() * 3, 5);
-                        }
-                        shakeTimer = 5; shakeAmt = 3;
-                        boss.teleportCooldown = 900; // 15 sec cooldown
-                    }
                     if (boss.bossPhase === 1) {
                         // Phase 1: Cycle through 3 attacks
                         const attack = boss.currentAttack % 3;
@@ -3204,34 +3178,8 @@
                 }
                 score += 3000;
                 bossTauntText = ''; bossTauntTimer = 0;
-            } else if (boss.bossPhase === 3) {
-                // Enter Phase 4!
-                boss.bossPhase = 4;
-                boss.hp = boss.miner ? 56 : boss.pirate ? 48 : 40;
-                boss.maxHp = boss.hp;
-                boss.phase = 'idle';
-                boss.phaseTimer = 90;
-                boss.currentAttack = 0;
-                boss.flashTimer = 100;
-                bossSpears = []; bossDaggers = []; bossFireballs2 = [];
-                bossColorWalls = []; bossBarrier = null; bossDarkCats = [];
-                bossRaygun = null; bossYarnBalls = []; bossCross = null;
-                bossDialogueActive = true;
-                bossDialogueText = boss.miner
-                    ? 'YOU... YOU CRACKED MY SKULL!!! BUT I WON\'T STOP... I\'LL NEVER STOP DIGGING!!!'
-                    : boss.pirate
-                        ? 'ME BONES ARE SHOWING!!! BUT A TRUE CAPTAIN NEVER ABANDONS SHIP!!! PREPARE TO BE BOARDED!!!'
-                        : 'Y-YOU... YOU BROKE ME... BUT I\'M NOT DONE!!! THE RAT KING NEVER FALLS!!! NEVER!!!';
-                bossDialogueCharIndex = 0; bossDialogueTimer = 0;
-                bossDialogueDone = false; bossDialogueDismissed = false;
-                shakeTimer = 60; shakeAmt = 15;
-                for (let i = 0; i < 60; i++) {
-                    addParticle(boss.x + Math.random() * boss.w, boss.y + Math.random() * boss.h, ['#FF0000', '#8B0000', '#FFFFFF', '#FFD700'][Math.floor(Math.random() * 4)], 4 + Math.random() * 8, 10);
-                }
-                score += 4000;
-                bossTauntText = ''; bossTauntTimer = 0;
             } else {
-                // Actually die — Phase 4 completed
+                // Actually die — Phase 3 completed
                 boss.alive = false;
                 boss.deathTimer = 120;
                 addParticle(boss.x + boss.w / 2, boss.y + boss.h / 2, '#FFD700', 30, 10);
@@ -3354,60 +3302,6 @@
                 ctx.fillStyle = '#FF0000';
                 ctx.fillRect(bx, by, boss.w, boss.h);
                 ctx.globalAlpha = 1;
-            }
-        }
-
-        // Phase 4 — skull exposed on right-top side + teleport aura
-        if (boss.bossPhase >= 4) {
-            // Exposed skull patch (right-top of body)
-            ctx.fillStyle = '#F5F5DC'; // bone white
-            ctx.beginPath();
-            ctx.moveTo(bx + 38, by + 2);
-            ctx.lineTo(bx + 58, by + 2);
-            ctx.lineTo(bx + 60, by + 8);
-            ctx.lineTo(bx + 60, by + 22);
-            ctx.lineTo(bx + 52, by + 26);
-            ctx.lineTo(bx + 36, by + 20);
-            ctx.lineTo(bx + 34, by + 8);
-            ctx.closePath();
-            ctx.fill();
-            // Skull outline
-            ctx.strokeStyle = '#8B8682';
-            ctx.lineWidth = 1;
-            ctx.stroke();
-            // Dark eye socket
-            ctx.fillStyle = '#1a1a1a';
-            ctx.beginPath();
-            ctx.ellipse(bx + 48, by + 10, 4, 5, 0, 0, Math.PI * 2);
-            ctx.fill();
-            // Red eye glow
-            ctx.fillStyle = frameCount % 30 < 15 ? '#FF0000' : '#CC0000';
-            ctx.beginPath();
-            ctx.arc(bx + 48, by + 10, 2, 0, Math.PI * 2);
-            ctx.fill();
-            // Bone cracks
-            ctx.strokeStyle = '#8B8682';
-            ctx.lineWidth = 1;
-            ctx.beginPath();
-            ctx.moveTo(bx + 42, by + 4);
-            ctx.lineTo(bx + 46, by + 12);
-            ctx.lineTo(bx + 44, by + 18);
-            ctx.stroke();
-            ctx.beginPath();
-            ctx.moveTo(bx + 54, by + 6);
-            ctx.lineTo(bx + 56, by + 14);
-            ctx.stroke();
-            // Purple teleport aura (pulsing)
-            const auraAlpha = 0.1 + Math.sin(frameCount * 0.08) * 0.08;
-            ctx.globalAlpha = auraAlpha;
-            ctx.fillStyle = '#8B00FF';
-            ctx.beginPath();
-            ctx.ellipse(bx + boss.w / 2, by + boss.h / 2, boss.w / 2 + 6, boss.h / 2 + 6, 0, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.globalAlpha = 1;
-            // Occasional teleport spark particles
-            if (frameCount % 8 === 0) {
-                addParticle(boss.x + Math.random() * boss.w, boss.y + Math.random() * boss.h, '#DA70D6', 2, 3);
             }
         }
 
