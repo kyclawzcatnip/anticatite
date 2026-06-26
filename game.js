@@ -468,6 +468,23 @@
             "MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM",
             "MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM",
             "MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM",
+        ],
+        // Level 27 — GLITCHED LANDS (Secret)
+        [
+            "GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG",
+            "G                                                                                                  G",
+            "G                                                                                                  G",
+            "G                                                                                                  G",
+            "G       C  C  C                     C  C                                  C  C  C                  G",
+            "G      BBBBBBBBB                   KKKKKKK                              MMMMMMMMM                  G",
+            "G                                                                                                  G",
+            "G                   W                                                                              G",
+            "G                  BBBB             []             {}                   Z                          G",
+            "G                                   []             {}                                              G",
+            "G             R            V        {}             []        R               Y                       G",
+            "G  S                                                                                             <>G",
+            "GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG()G",
+            "GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG()G",
         ]
     ];
 
@@ -511,6 +528,13 @@
                 else if (ch === 'S') { grid[r][c] = 0; spawnX = c; spawnY = r; }
                 else grid[r][c] = 0;
             }
+        }
+        if (idx === 26) {
+            enemies.forEach((e, i) => {
+                if (i % 2 === 0) {
+                    e.isGlitchedEnemy = true;
+                }
+            });
         }
         return { grid, rows, cols, enemies, coins, oneUps, fireFlowers, checkpoints, spawnX, spawnY, flagX, flagY };
     }
@@ -813,7 +837,7 @@
             if (e.code === 'Digit9') { tryBuyItem(8); return; }
             return;
         }
-        if (state === 'playing' && e.code === 'KeyN') { currentLevel++; if (currentLevel >= LEVEL_DATA.length) { currentLevel = 0; } loadLevel(currentLevel); return; }
+        if (state === 'playing' && e.code === 'KeyN') { currentLevel++; if (currentLevel >= LEVEL_DATA.length - 1) { currentLevel = 0; } loadLevel(currentLevel); return; }
         // P+2 toggles co-op on/off
         if (state === 'playing' && e.code === 'Digit2' && keys2._pHeld) {
             coopMode = !coopMode;
@@ -837,6 +861,10 @@
             throwPickaxe();
         }
         if (state === 'playing' && (e.code === 'KeyF' || e.code === 'KeyX') && scratchCooldown <= 0 && !cat.dead) {
+            if (!isMobile && currentLevel === 25 && isStandingOnSilverPipe(cat)) {
+                enterGlitchedLands();
+                return;
+            }
             if (isOnlineGuest) { guestScratchFlag = true; }
             else if (heldShell) {
                 // Throw held shell
@@ -861,6 +889,10 @@
         if (state === 'playing' && coopMode && e.code === 'KeyI' && hasPickaxe && pickaxeCooldown <= 0 && !cat2.dead && pickaxeAmmo > 0 && !pickaxeReloading) { throwPickaxe2(); }
         // P2 scratch/throw
         if (state === 'playing' && coopMode && e.code === 'KeyO' && cat2ScratchCooldown <= 0 && !cat2.dead) {
+            if (!isMobile && currentLevel === 25 && isStandingOnSilverPipe(cat2)) {
+                enterGlitchedLands();
+                return;
+            }
             if (heldShell2) {
                 heldShell2.shellVx = cat2.dir * 4;
                 heldShell2.vx = heldShell2.shellVx;
@@ -1024,8 +1056,43 @@
     }
 
     // TILE COLLISION
+    function isTileGlitchedOut(r, c) {
+        if (!level || state !== 'playing' || currentLevel !== 26) return false;
+        if (c <= 6) return false; // safe start
+        if (c >= level.cols - 4) return false; // safe end pipe
+        const colSection = Math.floor(c / 3);
+        const cycle = Math.floor(frameCount / 90) % 3;
+        return (colSection % 3 === cycle);
+    }
+
+    function isStandingOnSilverPipe(c) {
+        if (!level || c.dead || !c.grounded) return false;
+        const feetRow = Math.floor((c.y + c.h) / T);
+        const c1 = Math.floor((c.x + 4) / T), c2 = Math.floor((c.x + c.w - 4) / T);
+        for (let cc = c1; cc <= c2; cc++) {
+            if (feetRow >= 0 && feetRow < level.rows && cc >= 0 && cc < level.cols) {
+                const t = level.grid[feetRow][cc];
+                if (t === 16 || t === 17) return true;
+            }
+        }
+        return false;
+    }
+
+    function enterGlitchedLands() {
+        audio.playGlitch();
+        currentLevel = 26;
+        loadLevel(26);
+        state = 'playing';
+        if (overlay) overlay.classList.remove('visible');
+        shakeTimer = 45; shakeAmt = 8;
+        addParticle(cat.x + cat.w / 2, cat.y + cat.h / 2, '#FF00FF', 30, 8);
+        addParticle(cat.x + cat.w / 2, cat.y + cat.h / 2, '#00FFFF', 30, 8);
+        addParticle(cat.x + cat.w / 2, cat.y + cat.h / 2, '#FFFF00', 30, 8);
+    }
+
     function solid(r, c) {
         if (!level || r < 0 || r >= level.rows || c < 0 || c >= level.cols) return false;
+        if (isTileGlitchedOut(r, c)) return false;
         const t = level.grid[r][c];
         return t === 1 || t === 2 || t === 3 || t === 4 || t === 5 || t === 6 || t === 7 || t === 8 || t === 9 || t === 10 || t === 11 || t === 13 || t === 14 || t === 16 || t === 17 || t === 18 || t === 19;
     }
@@ -1554,6 +1621,13 @@
         if (!level) return;
         level.enemies.forEach(e => {
             if (!e.alive) return;
+            if (e.isGlitchedEnemy) {
+                e.vx = 0;
+                e.vy = 0;
+                e.y += Math.sin(frameCount * 0.05 + e.x) * 0.4;
+                e.frame += 0.02;
+                return;
+            }
             if (e === heldShell) return; // skip held shell
             if (e === heldShell2) return; // skip P2 held shell
             e.x += e.vx; e.frame += 0.05;
@@ -4475,8 +4549,13 @@
         }
 
         if (onSilverPipe(cat, keys) || (coopMode && onSilverPipe(cat2, keys2))) {
-            if (currentLevel < LEVEL_DATA.length - 1) { state = 'levelcomplete'; winTimer = 120; score += 1000; }
-            else { state = 'win'; score += 5000; }
+            if (currentLevel === 25) {
+                state = 'win'; score += 5000;
+            } else if (currentLevel < LEVEL_DATA.length - 1) {
+                state = 'levelcomplete'; winTimer = 120; score += 1000;
+            } else {
+                state = 'win'; score += 5000;
+            }
             return;
         }
 
@@ -4508,6 +4587,53 @@
     function drawTile(r, c, type) {
         const x = c * T - cam.x, y = r * T;
         if (x < -T || x > W + T) return;
+
+        // Glitched / phased out check
+        if (isTileGlitchedOut(r, c)) {
+            ctx.strokeStyle = 'rgba(255, 0, 255, 0.4)';
+            ctx.lineWidth = 1.5;
+            ctx.strokeRect(x + 2, y + 2, T - 4, T - 4);
+            if (frameCount % 6 < 3) {
+                ctx.fillStyle = 'rgba(0, 255, 255, 0.25)';
+                ctx.fillRect(x + 4, y + 4, T - 8, T - 8);
+                ctx.fillStyle = 'rgba(0, 255, 255, 0.6)';
+                ctx.fillRect(x + 2, y + 2 + (frameCount % T), T - 4, 1);
+            }
+            return;
+        }
+
+        // Corrupted block check
+        if (currentLevel === 26 && (r * 7 + c * 3) % 5 === 0) {
+            ctx.fillStyle = '#000';
+            ctx.fillRect(x, y, T, T);
+            const bands = 4;
+            const colorsList = ['#FF00FF', '#00FFFF', '#00FF00', '#FFFF00', '#FF0000'];
+            for (let i = 0; i < bands; i++) {
+                ctx.fillStyle = colorsList[(i + Math.floor(frameCount / 10)) % colorsList.length];
+                const shift = Math.sin(frameCount * 0.15 + i + r + c) * 3;
+                ctx.fillRect(x + shift, y + i * (T / bands), T, T / bands);
+            }
+            if ((r + c) % 3 === 0) {
+                ctx.fillStyle = '#FFF';
+                const randVal = ((r * 13 + c * 37) % 100);
+                if (randVal < 50) {
+                    ctx.font = 'bold 8px monospace';
+                    ctx.fillText('ERR', x + 8, y + 18);
+                } else if (randVal < 75) {
+                    ctx.font = 'bold 8px monospace';
+                    ctx.fillText('ERR#R', x + 4, y + 18);
+                } else if (randVal < 85) {
+                    ctx.font = 'bold 5px monospace';
+                    ctx.fillText('ERR#R CHUNCK', x + 1, y + 13);
+                    ctx.fillText('GEN#$#@ FAILED', x + 1, y + 23);
+                } else {
+                    ctx.font = 'bold 8px monospace';
+                    ctx.fillText('ERR', x + 8, y + 18);
+                }
+            }
+            return;
+        }
+
         const colors = TILE_COLORS[type];
         if (!colors) return;
         // Pipe rendering (green pipes + silver end-pipes!)
@@ -4981,8 +5107,24 @@
 
     function drawEnemy(e) {
         if (!e.alive) return;
-        const ex = Math.round(e.x - cam.x), ey = Math.round(e.y);
+        let ex = Math.round(e.x - cam.x), ey = Math.round(e.y);
         if (ex < -T || ex > W + T) return;
+
+        if (e.isGlitchedEnemy) {
+            ex += Math.round((Math.random() - 0.5) * 6);
+            ey += Math.round((Math.random() - 0.5) * 2);
+            if (frameCount % 6 < 3) {
+                ctx.fillStyle = 'rgba(255, 0, 255, 0.4)';
+                ctx.fillRect(ex - 4, ey + Math.floor(Math.random() * e.h), e.w + 8, 2);
+                ctx.fillStyle = 'rgba(0, 255, 255, 0.4)';
+                ctx.fillRect(ex - 4, ey + Math.floor(Math.random() * e.h), e.w + 8, 2);
+            }
+            if (frameCount % 4 === 0) {
+                ctx.globalAlpha = 0.3;
+            } else if (frameCount % 7 === 0) {
+                return;
+            }
+        }
 
         const isCave = currentLevel >= 11 && currentLevel < 22;
         const isSky = currentLevel >= 5 && currentLevel <= 10;
@@ -5346,6 +5488,9 @@
             ctx.fillRect(ex + 2, ey + 20, 3, 10);
             ctx.fillStyle = '#FFD700';
             ctx.fillRect(ex + 1, ey + 19, 5, 3);
+        }
+        if (e.isGlitchedEnemy) {
+            ctx.globalAlpha = 1.0;
         }
     }
 
@@ -5758,7 +5903,61 @@
         ctx.globalAlpha = 1;
     }
 
+    function drawGlitchedBackground() {
+        ctx.fillStyle = '#05030a';
+        ctx.fillRect(0, 0, W, H);
+
+        ctx.strokeStyle = 'rgba(255, 0, 255, 0.15)';
+        ctx.lineWidth = 1;
+        for (let y = 0; y < H; y += 4) {
+            ctx.beginPath();
+            ctx.moveTo(0, y);
+            ctx.lineTo(W, y);
+            ctx.stroke();
+        }
+
+        ctx.strokeStyle = 'rgba(0, 255, 255, 0.08)';
+        ctx.lineWidth = 2;
+        const gridSpacing = 40;
+        const warpShift = Math.sin(frameCount * 0.05) * 15;
+        for (let x = 0; x < W; x += gridSpacing) {
+            ctx.beginPath();
+            ctx.moveTo(x + warpShift, 0);
+            ctx.lineTo(x - warpShift, H);
+            ctx.stroke();
+        }
+        for (let y = 0; y < H; y += gridSpacing) {
+            ctx.beginPath();
+            ctx.moveTo(0, y + Math.cos(frameCount * 0.05 + y) * 5);
+            ctx.lineTo(W, y + Math.cos(frameCount * 0.05 + y) * 5);
+            ctx.stroke();
+        }
+
+        ctx.fillStyle = 'rgba(0, 255, 0, 0.25)';
+        ctx.font = '8px monospace';
+        const numStreams = 6;
+        for (let i = 0; i < numStreams; i++) {
+            const sx = (i * 120 + 30) % W;
+            const sy = (frameCount * (1 + i % 2) * 1.5) % H;
+            for (let j = 0; j < 5; j++) {
+                const charVal = Math.random() < 0.5 ? '0' : '1';
+                ctx.fillText(charVal, sx, (sy + j * 12) % H);
+            }
+        }
+
+        if (frameCount % 10 < 4) {
+            const barCount = 1 + Math.floor(Math.random() * 3);
+            for (let b = 0; b < barCount; b++) {
+                const by = Math.random() * H;
+                const bh = 2 + Math.random() * 20;
+                ctx.fillStyle = ['rgba(255, 0, 255, 0.18)', 'rgba(0, 255, 255, 0.18)', 'rgba(255, 255, 0, 0.15)'][Math.floor(Math.random() * 3)];
+                ctx.fillRect(0, by, W, bh);
+            }
+        }
+    }
+
     function drawBackground() {
+        if (currentLevel === 26) { drawGlitchedBackground(); return; }
         if (currentLevel >= 22) { drawMineshaftBackground(); return; }
         if (currentLevel >= 11) { drawCaveBackground(); return; }
         if (currentLevel >= 5) { drawSkyIslandBackground(); return; }
@@ -6942,7 +7141,7 @@
             }
             coinEl.textContent = '🪙 × ' + coinCount;
             scoreEl.textContent = 'SCORE: ' + score;
-            levelEl.textContent = boss ? (boss.pirate ? 'SKY BOSS' : 'BOSS') : (currentLevel >= 22 ? 'MINE ' + (currentLevel - 21) : currentLevel >= 11 ? 'CAVE ' + (currentLevel - 10) : currentLevel >= 5 ? 'SKY ' + (currentLevel - 4) : 'WORLD ' + (currentLevel + 1));
+            levelEl.textContent = currentLevel === 26 ? 'ERR: GLITCH' : (boss ? (boss.pirate ? 'SKY BOSS' : 'BOSS') : (currentLevel >= 22 ? 'MINE ' + (currentLevel - 21) : currentLevel >= 11 ? 'CAVE ' + (currentLevel - 10) : currentLevel >= 5 ? 'SKY ' + (currentLevel - 4) : 'WORLD ' + (currentLevel + 1)));
             if (state === 'over') { showOverlay('GAME OVER', 'SCORE: ' + score + '\n\nPRESS SPACE TO RETRY'); }
             if (state === 'levelcomplete') { showOverlay('LEVEL COMPLETE!', 'SCORE: ' + score + '\n\nWAITING FOR HOST...'); }
             if (state === 'win') { showOverlay('YOU WIN! 🎉', 'FINAL SCORE: ' + score); }
@@ -7022,7 +7221,7 @@
         }
         coinEl.textContent = '🪙 × ' + coinCount;
         scoreEl.textContent = 'SCORE: ' + score;
-        levelEl.textContent = boss ? (boss.pirate ? 'SKY BOSS' : 'BOSS') : (currentLevel >= 22 ? 'MINE ' + (currentLevel - 21) : currentLevel >= 11 ? 'CAVE ' + (currentLevel - 10) : currentLevel >= 5 ? 'SKY ' + (currentLevel - 4) : 'WORLD ' + (currentLevel + 1));
+        levelEl.textContent = currentLevel === 26 ? 'ERR: GLITCH' : (boss ? (boss.pirate ? 'SKY BOSS' : 'BOSS') : (currentLevel >= 22 ? 'MINE ' + (currentLevel - 21) : currentLevel >= 11 ? 'CAVE ' + (currentLevel - 10) : currentLevel >= 5 ? 'SKY ' + (currentLevel - 4) : 'WORLD ' + (currentLevel + 1)));
         // Check game over
         if (state === 'over') { showOverlay('GAME OVER', 'SCORE: ' + score + '\n\nPRESS SPACE TO RETRY\nPRESS 2 FOR CO-OP'); }
         if (state === 'levelcomplete') { showOverlay('LEVEL COMPLETE!', 'SCORE: ' + score + '\n\nPRESS SPACE TO CONTINUE'); }
