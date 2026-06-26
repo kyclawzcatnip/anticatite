@@ -973,15 +973,30 @@
             btnAct.addEventListener('touchend', () => { keys.glide = false; });
         }
     }
-    // Tap canvas to start/retry on mobile
+    // Mobile: tap overlay or canvas to start/retry
     if (isMobile) {
+        // Tap the title overlay to start
+        const overlayEl = document.getElementById('overlay');
+        if (overlayEl) {
+            overlayEl.addEventListener('touchstart', e => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (state === 'title') {
+                    state = 'playing'; lives = 3; score = 0; coinCount = 0; currentLevel = 0;
+                    loadLevel(0); overlayEl.classList.remove('visible');
+                }
+            }, { passive: false });
+        }
+        // Tap canvas for game over retry, level complete, etc.
         canvas.addEventListener('touchstart', e => {
-            if (state === 'title' || state === 'gameover') {
+            if (state === 'gameover') {
                 e.preventDefault();
                 state = 'playing'; lives = 3; score = 0; coinCount = 0; currentLevel = 0; loadLevel(0);
             } else if (state === 'levelcomplete') {
                 e.preventDefault();
                 openShop();
+            } else if (state === 'shop') {
+                // Let the action button handle shop
             }
         }, { passive: false });
     }
