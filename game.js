@@ -7127,16 +7127,12 @@
 
             // Update HUD
             if (coopMode) {
-                let p1Str = 'P1 ';
-                for (let i = 0; i < 3; i++) p1Str += i < p1HP ? '❤️' : '🖤';
-                let p2Str = ' P2 ';
-                for (let i = 0; i < 3; i++) p2Str += i < p2HP ? '❤️' : '🖤';
+                let p1Str = 'P1: ' + (devMode ? '∞' : Math.max(0, p1HP));
+                let p2Str = ' P2: ' + (devMode ? '∞' : Math.max(0, p2HP));
                 let extraStr = '';
                 if (fourPlayerMode) {
-                    extraStr += ' P3 ';
-                    for (let i = 0; i < 3; i++) extraStr += i < p3HP ? '❤️' : '🖤';
-                    extraStr += ' P4 ';
-                    for (let i = 0; i < 3; i++) extraStr += i < p4HP ? '❤️' : '🖤';
+                    extraStr += ' P3: ' + (devMode ? '∞' : Math.max(0, p3HP));
+                    extraStr += ' P4: ' + (devMode ? '∞' : Math.max(0, p4HP));
                 }
                 livesEl.textContent = p1Str + p2Str + extraStr + (hasFire ? ' 🔥' : '');
             }
@@ -7205,16 +7201,12 @@
 
         // HUD
         if (coopMode) {
-            let p1Str = 'P1 ';
-            for (let i = 0; i < 3; i++) p1Str += i < p1HP ? '❤️' : '🖤';
-            let p2Str = ' P2 ';
-            for (let i = 0; i < 3; i++) p2Str += i < p2HP ? '❤️' : '🖤';
+            let p1Str = 'P1: ' + (devMode ? '∞' : Math.max(0, p1HP));
+            let p2Str = ' P2: ' + (devMode ? '∞' : Math.max(0, p2HP));
             let extraStr = '';
             if (fourPlayerMode) {
-                extraStr += ' P3 ';
-                for (let i = 0; i < 3; i++) extraStr += i < p3HP ? '❤️' : '🖤';
-                extraStr += ' P4 ';
-                for (let i = 0; i < 3; i++) extraStr += i < p4HP ? '❤️' : '🖤';
+                extraStr += ' P3: ' + (devMode ? '∞' : Math.max(0, p3HP));
+                extraStr += ' P4: ' + (devMode ? '∞' : Math.max(0, p4HP));
             }
             livesEl.textContent = p1Str + p2Str + extraStr + (hasFire ? ' 🔥' : '') + (onlineMode ? ' 🌐' : '');
         } else {
