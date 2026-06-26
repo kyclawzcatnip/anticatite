@@ -1322,11 +1322,12 @@
         }
         cat.dead = true; cat.vy = -8; deathTimer = 60; heldShell = null;
         if (coopMode) {
-            p1HP--;
+            if (!devMode) p1HP--;
             const allOut = p1HP <= 0 && p2HP <= 0 && (!fourPlayerMode || (p3HP <= 0 && p4HP <= 0));
             if (allOut) { deathTimer = 90; state = 'over'; }
         } else {
-            lives--; if(window.audio) audio.playDeath();
+            if (!devMode) lives--;
+            if(window.audio) audio.playDeath();
             if (lives < 0) { deathTimer = 90; state = 'over'; }
         }
     }
@@ -1425,7 +1426,7 @@
             return;
         }
         cat2.dead = true; cat2.vy = -8; cat2DeathTimer = 60; heldShell2 = null;
-        p2HP--;
+        if (!devMode) p2HP--;
         const allOut = p1HP <= 0 && p2HP <= 0 && (!fourPlayerMode || (p3HP <= 0 && p4HP <= 0));
         if (allOut) { cat2DeathTimer = 90; state = 'over'; }
     }
@@ -1540,7 +1541,7 @@
             }
         }
         if (level && ec.y > level.rows * T + 100) {
-            ecHP--;
+            if (!devMode) ecHP--;
             if (ecHP <= 0 && p1HP <= 0 && p2HP <= 0 && (fourPlayerMode ? (ec === cat3 ? p4HP <= 0 : p3HP <= 0) : true)) { state = 'over'; }
             ec.dead = true; ecDT = 90;
         }
@@ -4141,7 +4142,7 @@
                         }
                     } else {
                         // Lose 1 life but stay where you are
-                        lives--;
+                        if (!devMode) lives--;
                         invincibleTimer = 90;
                         shakeTimer = 10; shakeAmt = 6;
                         addParticle(cat.x + cat.w / 2, cat.y + cat.h / 2, '#FF0000', 12, 5);
@@ -4169,7 +4170,7 @@
                             addParticle(dc.x + dc.w / 2, dc.y + dc.h / 2, '#1a1a2e', 15, 6);
                         }
                     } else {
-                        lives--;
+                        if (!devMode) lives--;
                         invincibleTimer2 = 90;
                         shakeTimer = 10; shakeAmt = 6;
                         addParticle(cat2.x + cat2.w / 2, cat2.y + cat2.h / 2, '#FF0000', 12, 5);
@@ -7217,7 +7218,7 @@
             }
             livesEl.textContent = p1Str + p2Str + extraStr + (hasFire ? ' 🔥' : '') + (onlineMode ? ' 🌐' : '');
         } else {
-            livesEl.textContent = '🐱 × ' + Math.max(0, lives) + (hasFire ? ' 🔥' : '');
+            livesEl.textContent = '🐱 × ' + (devMode ? '∞' : Math.max(0, lives)) + (hasFire ? ' 🔥' : '');
         }
         coinEl.textContent = '🪙 × ' + coinCount;
         scoreEl.textContent = 'SCORE: ' + score;
@@ -7349,7 +7350,7 @@
         ctx.fillStyle = '#0F0'; ctx.font = 'bold 9px monospace'; ctx.textAlign = 'left';
         let dy = 16;
         const info = [
-            `FPS: ${devFps} | ${onlineMode ? 'ONLINE (no slow-mo)' : 'SLOW-MO: 1/3'}`,
+            `FPS: ${devFps} | INF LIVES: ON`,
             `P1 pos: ${Math.round(cat.x)}, ${Math.round(cat.y)}`,
             `P1 vel: ${cat.vx.toFixed(1)}, ${cat.vy.toFixed(1)}`,
             `P1 grnd: ${cat.grounded} | big: ${isBig} | mini: ${isMini}`,
@@ -7699,15 +7700,8 @@
         ctx.lineWidth = 1;
     }
 
-    let devSlowCounter = 0;
     function loop() {
-        if (devMode && !onlineMode) {
-            // Slow-mo only in offline mode (would desync online)
-            devSlowCounter++;
-            if (devSlowCounter % 3 === 0) update();
-        } else {
-            update();
-        }
+        update();
         draw();
         requestAnimationFrame(loop);
     }
