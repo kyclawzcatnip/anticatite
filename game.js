@@ -987,6 +987,28 @@
                 }
             }, { passive: false });
         }
+        // CO-OP button on title
+        const btnCoop = document.getElementById('btn-coop');
+        if (btnCoop) {
+            btnCoop.addEventListener('touchstart', e => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (state === 'title' || state === 'start' || state === 'over' || state === 'win') {
+                    coopMode = true; startGame();
+                }
+            }, { passive: false });
+        }
+        // ONLINE button on title
+        const btnOnline = document.getElementById('btn-online');
+        if (btnOnline) {
+            btnOnline.addEventListener('touchstart', e => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (state === 'title' || state === 'start' || state === 'over' || state === 'win') {
+                    openLobby();
+                }
+            }, { passive: false });
+        }
         // Tap canvas for game over retry, level complete, etc.
         canvas.addEventListener('touchstart', e => {
             if (state === 'gameover') {
