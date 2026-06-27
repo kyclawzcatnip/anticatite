@@ -837,7 +837,7 @@
             if (e.code === 'Digit9') { tryBuyItem(8); return; }
             return;
         }
-        if (state === 'playing' && e.code === 'KeyN') { currentLevel++; if (currentLevel >= LEVEL_DATA.length - 1) { currentLevel = 0; } loadLevel(currentLevel); return; }
+        if (state === 'playing' && e.code === 'KeyN') { const maxLvl = devMode ? LEVEL_DATA.length : LEVEL_DATA.length - 1; currentLevel++; if (currentLevel >= maxLvl) { currentLevel = 0; } if (currentLevel === 26) { enterGlitchedLands(); } else { loadLevel(currentLevel); } return; }
         // P+2 toggles co-op on/off
         if (state === 'playing' && e.code === 'Digit2' && keys2._pHeld) {
             coopMode = !coopMode;
