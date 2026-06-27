@@ -5068,26 +5068,7 @@
         }
         if (cat.dead) return;
         if (invincibleTimer > 0 && frameCount % 4 < 2) return;
-        const catInv = isInvertedGravityZone(cat.x + cat.w / 2);
-        if (catInv) {
-            // Inverted: flip cat upside down around its center
-            const sx = cat.x - cam.x;
-            const sy = cat.y;
-            ctx.save();
-            ctx.translate(sx + cat.w / 2, sy + cat.h / 2);
-            ctx.scale(1, -1);
-            ctx.translate(-(sx + cat.w / 2), -(sy + cat.h / 2));
-            if (isBig) {
-                ctx.save();
-                ctx.translate(sx, sy + cat.h);
-                ctx.scale(1, 2);
-                drawCatBody(0, -32);
-                ctx.restore();
-            } else {
-                drawCatBody(sx, sy);
-            }
-            ctx.restore();
-        } else if (isBig) {
+        if (isBig) {
             ctx.save();
             ctx.translate(cat.x - cam.x, cat.y + cat.h);
             ctx.scale(1, 2);
@@ -5211,25 +5192,7 @@
         // Save P1 state, swap to P2
         const savedDir = cat.dir, savedSkin = selectedSkin, savedW = cat.w, savedH = cat.h;
         cat.dir = cat2.dir; selectedSkin = cat2SelectedSkin; cat.w = cat2.w; cat.h = cat2.h;
-        const cat2Inv = isInvertedGravityZone(cat2.x + cat2.w / 2);
-        if (cat2Inv) {
-            const sx = cat2.x - cam.x;
-            const sy = cat2.y;
-            ctx.save();
-            ctx.translate(sx + cat2.w / 2, sy + cat2.h / 2);
-            ctx.scale(1, -1);
-            ctx.translate(-(sx + cat2.w / 2), -(sy + cat2.h / 2));
-            if (isBig2) {
-                ctx.save();
-                ctx.translate(sx, sy + cat2.h);
-                ctx.scale(1, 2);
-                drawCatBody(0, -32);
-                ctx.restore();
-            } else {
-                drawCatBody(sx, sy);
-            }
-            ctx.restore();
-        } else if (isBig2) {
+        if (isBig2) {
             ctx.save();
             ctx.translate(cat2.x - cam.x, cat2.y + cat2.h);
             ctx.scale(1, 2);
@@ -5342,14 +5305,6 @@
             }
         }
 
-        // Inverted gravity visual flip for enemies
-        const enemyInv = isInvertedGravityZone(e.x + e.w / 2);
-        if (enemyInv) {
-            ctx.save();
-            ctx.translate(ex + e.w / 2, ey + e.h / 2);
-            ctx.scale(1, -1);
-            ctx.translate(-(ex + e.w / 2), -(ey + e.h / 2));
-        }
 
         const isCave = currentLevel >= 11 && currentLevel < 22;
         const isSky = currentLevel >= 5 && currentLevel <= 10;
@@ -5713,10 +5668,6 @@
             ctx.fillRect(ex + 2, ey + 20, 3, 10);
             ctx.fillStyle = '#FFD700';
             ctx.fillRect(ex + 1, ey + 19, 5, 3);
-        }
-        // Restore inverted gravity flip
-        if (enemyInv) {
-            ctx.restore();
         }
         if (e.isGlitchedEnemy) {
             ctx.globalAlpha = 1.0;
