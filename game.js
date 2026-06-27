@@ -1103,13 +1103,6 @@
         }
         return false;
     }
-    function isInvertedGravityZoneForCol(col) {
-        if (currentLevel !== 27) return false;
-        for (const zone of INVERTED_ZONES) {
-            if (col >= zone.start && col <= zone.end) return true;
-        }
-        return false;
-    }
 
     // TILE COLLISION
     function isTileGlitchedOut(r, c) {
@@ -4768,15 +4761,6 @@
         const x = c * T - cam.x, y = r * T;
         if (x < -T || x > W + T) return;
 
-        // Inverted gravity zone: flip tiles upside down
-        const tileInverted = isInvertedGravityZoneForCol(c);
-        if (tileInverted) {
-            ctx.save();
-            ctx.translate(x + T / 2, y + T / 2);
-            ctx.scale(1, -1);
-            ctx.translate(-(x + T / 2), -(y + T / 2));
-        }
-
         // Glitched / phased out check
         if (isTileGlitchedOut(r, c)) {
             ctx.strokeStyle = 'rgba(255, 0, 255, 0.4)';
@@ -4788,7 +4772,6 @@
                 ctx.fillStyle = 'rgba(0, 255, 255, 0.6)';
                 ctx.fillRect(x + 2, y + 2 + (frameCount % T), T - 4, 1);
             }
-            if (tileInverted) ctx.restore();
             return;
         }
 
@@ -4821,12 +4804,12 @@
                     ctx.fillText('ERR', x + 8, y + 18);
                 }
             }
-            if (tileInverted) ctx.restore();
+
             return;
         }
 
         const colors = TILE_COLORS[type];
-        if (!colors) { if (tileInverted) ctx.restore(); return; }
+        if (!colors) return;
         // Pipe rendering (green pipes + silver end-pipes!)
         if ((type >= 4 && type <= 7) || (type >= 16 && type <= 19)) {
             const isSilver = type >= 16;
@@ -4869,7 +4852,7 @@
                 if (isLeft) ctx.fillRect(x, y, 2, T);
                 else ctx.fillRect(x + T - 2, y, 2, T);
             }
-            if (tileInverted) ctx.restore();
+
             return;
         }
         // Underground cave rock rendering for G-blocks
@@ -4889,7 +4872,7 @@
                 ctx.fillStyle = '#FF6644'; ctx.fillRect(x + 20, y + 18, 3, 3);
                 ctx.fillStyle = '#FF9966'; ctx.fillRect(x + 21, y + 19, 1, 1);
             }
-            if (tileInverted) ctx.restore();
+
             return;
         }
         // Mineshaft rock rendering (M-blocks, tile 14)
@@ -4924,7 +4907,7 @@
             // Bottom shadow
             ctx.fillStyle = 'rgba(0,0,0,0.15)';
             ctx.fillRect(x + 1, y + T - 2, T - 2, 2);
-            if (tileInverted) ctx.restore();
+
             return;
         }
         // Mine rails (decorative track, tile 15)
@@ -4945,7 +4928,7 @@
             ctx.fillStyle = '#AAA';
             ctx.fillRect(x + 7, y + 8, 1, T - 8);
             ctx.fillRect(x + T - 8, y + 8, 1, T - 8);
-            if (tileInverted) ctx.restore();
+
             return;
         }
         ctx.fillStyle = colors[0]; ctx.fillRect(x, y, T, T);
@@ -5075,7 +5058,7 @@
             ctx.fillStyle = '#DAA520';
             ctx.beginPath(); ctx.arc(x + T - 10, y + T / 2 + 4, 2.5, 0, Math.PI * 2); ctx.fill();
         }
-        if (tileInverted) ctx.restore();
+
     }
 
     function drawCatSprite() {
@@ -5087,16 +5070,21 @@
         if (invincibleTimer > 0 && frameCount % 4 < 2) return;
         const catInv = isInvertedGravityZone(cat.x + cat.w / 2);
         if (catInv) {
-            // Inverted: flip cat upside down
+            // Inverted: flip cat upside down around its center
+            const sx = cat.x - cam.x;
+            const sy = cat.y;
             ctx.save();
-            ctx.translate(cat.x - cam.x, cat.y);
+            ctx.translate(sx + cat.w / 2, sy + cat.h / 2);
             ctx.scale(1, -1);
+            ctx.translate(-(sx + cat.w / 2), -(sy + cat.h / 2));
             if (isBig) {
-                ctx.translate(0, -cat.h);
+                ctx.save();
+                ctx.translate(sx, sy + cat.h);
                 ctx.scale(1, 2);
                 drawCatBody(0, -32);
+                ctx.restore();
             } else {
-                drawCatBody(0, -cat.h);
+                drawCatBody(sx, sy);
             }
             ctx.restore();
         } else if (isBig) {
@@ -5225,15 +5213,20 @@
         cat.dir = cat2.dir; selectedSkin = cat2SelectedSkin; cat.w = cat2.w; cat.h = cat2.h;
         const cat2Inv = isInvertedGravityZone(cat2.x + cat2.w / 2);
         if (cat2Inv) {
+            const sx = cat2.x - cam.x;
+            const sy = cat2.y;
             ctx.save();
-            ctx.translate(cat2.x - cam.x, cat2.y);
+            ctx.translate(sx + cat2.w / 2, sy + cat2.h / 2);
             ctx.scale(1, -1);
+            ctx.translate(-(sx + cat2.w / 2), -(sy + cat2.h / 2));
             if (isBig2) {
-                ctx.translate(0, -cat2.h);
+                ctx.save();
+                ctx.translate(sx, sy + cat2.h);
                 ctx.scale(1, 2);
                 drawCatBody(0, -32);
+                ctx.restore();
             } else {
-                drawCatBody(0, -cat2.h);
+                drawCatBody(sx, sy);
             }
             ctx.restore();
         } else if (isBig2) {
