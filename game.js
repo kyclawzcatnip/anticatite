@@ -486,20 +486,20 @@
             "GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG()G",
             "GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG()G",
         ],
-        // Level 28 — GLITCHED LANDS 2 (Memory Leak)
+        // Level 28 — GLITCHED LANDS 2 (Inverted Gravity)
         [
             "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
             "K                                                                                                  K",
             "K                                                                                                  K",
-            "K        C C C                      C C C                        C C C                             K",
-            "K       BBBBBBB                    MMMMMMM                      BBBBBBB                            K",
+            "K                          BBBBBBB         KKKKKKK         BBBBBBB                                 K",
+            "K       C C C             C  C  C  C      C  C  C  C      C  C  C  C                               K",
+            "K      BBBBBBB                                                                                     K",
+            "K                           R       V       R       Y       R       V                              K",
             "K                                                                                                  K",
-            "K                               W                                                                  K",
-            "K   S          R     V        BBBBBBB        Y          A                     R                  K",
-            "K  BBBBB     GGGGGGGGGG                     GGGGGGG    BBBBBB               GGGGGGG              <>K",
+            "K   S                                                                                            <>K",
+            "K  BBBBB     GGGGG                                                         BBBBB                ()K",
             "K                                                                                                ()K",
-            "K                                                                                                ()K",
-            "K             V          R                     R            V               R                    ()K",
+            "K             R         V                     R            V         R                            ()K",
             "GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG()K",
             "GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG()K",
         ],
@@ -1089,9 +1089,32 @@
         }, { passive: false });
     }
 
+    // INVERTED GRAVITY ZONES for Glitched Lands 2 (level 27)
+    // Defines column ranges where gravity is inverted
+    const INVERTED_ZONES = [
+        { start: 18, end: 38 },
+        { start: 52, end: 72 },
+    ];
+    function isInvertedGravityZone(px) {
+        if (currentLevel !== 27) return false;
+        const col = Math.floor(px / T);
+        for (const zone of INVERTED_ZONES) {
+            if (col >= zone.start && col <= zone.end) return true;
+        }
+        return false;
+    }
+    function isInvertedGravityZoneForCol(col) {
+        if (currentLevel !== 27) return false;
+        for (const zone of INVERTED_ZONES) {
+            if (col >= zone.start && col <= zone.end) return true;
+        }
+        return false;
+    }
+
     // TILE COLLISION
     function isTileGlitchedOut(r, c) {
         if (!level || state !== 'playing' || currentLevel < 26) return false;
+        if (currentLevel === 27) return false; // No appearing/disappearing tiles in Glitched Lands 2
         if (c <= 6) return false; // safe start
         if (c >= level.cols - 4) return false; // safe end pipe
         const colSection = Math.floor(c / 3);
@@ -1165,30 +1188,59 @@
         const miniSpd = isMini ? 0.7 : 1; // mini cats walk slower
         if (keys.left) { cat.vx = -(WALK + speedBoost) * miniSpd; cat.dir = -1; }
         if (keys.right) { cat.vx = (WALK + speedBoost) * miniSpd; cat.dir = 1; }
+        // Inverted gravity check
+        const catInverted = isInvertedGravityZone(cat.x + cat.w / 2);
         // Jump
         const jumpForce = isMini ? JUMP * 1.15 : JUMP; // mini cats jump higher
-        if (keys.jumpPressed && cat.grounded) {
-            cat.vy = jumpForce; if(window.audio) audio.playJump(); cat.grounded = false; cat.jumping = true; cat.canDoubleJump = true;
-        } else if (keys.jumpPressed && !cat.grounded && cat.canDoubleJump) {
-            cat.vy = JUMP * 0.75; if(window.audio) audio.playJump(); cat.canDoubleJump = false;
-            // Puff particles for double jump
-            for (let i = 0; i < 6; i++) {
-                addParticle(cat.x + cat.w / 2, cat.y + cat.h, '#FFFFFF', 2, 3);
+        if (catInverted) {
+            // Inverted: jump pushes DOWN (positive vy)
+            if (keys.jumpPressed && cat.grounded) {
+                cat.vy = -jumpForce; if(window.audio) audio.playJump(); cat.grounded = false; cat.jumping = true; cat.canDoubleJump = true;
+            } else if (keys.jumpPressed && !cat.grounded && cat.canDoubleJump) {
+                cat.vy = -JUMP * 0.75; if(window.audio) audio.playJump(); cat.canDoubleJump = false;
+                for (let i = 0; i < 6; i++) { addParticle(cat.x + cat.w / 2, cat.y, '#FFFFFF', 2, 3); }
+            }
+        } else {
+            if (keys.jumpPressed && cat.grounded) {
+                cat.vy = jumpForce; if(window.audio) audio.playJump(); cat.grounded = false; cat.jumping = true; cat.canDoubleJump = true;
+            } else if (keys.jumpPressed && !cat.grounded && cat.canDoubleJump) {
+                cat.vy = JUMP * 0.75; if(window.audio) audio.playJump(); cat.canDoubleJump = false;
+                // Puff particles for double jump
+                for (let i = 0; i < 6; i++) {
+                    addParticle(cat.x + cat.w / 2, cat.y + cat.h, '#FFFFFF', 2, 3);
+                }
             }
         }
         keys.jumpPressed = false;
         // Variable jump height
-        if (!keys.jump && cat.vy < -3) cat.vy = -3;
-        // Gravity + Glide
-        isGliding = hasGlide && keys.glide && !cat.grounded && cat.vy > 0;
-        if (isGliding) {
-            cat.vy = Math.min(cat.vy + GRAVITY * 0.15, 1.5);
-            // Wind particles while gliding
-            if (frameCount % 3 === 0) addParticle(cat.x + cat.w / 2, cat.y + cat.h + 4, '#B0D8FF', 1.5, 4);
+        if (catInverted) {
+            if (!keys.jump && cat.vy > 3) cat.vy = 3;
         } else {
-            const grav = isMini ? GRAVITY * 0.7 : GRAVITY; // mini cats float more
-            const maxF = isMini ? MAX_FALL * 0.7 : MAX_FALL;
-            cat.vy = Math.min(cat.vy + grav, maxF);
+            if (!keys.jump && cat.vy < -3) cat.vy = -3;
+        }
+        // Gravity + Glide
+        if (catInverted) {
+            // Inverted gravity: pull upward
+            isGliding = hasGlide && keys.glide && !cat.grounded && cat.vy < 0;
+            if (isGliding) {
+                cat.vy = Math.max(cat.vy - GRAVITY * 0.15, -1.5);
+                if (frameCount % 3 === 0) addParticle(cat.x + cat.w / 2, cat.y - 4, '#B0D8FF', 1.5, 4);
+            } else {
+                const grav = isMini ? GRAVITY * 0.7 : GRAVITY;
+                const maxF = isMini ? MAX_FALL * 0.7 : MAX_FALL;
+                cat.vy = Math.max(cat.vy - grav, -maxF);
+            }
+        } else {
+            isGliding = hasGlide && keys.glide && !cat.grounded && cat.vy > 0;
+            if (isGliding) {
+                cat.vy = Math.min(cat.vy + GRAVITY * 0.15, 1.5);
+                // Wind particles while gliding
+                if (frameCount % 3 === 0) addParticle(cat.x + cat.w / 2, cat.y + cat.h + 4, '#B0D8FF', 1.5, 4);
+            } else {
+                const grav = isMini ? GRAVITY * 0.7 : GRAVITY; // mini cats float more
+                const maxF = isMini ? MAX_FALL * 0.7 : MAX_FALL;
+                cat.vy = Math.min(cat.vy + grav, maxF);
+            }
         }
 
         // Move X
@@ -1208,38 +1260,69 @@
         // Move Y
         cat.y += cat.vy;
         cat.grounded = false;
-        if (cat.vy > 0) {
-            // Falling — check below
-            let tr = Math.floor((cat.y + cat.h) / T);
-            let tc1 = Math.floor((cat.x + m) / T), tc2 = Math.floor((cat.x + cat.w - m - 1) / T);
-            for (let c = tc1; c <= tc2; c++) {
-                if (solid(tr, c)) { cat.y = tr * T - cat.h; cat.vy = 0; cat.grounded = true; cat.jumping = false; break; }
-            }
-        } else if (cat.vy < 0) {
-            // Rising — check above (head bump, question blocks)
-            let tr = Math.floor(cat.y / T);
-            let tc1 = Math.floor((cat.x + m) / T), tc2 = Math.floor((cat.x + cat.w - m - 1) / T);
-            for (let c = tc1; c <= tc2; c++) {
-                if (solid(tr, c)) {
-                    cat.y = (tr + 1) * T; cat.vy = 1;
-                    // Hit question block or rare question block?
-                    if (level.grid[tr][c] === 3 || level.grid[tr][c] === 13) { hitQuestion(tr, c); }
-                    // Break bricks when big
-                    else if (isBig && level.grid[tr][c] === 2) {
-                        level.grid[tr][c] = 0;
-                        if (onlineMode && isOnlineHost) netGridChanges.push({ r: tr, c, v: 0 });
-                        shakeTimer = 4; shakeAmt = 3;
-                        addParticle(c * T + T / 2, tr * T + T / 2, '#8B4513', 12, 6);
-                        addParticle(c * T + T / 2, tr * T + T / 2, '#A0522D', 8, 4);
-                        score += 50;
+        if (catInverted) {
+            // Inverted: "falling" upward (vy < 0) — ground is the ceiling
+            if (cat.vy < 0) {
+                let tr = Math.floor(cat.y / T);
+                let tc1 = Math.floor((cat.x + m) / T), tc2 = Math.floor((cat.x + cat.w - m - 1) / T);
+                for (let c = tc1; c <= tc2; c++) {
+                    if (solid(tr, c)) { cat.y = (tr + 1) * T; cat.vy = 0; cat.grounded = true; cat.jumping = false; break; }
+                }
+            } else if (cat.vy > 0) {
+                // "Rising" downward (vy > 0) — hit floor = head bump
+                let tr = Math.floor((cat.y + cat.h) / T);
+                let tc1 = Math.floor((cat.x + m) / T), tc2 = Math.floor((cat.x + cat.w - m - 1) / T);
+                for (let c = tc1; c <= tc2; c++) {
+                    if (solid(tr, c)) {
+                        cat.y = tr * T - cat.h; cat.vy = -1;
+                        if (level.grid[tr][c] === 3 || level.grid[tr][c] === 13) { hitQuestion(tr, c); }
+                        else if (isBig && level.grid[tr][c] === 2) {
+                            level.grid[tr][c] = 0;
+                            if (onlineMode && isOnlineHost) netGridChanges.push({ r: tr, c, v: 0 });
+                            shakeTimer = 4; shakeAmt = 3;
+                            addParticle(c * T + T / 2, tr * T + T / 2, '#8B4513', 12, 6);
+                            addParticle(c * T + T / 2, tr * T + T / 2, '#A0522D', 8, 4);
+                            score += 50;
+                        }
+                        break;
                     }
-                    break;
+                }
+            }
+        } else {
+            if (cat.vy > 0) {
+                // Falling — check below
+                let tr = Math.floor((cat.y + cat.h) / T);
+                let tc1 = Math.floor((cat.x + m) / T), tc2 = Math.floor((cat.x + cat.w - m - 1) / T);
+                for (let c = tc1; c <= tc2; c++) {
+                    if (solid(tr, c)) { cat.y = tr * T - cat.h; cat.vy = 0; cat.grounded = true; cat.jumping = false; break; }
+                }
+            } else if (cat.vy < 0) {
+                // Rising — check above (head bump, question blocks)
+                let tr = Math.floor(cat.y / T);
+                let tc1 = Math.floor((cat.x + m) / T), tc2 = Math.floor((cat.x + cat.w - m - 1) / T);
+                for (let c = tc1; c <= tc2; c++) {
+                    if (solid(tr, c)) {
+                        cat.y = (tr + 1) * T; cat.vy = 1;
+                        // Hit question block or rare question block?
+                        if (level.grid[tr][c] === 3 || level.grid[tr][c] === 13) { hitQuestion(tr, c); }
+                        // Break bricks when big
+                        else if (isBig && level.grid[tr][c] === 2) {
+                            level.grid[tr][c] = 0;
+                            if (onlineMode && isOnlineHost) netGridChanges.push({ r: tr, c, v: 0 });
+                            shakeTimer = 4; shakeAmt = 3;
+                            addParticle(c * T + T / 2, tr * T + T / 2, '#8B4513', 12, 6);
+                            addParticle(c * T + T / 2, tr * T + T / 2, '#A0522D', 8, 4);
+                            score += 50;
+                        }
+                        break;
+                    }
                 }
             }
         }
 
-        // Fall off map
+        // Fall off map (or float off top in inverted)
         if (cat.y > level.rows * T + 100) killCat();
+        if (catInverted && cat.y < -100) killCat();
 
         // Keep in bounds left
         if (cat.x < 0) cat.x = 0;
@@ -1393,17 +1476,34 @@
         cat2.vx = 0;
         if (keys2.left) { cat2.vx = -(WALK + speedBoost); cat2.dir = -1; }
         if (keys2.right) { cat2.vx = WALK + speedBoost; cat2.dir = 1; }
-        if (keys2.jumpPressed && cat2.grounded) {
-            cat2.vy = JUMP; if(window.audio) audio.playJump(); cat2.grounded = false; cat2.jumping = true; cat2.canDoubleJump = true;
-        } else if (keys2.jumpPressed && !cat2.grounded && cat2.canDoubleJump) {
-            cat2.vy = JUMP * 0.75; if(window.audio) audio.playJump(); cat2.canDoubleJump = false;
-            for (let i = 0; i < 6; i++) addParticle(cat2.x + cat2.w / 2, cat2.y + cat2.h, '#FFFFFF', 2, 3);
+        const cat2Inverted = isInvertedGravityZone(cat2.x + cat2.w / 2);
+        if (cat2Inverted) {
+            if (keys2.jumpPressed && cat2.grounded) {
+                cat2.vy = -JUMP; if(window.audio) audio.playJump(); cat2.grounded = false; cat2.jumping = true; cat2.canDoubleJump = true;
+            } else if (keys2.jumpPressed && !cat2.grounded && cat2.canDoubleJump) {
+                cat2.vy = -JUMP * 0.75; if(window.audio) audio.playJump(); cat2.canDoubleJump = false;
+                for (let i = 0; i < 6; i++) addParticle(cat2.x + cat2.w / 2, cat2.y, '#FFFFFF', 2, 3);
+            }
+        } else {
+            if (keys2.jumpPressed && cat2.grounded) {
+                cat2.vy = JUMP; if(window.audio) audio.playJump(); cat2.grounded = false; cat2.jumping = true; cat2.canDoubleJump = true;
+            } else if (keys2.jumpPressed && !cat2.grounded && cat2.canDoubleJump) {
+                cat2.vy = JUMP * 0.75; if(window.audio) audio.playJump(); cat2.canDoubleJump = false;
+                for (let i = 0; i < 6; i++) addParticle(cat2.x + cat2.w / 2, cat2.y + cat2.h, '#FFFFFF', 2, 3);
+            }
         }
         keys2.jumpPressed = false;
-        if (!keys2.jump && cat2.vy < -3) cat2.vy = -3;
-        const isGliding2 = hasGlide && keys2.glide && !cat2.grounded && cat2.vy > 0;
-        if (isGliding2) { cat2.vy = Math.min(cat2.vy + GRAVITY * 0.15, 1.5); }
-        else { cat2.vy = Math.min(cat2.vy + GRAVITY, MAX_FALL); }
+        if (cat2Inverted) {
+            if (!keys2.jump && cat2.vy > 3) cat2.vy = 3;
+            const isGliding2 = hasGlide && keys2.glide && !cat2.grounded && cat2.vy < 0;
+            if (isGliding2) { cat2.vy = Math.max(cat2.vy - GRAVITY * 0.15, -1.5); }
+            else { cat2.vy = Math.max(cat2.vy - GRAVITY, -MAX_FALL); }
+        } else {
+            if (!keys2.jump && cat2.vy < -3) cat2.vy = -3;
+            const isGliding2 = hasGlide && keys2.glide && !cat2.grounded && cat2.vy > 0;
+            if (isGliding2) { cat2.vy = Math.min(cat2.vy + GRAVITY * 0.15, 1.5); }
+            else { cat2.vy = Math.min(cat2.vy + GRAVITY, MAX_FALL); }
+        }
         cat2.x += cat2.vx;
         const m = 4;
         if (cat2.vx > 0) {
@@ -1417,30 +1517,57 @@
         }
         cat2.y += cat2.vy;
         cat2.grounded = false;
-        if (cat2.vy > 0) {
-            let tr = Math.floor((cat2.y + cat2.h) / T);
-            let tc1 = Math.floor((cat2.x + m) / T), tc2 = Math.floor((cat2.x + cat2.w - m - 1) / T);
-            for (let c = tc1; c <= tc2; c++) {
-                if (solid(tr, c)) { cat2.y = tr * T - cat2.h; cat2.vy = 0; cat2.grounded = true; cat2.jumping = false; break; }
-            }
-        } else if (cat2.vy < 0) {
-            let tr = Math.floor(cat2.y / T);
-            let tc1 = Math.floor((cat2.x + m) / T), tc2 = Math.floor((cat2.x + cat2.w - m - 1) / T);
-            for (let c = tc1; c <= tc2; c++) {
-                if (solid(tr, c)) {
-                    cat2.y = (tr + 1) * T; cat2.vy = 1;
-                    if (level.grid[tr][c] === 3 || level.grid[tr][c] === 13) { hitQuestion(tr, c); }
-                    else if (isBig2 && level.grid[tr][c] === 2) {
-                        level.grid[tr][c] = 0; shakeTimer = 4; shakeAmt = 3;
-                        if (onlineMode && isOnlineHost) netGridChanges.push({ r: tr, c, v: 0 });
-                        addParticle(c * T + T / 2, tr * T + T / 2, '#8B4513', 12, 6);
-                        score += 50;
+        if (cat2Inverted) {
+            if (cat2.vy < 0) {
+                let tr = Math.floor(cat2.y / T);
+                let tc1 = Math.floor((cat2.x + m) / T), tc2 = Math.floor((cat2.x + cat2.w - m - 1) / T);
+                for (let c = tc1; c <= tc2; c++) {
+                    if (solid(tr, c)) { cat2.y = (tr + 1) * T; cat2.vy = 0; cat2.grounded = true; cat2.jumping = false; break; }
+                }
+            } else if (cat2.vy > 0) {
+                let tr = Math.floor((cat2.y + cat2.h) / T);
+                let tc1 = Math.floor((cat2.x + m) / T), tc2 = Math.floor((cat2.x + cat2.w - m - 1) / T);
+                for (let c = tc1; c <= tc2; c++) {
+                    if (solid(tr, c)) {
+                        cat2.y = tr * T - cat2.h; cat2.vy = -1;
+                        if (level.grid[tr][c] === 3 || level.grid[tr][c] === 13) { hitQuestion(tr, c); }
+                        else if (isBig2 && level.grid[tr][c] === 2) {
+                            level.grid[tr][c] = 0; shakeTimer = 4; shakeAmt = 3;
+                            if (onlineMode && isOnlineHost) netGridChanges.push({ r: tr, c, v: 0 });
+                            addParticle(c * T + T / 2, tr * T + T / 2, '#8B4513', 12, 6);
+                            score += 50;
+                        }
+                        break;
                     }
-                    break;
+                }
+            }
+        } else {
+            if (cat2.vy > 0) {
+                let tr = Math.floor((cat2.y + cat2.h) / T);
+                let tc1 = Math.floor((cat2.x + m) / T), tc2 = Math.floor((cat2.x + cat2.w - m - 1) / T);
+                for (let c = tc1; c <= tc2; c++) {
+                    if (solid(tr, c)) { cat2.y = tr * T - cat2.h; cat2.vy = 0; cat2.grounded = true; cat2.jumping = false; break; }
+                }
+            } else if (cat2.vy < 0) {
+                let tr = Math.floor(cat2.y / T);
+                let tc1 = Math.floor((cat2.x + m) / T), tc2 = Math.floor((cat2.x + cat2.w - m - 1) / T);
+                for (let c = tc1; c <= tc2; c++) {
+                    if (solid(tr, c)) {
+                        cat2.y = (tr + 1) * T; cat2.vy = 1;
+                        if (level.grid[tr][c] === 3 || level.grid[tr][c] === 13) { hitQuestion(tr, c); }
+                        else if (isBig2 && level.grid[tr][c] === 2) {
+                            level.grid[tr][c] = 0; shakeTimer = 4; shakeAmt = 3;
+                            if (onlineMode && isOnlineHost) netGridChanges.push({ r: tr, c, v: 0 });
+                            addParticle(c * T + T / 2, tr * T + T / 2, '#8B4513', 12, 6);
+                            score += 50;
+                        }
+                        break;
+                    }
                 }
             }
         }
         if (cat2.y > level.rows * T + 100) killCat2();
+        if (cat2Inverted && cat2.y < -100) killCat2();
         if (cat2.x < 0) cat2.x = 0;
         if (heldShell2) {
             heldShell2.x = cat2.x + cat2.w / 2 - heldShell2.w / 2;
@@ -1448,7 +1575,7 @@
             heldShell2.vx = 0; heldShell2.vy = 0; heldShell2.shellVx = 0;
         }
         if (cat2.grounded && (keys2.left || keys2.right) && frameCount % 4 === 0) {
-            addParticle(cat2.x + cat2.w / 2, cat2.y + cat2.h, '#b89070', 2, 2);
+            addParticle(cat2.x + cat2.w / 2, cat2Inverted ? cat2.y : cat2.y + cat2.h, '#b89070', 2, 2);
         }
     }
 
@@ -1668,9 +1795,26 @@
             e.x += e.vx; e.frame += 0.05;
 
             // Apply gravity to enemies (flyratters fly instead)
+            const enemyInverted = isInvertedGravityZone(e.x + e.w / 2);
             if (e.type === 'flyratter') {
                 e.y = e.baseY + Math.sin(e.frame * 2) * e.flyAmp;
                 e.vy = 0;
+            } else if (enemyInverted) {
+                // Inverted gravity: enemies fall upward
+                if (!e.vy) e.vy = 0;
+                e.vy = Math.max((e.vy || 0) - 0.4, -MAX_FALL);
+                e.y += e.vy;
+
+                // Land on ceiling
+                let headR = Math.floor(e.y / T);
+                let ec1 = Math.floor((e.x + 4) / T), ec2 = Math.floor((e.x + e.w - 4) / T);
+                for (let c = ec1; c <= ec2; c++) {
+                    if (solid(headR, c)) {
+                        e.y = (headR + 1) * T;
+                        e.vy = 0;
+                        break;
+                    }
+                }
             } else {
                 if (!e.vy) e.vy = 0;
                 e.vy = Math.min((e.vy || 0) + 0.4, MAX_FALL);
@@ -1688,8 +1832,9 @@
                 }
             }
 
-            // Remove if fallen off map
+            // Remove if fallen off map (or floated off top in inverted)
             if (e.y > level.rows * T + 100) { e.alive = false; return; }
+            if (enemyInverted && e.y < -100) { e.alive = false; return; }
 
             // Archer AI: stationary, face cat, shoot arrows
             if (e.type === 'archer') {
@@ -4623,6 +4768,15 @@
         const x = c * T - cam.x, y = r * T;
         if (x < -T || x > W + T) return;
 
+        // Inverted gravity zone: flip tiles upside down
+        const tileInverted = isInvertedGravityZoneForCol(c);
+        if (tileInverted) {
+            ctx.save();
+            ctx.translate(x + T / 2, y + T / 2);
+            ctx.scale(1, -1);
+            ctx.translate(-(x + T / 2), -(y + T / 2));
+        }
+
         // Glitched / phased out check
         if (isTileGlitchedOut(r, c)) {
             ctx.strokeStyle = 'rgba(255, 0, 255, 0.4)';
@@ -4634,6 +4788,7 @@
                 ctx.fillStyle = 'rgba(0, 255, 255, 0.6)';
                 ctx.fillRect(x + 2, y + 2 + (frameCount % T), T - 4, 1);
             }
+            if (tileInverted) ctx.restore();
             return;
         }
 
@@ -4666,11 +4821,12 @@
                     ctx.fillText('ERR', x + 8, y + 18);
                 }
             }
+            if (tileInverted) ctx.restore();
             return;
         }
 
         const colors = TILE_COLORS[type];
-        if (!colors) return;
+        if (!colors) { if (tileInverted) ctx.restore(); return; }
         // Pipe rendering (green pipes + silver end-pipes!)
         if ((type >= 4 && type <= 7) || (type >= 16 && type <= 19)) {
             const isSilver = type >= 16;
@@ -4713,6 +4869,7 @@
                 if (isLeft) ctx.fillRect(x, y, 2, T);
                 else ctx.fillRect(x + T - 2, y, 2, T);
             }
+            if (tileInverted) ctx.restore();
             return;
         }
         // Underground cave rock rendering for G-blocks
@@ -4732,6 +4889,7 @@
                 ctx.fillStyle = '#FF6644'; ctx.fillRect(x + 20, y + 18, 3, 3);
                 ctx.fillStyle = '#FF9966'; ctx.fillRect(x + 21, y + 19, 1, 1);
             }
+            if (tileInverted) ctx.restore();
             return;
         }
         // Mineshaft rock rendering (M-blocks, tile 14)
@@ -4766,6 +4924,7 @@
             // Bottom shadow
             ctx.fillStyle = 'rgba(0,0,0,0.15)';
             ctx.fillRect(x + 1, y + T - 2, T - 2, 2);
+            if (tileInverted) ctx.restore();
             return;
         }
         // Mine rails (decorative track, tile 15)
@@ -4786,6 +4945,7 @@
             ctx.fillStyle = '#AAA';
             ctx.fillRect(x + 7, y + 8, 1, T - 8);
             ctx.fillRect(x + T - 8, y + 8, 1, T - 8);
+            if (tileInverted) ctx.restore();
             return;
         }
         ctx.fillStyle = colors[0]; ctx.fillRect(x, y, T, T);
@@ -4915,6 +5075,7 @@
             ctx.fillStyle = '#DAA520';
             ctx.beginPath(); ctx.arc(x + T - 10, y + T / 2 + 4, 2.5, 0, Math.PI * 2); ctx.fill();
         }
+        if (tileInverted) ctx.restore();
     }
 
     function drawCatSprite() {
@@ -4924,7 +5085,21 @@
         }
         if (cat.dead) return;
         if (invincibleTimer > 0 && frameCount % 4 < 2) return;
-        if (isBig) {
+        const catInv = isInvertedGravityZone(cat.x + cat.w / 2);
+        if (catInv) {
+            // Inverted: flip cat upside down
+            ctx.save();
+            ctx.translate(cat.x - cam.x, cat.y);
+            ctx.scale(1, -1);
+            if (isBig) {
+                ctx.translate(0, -cat.h);
+                ctx.scale(1, 2);
+                drawCatBody(0, -32);
+            } else {
+                drawCatBody(0, -cat.h);
+            }
+            ctx.restore();
+        } else if (isBig) {
             ctx.save();
             ctx.translate(cat.x - cam.x, cat.y + cat.h);
             ctx.scale(1, 2);
@@ -5048,7 +5223,20 @@
         // Save P1 state, swap to P2
         const savedDir = cat.dir, savedSkin = selectedSkin, savedW = cat.w, savedH = cat.h;
         cat.dir = cat2.dir; selectedSkin = cat2SelectedSkin; cat.w = cat2.w; cat.h = cat2.h;
-        if (isBig2) {
+        const cat2Inv = isInvertedGravityZone(cat2.x + cat2.w / 2);
+        if (cat2Inv) {
+            ctx.save();
+            ctx.translate(cat2.x - cam.x, cat2.y);
+            ctx.scale(1, -1);
+            if (isBig2) {
+                ctx.translate(0, -cat2.h);
+                ctx.scale(1, 2);
+                drawCatBody(0, -32);
+            } else {
+                drawCatBody(0, -cat2.h);
+            }
+            ctx.restore();
+        } else if (isBig2) {
             ctx.save();
             ctx.translate(cat2.x - cam.x, cat2.y + cat2.h);
             ctx.scale(1, 2);
@@ -5159,6 +5347,15 @@
             } else if (frameCount % 7 === 0) {
                 return;
             }
+        }
+
+        // Inverted gravity visual flip for enemies
+        const enemyInv = isInvertedGravityZone(e.x + e.w / 2);
+        if (enemyInv) {
+            ctx.save();
+            ctx.translate(ex + e.w / 2, ey + e.h / 2);
+            ctx.scale(1, -1);
+            ctx.translate(-(ex + e.w / 2), -(ey + e.h / 2));
         }
 
         const isCave = currentLevel >= 11 && currentLevel < 22;
@@ -5523,6 +5720,10 @@
             ctx.fillRect(ex + 2, ey + 20, 3, 10);
             ctx.fillStyle = '#FFD700';
             ctx.fillRect(ex + 1, ey + 19, 5, 3);
+        }
+        // Restore inverted gravity flip
+        if (enemyInv) {
+            ctx.restore();
         }
         if (e.isGlitchedEnemy) {
             ctx.globalAlpha = 1.0;
@@ -5987,6 +6188,39 @@
                 const bh = 2 + Math.random() * 20;
                 ctx.fillStyle = ['rgba(255, 0, 255, 0.18)', 'rgba(0, 255, 255, 0.18)', 'rgba(255, 255, 0, 0.15)'][Math.floor(Math.random() * 3)];
                 ctx.fillRect(0, by, W, bh);
+            }
+        }
+
+        // Inverted gravity zone indicators (level 27 only)
+        if (currentLevel === 27) {
+            for (const zone of INVERTED_ZONES) {
+                const zoneLeft = zone.start * T - cam.x;
+                const zoneRight = (zone.end + 1) * T - cam.x;
+                const zoneWidth = zoneRight - zoneLeft;
+                if (zoneRight < 0 || zoneLeft > W) continue;
+
+                // Tinted overlay
+                const pulse = 0.06 + Math.sin(frameCount * 0.04) * 0.03;
+                ctx.fillStyle = `rgba(255, 0, 100, ${pulse})`;
+                ctx.fillRect(zoneLeft, 0, zoneWidth, H);
+
+                // Boundary lines
+                const lineAlpha = 0.4 + Math.sin(frameCount * 0.08) * 0.2;
+                ctx.strokeStyle = `rgba(255, 0, 255, ${lineAlpha})`;
+                ctx.lineWidth = 2;
+                ctx.setLineDash([6, 4]);
+                ctx.beginPath(); ctx.moveTo(zoneLeft, 0); ctx.lineTo(zoneLeft, H); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(zoneRight, 0); ctx.lineTo(zoneRight, H); ctx.stroke();
+                ctx.setLineDash([]);
+
+                // Floating "↕" arrows to indicate gravity flip
+                const arrowX = (zoneLeft + zoneRight) / 2;
+                const arrowY = 20 + Math.sin(frameCount * 0.06) * 8;
+                ctx.fillStyle = `rgba(255, 100, 255, ${0.5 + Math.sin(frameCount * 0.1) * 0.3})`;
+                ctx.font = 'bold 14px monospace';
+                ctx.textAlign = 'center';
+                ctx.fillText('⇅ INVERTED ⇅', arrowX, arrowY);
+                ctx.textAlign = 'left';
             }
         }
     }
