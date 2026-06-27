@@ -469,7 +469,7 @@
             "MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM",
             "MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM",
         ],
-        // Level 27 — GLITCHED LANDS (Secret)
+        // Level 27 — GLITCHED LANDS 1 (Secret)
         [
             "GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG",
             "G                                                                                                  G",
@@ -485,6 +485,40 @@
             "G  S                                                                                             <>G",
             "GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG()G",
             "GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG()G",
+        ],
+        // Level 28 — GLITCHED LANDS 2 (Memory Leak)
+        [
+            "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
+            "K                                                                                                  K",
+            "K                                                                                                  K",
+            "K        C C C                      C C C                        C C C                             K",
+            "K       BBBBBBB                    MMMMMMM                      BBBBBBB                            K",
+            "K                                                                                                  K",
+            "K                               W                                                                  K",
+            "K   S          R     V        BBBBBBB        Y          A                     R                  K",
+            "K  BBBBB     GGGGGGGGGG                     GGGGGGG    BBBBBB               GGGGGGG              <>K",
+            "K                                                                                                ()K",
+            "K                                                                                                ()K",
+            "K             V          R                     R            V               R                    ()K",
+            "GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG()K",
+            "GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG()K",
+        ],
+        // Level 29 — GLITCHED LANDS 3 (Corrupted Core)
+        [
+            "MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM",
+            "M                                                                                                  M",
+            "M                                                                                                  M",
+            "M                                                                                                  M",
+            "M        Z                          Z                            Z                                 M",
+            "M      BBBBB                      MMMMM                        KKKKK                               M",
+            "M                                                                                                  M",
+            "M   S             A                        Y                        A                            <>M",
+            "M  GGGGG        BBBBB                    MMMMM                    KKKKK                          ()M",
+            "M                                                                                                ()M",
+            "M                                                                                                ()M",
+            "M             R          V                     R            V               R                    ()M",
+            "MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM()M",
+            "MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM()M",
         ]
     ];
 
@@ -529,7 +563,7 @@
                 else grid[r][c] = 0;
             }
         }
-        if (idx === 26) {
+        if (idx >= 26) {
             enemies.forEach((e, i) => {
                 if (i % 2 === 0) {
                     e.isGlitchedEnemy = true;
@@ -837,7 +871,7 @@
             if (e.code === 'Digit9') { tryBuyItem(8); return; }
             return;
         }
-        if (state === 'playing' && e.code === 'KeyN') { const maxLvl = devMode ? LEVEL_DATA.length : LEVEL_DATA.length - 1; currentLevel++; if (currentLevel >= maxLvl) { currentLevel = 0; } if (currentLevel === 26) { enterGlitchedLands(); } else { loadLevel(currentLevel); } return; }
+        if (state === 'playing' && e.code === 'KeyN') { const maxLvl = devMode ? LEVEL_DATA.length : 26; currentLevel++; if (currentLevel >= maxLvl) { currentLevel = 0; } if (currentLevel === 26) { enterGlitchedLands(); } else { loadLevel(currentLevel); } return; }
         // P+2 toggles co-op on/off
         if (state === 'playing' && e.code === 'Digit2' && keys2._pHeld) {
             coopMode = !coopMode;
@@ -1057,7 +1091,7 @@
 
     // TILE COLLISION
     function isTileGlitchedOut(r, c) {
-        if (!level || state !== 'playing' || currentLevel !== 26) return false;
+        if (!level || state !== 'playing' || currentLevel < 26) return false;
         if (c <= 6) return false; // safe start
         if (c >= level.cols - 4) return false; // safe end pipe
         const colSection = Math.floor(c / 3);
@@ -4604,7 +4638,7 @@
         }
 
         // Corrupted block check
-        if (currentLevel === 26 && (r * 7 + c * 3) % 5 === 0) {
+        if (currentLevel >= 26 && (r * 7 + c * 3) % 5 === 0) {
             ctx.fillStyle = '#000';
             ctx.fillRect(x, y, T, T);
             const bands = 4;
@@ -5958,7 +5992,7 @@
     }
 
     function drawBackground() {
-        if (currentLevel === 26) { drawGlitchedBackground(); return; }
+        if (currentLevel >= 26) { drawGlitchedBackground(); return; }
         if (currentLevel >= 22) { drawMineshaftBackground(); return; }
         if (currentLevel >= 11) { drawCaveBackground(); return; }
         if (currentLevel >= 5) { drawSkyIslandBackground(); return; }
@@ -7138,7 +7172,7 @@
             }
             coinEl.textContent = '🪙 × ' + coinCount;
             scoreEl.textContent = 'SCORE: ' + score;
-            levelEl.textContent = currentLevel === 26 ? 'ERR: GLITCH' : (boss ? (boss.pirate ? 'SKY BOSS' : 'BOSS') : (currentLevel >= 22 ? 'MINE ' + (currentLevel - 21) : currentLevel >= 11 ? 'CAVE ' + (currentLevel - 10) : currentLevel >= 5 ? 'SKY ' + (currentLevel - 4) : 'WORLD ' + (currentLevel + 1)));
+            levelEl.textContent = currentLevel >= 26 ? 'ERR: GLITCH ' + (currentLevel - 25) : (boss ? (boss.pirate ? 'SKY BOSS' : 'BOSS') : (currentLevel >= 22 ? 'MINE ' + (currentLevel - 21) : currentLevel >= 11 ? 'CAVE ' + (currentLevel - 10) : currentLevel >= 5 ? 'SKY ' + (currentLevel - 4) : 'WORLD ' + (currentLevel + 1)));
             if (state === 'over') { showOverlay('GAME OVER', 'SCORE: ' + score + '\n\nPRESS SPACE TO RETRY'); }
             if (state === 'levelcomplete') { showOverlay('LEVEL COMPLETE!', 'SCORE: ' + score + '\n\nWAITING FOR HOST...'); }
             if (state === 'win') { showOverlay('YOU WIN! 🎉', 'FINAL SCORE: ' + score); }
@@ -7214,7 +7248,7 @@
         }
         coinEl.textContent = '🪙 × ' + coinCount;
         scoreEl.textContent = 'SCORE: ' + score;
-        levelEl.textContent = currentLevel === 26 ? 'ERR: GLITCH' : (boss ? (boss.pirate ? 'SKY BOSS' : 'BOSS') : (currentLevel >= 22 ? 'MINE ' + (currentLevel - 21) : currentLevel >= 11 ? 'CAVE ' + (currentLevel - 10) : currentLevel >= 5 ? 'SKY ' + (currentLevel - 4) : 'WORLD ' + (currentLevel + 1)));
+        levelEl.textContent = currentLevel >= 26 ? 'ERR: GLITCH ' + (currentLevel - 25) : (boss ? (boss.pirate ? 'SKY BOSS' : 'BOSS') : (currentLevel >= 22 ? 'MINE ' + (currentLevel - 21) : currentLevel >= 11 ? 'CAVE ' + (currentLevel - 10) : currentLevel >= 5 ? 'SKY ' + (currentLevel - 4) : 'WORLD ' + (currentLevel + 1)));
         // Check game over
         if (state === 'over') { showOverlay('GAME OVER', 'SCORE: ' + score + '\n\nPRESS SPACE TO RETRY\nPRESS 2 FOR CO-OP'); }
         if (state === 'levelcomplete') { showOverlay('LEVEL COMPLETE!', 'SCORE: ' + score + '\n\nPRESS SPACE TO CONTINUE'); }
