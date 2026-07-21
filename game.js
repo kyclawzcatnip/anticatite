@@ -520,6 +520,23 @@
             "M             R          V                     R            V               R                    ()M",
             "MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM()M",
             "MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM()M",
+        ],
+        // Level 30 — THE GLITCHED CORE (Final Boss Arena)
+        [
+            "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
+            "K                                                K",
+            "K                                                K",
+            "K                                                K",
+            "K    KKK              KKK              KKK       K",
+            "K         KKKK                  KKKK             K",
+            "K                      KKKK                      K",
+            "K W              KKK          KKK             X  K",
+            "K                                                K",
+            "K       KKK                          KKK         K",
+            "K S                                              K",
+            "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
+            "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
+            "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
         ]
     ];
 
@@ -591,6 +608,7 @@
     // GAME STATE
     let state = 'start', currentLevel = 0, score = 0, lives = 3, coinCount = 0, frameCount = 0;
     let bossesDefeated = 0, gameStartTime = Date.now(), gameDifficulty = 'Easy';
+    let glitchScreenTimer = 0;
     let level = null, cam = { x: 0 }, shakeTimer = 0, shakeAmt = 0;
     let invincibleTimer = 0, deathTimer = 0, winTimer = 0;
     let questionHits = [];// tracks which question blocks have been hit
@@ -630,7 +648,8 @@
         { id: 5, level: 10, title: 'V. The Sky Captain\'s Vow', text: 'Captain Rattail swore never to drop anchor until he found the Legendary Sky Fish. His flagship is armed with heavy cannons and spinning yarn!' },
         { id: 6, level: 12, title: 'VI. Crystal Depths', text: 'Deep beneath the mountains lie crystal caverns and rivers of magma. Only cats with Fire Protection can withstand the subterranean heat.' },
         { id: 7, level: 21, title: 'VII. The Miner\'s Greed', text: 'Miner Boss Rattock dug too deep into the ancient ore veins, unleashing cave-ins and volatile minecart explosives.' },
-        { id: 8, level: 25, title: 'VIII. The Glitched Realm', text: 'Beyond the silver pipes lies a shifting dimension of corrupted code and inverted gravity. Few cats ever return from this frontier.' }
+        { id: 8, level: 25, title: 'VIII. The Glitched Realm', text: 'Beyond the silver pipes lies a shifting dimension of corrupted code and inverted gravity. Few cats ever return from this frontier.' },
+        { id: 9, level: 29, title: 'IX. The Glitched Core', text: 'At the heart of the corrupted dimension floats the Glitched Core — the sentient heart of shifting code. Defeating it stabilizes reality itself!' }
     ];
     let unlockedLore = JSON.parse(localStorage.getItem('scw_unlocked_lore') || '[]');
     let loreNotification = null; // { title, text, timer }
@@ -722,18 +741,47 @@
     let bossColorWalls = [];  // { x, color: 'blue'|'red', w, h }
     let bossBarrier = null;   // { x, y, w, h, vx } sweeping wall
     let bossDarkCats = [];    // shadow cats that chase player
+    const BOSS_MAX_HP = 10;
+    const PIRATE_BOSS_HP = 12;
+    const MINER_BOSS_HP = 14;
+    const GLITCHED_BOSS_HP = 16;
+    // Boss dialogue state
+    let bossDialogueActive = false;
+    let bossDialogueText = '';
+    let bossDialogueCharIndex = 0;
+    let bossDialogueTimer = 0;
+    let bossDialogueDone = false; // true after dialogue fully shown
+    let bossDialogueDismissed = false; // true after player presses space
+    // Boss taunt system (quick speech bubble during attacks, doesn't pause game)
+    let bossTauntText = '';
+    let bossTauntTimer = 0;
+    // Boss Phase 1 projectile arrays
+    let bossSpears = [];      // floor spear traps
+    let bossDaggers = [];     // dagger projectiles (large + small)
+    let bossFireballs2 = [];  // boss's bouncing fireballs (separate from player fireballs)
+    // Boss Phase 2 state
+    let bossColorWalls = [];  // { x, color: 'blue'|'red', w, h }
+    let bossBarrier = null;   // { x, y, w, h, vx } sweeping wall
+    let bossDarkCats = [];    // shadow cats that chase player
     // Boss Phase 3 state
     let bossRaygun = null;    // { targetX, targetY, aimTimer, fireTimer, firing }
     let bossYarnBalls = [];   // { x, y, vx, vy, life } tracking yarn balls
     let bossCross = null;     // { x, y, warningTimer, fireTimer, firing }
     const BOSS_ATTACK_COOLDOWN = 180; // 3 seconds at 60fps
-    function createBoss(x, y, isPirate, isMiner) {
+    function createBoss(x, y, isPirate, isMiner, isGlitched) {
         // Reset boss projectiles
         bossSpears = [];
         bossDaggers = [];
         bossFireballs2 = [];
         // Reset dialogue state
-        if (isMiner) {
+        if (isGlitched) {
+            bossDialogueActive = true;
+            bossDialogueText = 'ERROR 404: REALITY NOT FOUND. I AM THE GLITCHED CORE. PREPARE FOR DELETION.';
+            bossDialogueCharIndex = 0;
+            bossDialogueTimer = 0;
+            bossDialogueDone = false;
+            bossDialogueDismissed = false;
+        } else if (isMiner) {
             bossDialogueActive = true;
             bossDialogueText = 'You dare trespass in MY mine?! I\'ve been digging these tunnels for years... and I\'ll bury you in them!';
             bossDialogueCharIndex = 0;
@@ -757,7 +805,7 @@
             bossDialogueDone = false;
             bossDialogueDismissed = false;
         }
-        const bossHP = isMiner ? MINER_BOSS_HP : isPirate ? PIRATE_BOSS_HP : BOSS_MAX_HP;
+        const bossHP = isGlitched ? GLITCHED_BOSS_HP : isMiner ? MINER_BOSS_HP : isPirate ? PIRATE_BOSS_HP : BOSS_MAX_HP;
         return {
             x: x, y: y, w: 64, h: 64,
             vx: 0, vy: 0,
@@ -766,6 +814,7 @@
             alive: true,
             pirate: isPirate || false,
             miner: isMiner || false,
+            glitched: isGlitched || false,
             phase: 'idle',
             phaseTimer: 90,
             dir: -1,
@@ -3384,11 +3433,13 @@
                 bossColorWalls = []; bossBarrier = null; bossDarkCats = [];
                 bossRaygun = null; bossYarnBalls = []; bossCross = null;
                 bossDialogueActive = true;
-                bossDialogueText = boss.miner
-                    ? 'You broke me pickaxe! But I\'ve got plenty more tools where that came from!'
-                    : boss.pirate
-                        ? 'Argh! Ye scratched me hull! But I\'ve weathered worse storms than you, kitty!'
-                        : 'H-h-how d-d-did you h-hi-t me... No matter... You\'ll die now!';
+                bossDialogueText = boss.glitched
+                    ? 'SYSTEM CORRUPTION AT 50%! CORE CRACKING... RELEASING OVERLOAD MATRIX!'
+                    : boss.miner
+                        ? 'You broke me pickaxe! But I\'ve got plenty more tools where that came from!'
+                        : boss.pirate
+                            ? 'Argh! Ye scratched me hull! But I\'ve weathered worse storms than you, kitty!'
+                            : 'H-h-how d-d-did you h-hi-t me... No matter... You\'ll die now!';
                 bossDialogueCharIndex = 0; bossDialogueTimer = 0;
                 bossDialogueDone = false; bossDialogueDismissed = false;
                 shakeTimer = 30; shakeAmt = 8;
@@ -3410,11 +3461,13 @@
                 bossColorWalls = []; bossBarrier = null; bossDarkCats = [];
                 bossRaygun = null; bossYarnBalls = []; bossCross = null;
                 bossDialogueActive = true;
-                bossDialogueText = boss.miner
-                    ? 'THAT\'S IT!!! I\'LL COLLAPSE THIS ENTIRE MINE ON YOUR HEAD!!! CAVE-IN TIME!!!'
-                    : boss.pirate
-                        ? 'ENOUGH!!! No mangy cat sinks Captain Rattail! I\'ll send ye to DAVY JONES!!!'
-                        : 'NOOOOO!!!! HOW! HOW DID YOU DO THIS! YOU COULD HAVE SURRENDERED BUT NOOO YOU HAD TO MESS IT UP!!! NOW DIIIEEE!!!';
+                bossDialogueText = boss.glitched
+                    ? 'CRITICAL FAILURE! SHATTERING CORE DIMENSION! EVERYTHING WILL BE ERASED!'
+                    : boss.miner
+                        ? 'THAT\'S IT!!! I\'LL COLLAPSE THIS ENTIRE MINE ON YOUR HEAD!!! CAVE-IN TIME!!!'
+                        : boss.pirate
+                            ? 'ENOUGH!!! No mangy cat sinks Captain Rattail! I\'ll send ye to DAVY JONES!!!'
+                            : 'NOOOOO!!!! HOW! HOW DID YOU DO THIS! YOU COULD HAVE SURRENDERED BUT NOOO YOU HAD TO MESS IT UP!!! NOW DIIIEEE!!!';
                 bossDialogueCharIndex = 0; bossDialogueTimer = 0;
                 bossDialogueDone = false; bossDialogueDismissed = false;
                 shakeTimer = 50; shakeAmt = 12;
@@ -3442,6 +3495,75 @@
         if (!boss) return;
         if (!boss.alive) return; // death particles handled by updateBoss
         if (boss.flashTimer > 0 && boss.flashTimer % 4 < 2) return; // damage flash
+
+        if (boss.glitched) {
+            const bx = Math.round(boss.x - cam.x), by = Math.round(boss.y);
+            const cx = bx + boss.w / 2, cy = by + boss.h / 2;
+
+            ctx.save();
+            const jitterX = (Math.random() - 0.5) * (boss.bossPhase * 3);
+            const jitterY = (Math.random() - 0.5) * (boss.bossPhase * 3);
+
+            // Diamond Path
+            ctx.beginPath();
+            ctx.moveTo(cx + jitterX, by + jitterY);
+            ctx.lineTo(bx + boss.w + jitterX, cy + jitterY);
+            ctx.lineTo(cx + jitterX, by + boss.h + jitterY);
+            ctx.lineTo(bx + jitterX, cy + jitterY);
+            ctx.closePath();
+
+            if (boss.bossPhase === 1) {
+                ctx.fillStyle = '#1A0033';
+                ctx.strokeStyle = '#9D00FF';
+            } else if (boss.bossPhase === 2) {
+                ctx.fillStyle = '#2A002A';
+                ctx.strokeStyle = '#FF0055'; // Cracked look
+            } else {
+                ctx.fillStyle = (frameCount % 4 < 2) ? '#400040' : '#003344';
+                ctx.strokeStyle = (frameCount % 4 < 2) ? '#FF00FF' : '#00FFFF';
+            }
+            ctx.lineWidth = 4;
+            ctx.fill();
+            ctx.stroke();
+
+            // Inner Core Diamond
+            ctx.beginPath();
+            ctx.moveTo(cx + jitterX, by + 16 + jitterY);
+            ctx.lineTo(bx + boss.w - 16 + jitterX, cy + jitterY);
+            ctx.lineTo(cx + jitterX, by + boss.h - 16 + jitterY);
+            ctx.lineTo(bx + 16 + jitterX, cy + jitterY);
+            ctx.closePath();
+            ctx.fillStyle = (boss.bossPhase === 2) ? '#FF0055' : (boss.bossPhase === 3) ? '#00FFFF' : '#9D00FF';
+            ctx.fill();
+
+            // Phase 2/3: Cracks across diamond
+            if (boss.bossPhase >= 2) {
+                ctx.strokeStyle = '#FF0055';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(cx, by + 10); ctx.lineTo(cx - 10, cy); ctx.lineTo(cx + 12, cy + 15);
+                ctx.moveTo(cx + 15, cy - 10); ctx.lineTo(cx, cy + 5); ctx.lineTo(cx - 8, by + boss.h - 10);
+                ctx.stroke();
+            }
+
+            // Phase 3: Shattered Matrix Ring
+            if (boss.bossPhase === 3) {
+                ctx.strokeStyle = '#00FFFF';
+                ctx.lineWidth = 1;
+                ctx.strokeRect(bx - 8 + jitterX, by - 8 + jitterY, boss.w + 16, boss.h + 16);
+            }
+
+            ctx.restore();
+
+            // Glitch particles
+            if (frameCount % 2 === 0) {
+                const px = bx + Math.random() * boss.w;
+                const py = by + Math.random() * boss.h;
+                const pcol = boss.bossPhase === 3 ? ['#FF00FF', '#00FFFF', '#1A0033'][Math.floor(Math.random() * 3)] : ['#9D00FF', '#1A0033', '#8B00FF'][Math.floor(Math.random() * 3)];
+                addParticle(px, py, pcol, 3, 4);
+            }
+            return;
+        }
 
         const bx = Math.round(boss.x - cam.x), by = Math.round(boss.y);
         const d = boss.dir;
@@ -3632,7 +3754,7 @@
         // Label
         ctx.fillStyle = '#FFF';
         ctx.font = '8px "Press Start 2P", monospace';
-        ctx.fillText(boss.miner ? 'MINE FOREMAN' : boss.pirate ? 'PIRATE CAPTAIN' : 'RAT KING', barX, barY - 5);
+        ctx.fillText(boss.glitched ? 'THE GLITCHED CORE' : boss.miner ? 'MINE FOREMAN' : boss.pirate ? 'PIRATE CAPTAIN' : 'RAT KING', barX, barY - 5);
     }
 
     // BOSS DIALOGUE — typewriter text with speech bubble
@@ -4012,6 +4134,7 @@
             // Hit player
             if (!cat.dead && invincibleTimer <= 0 && starPowerTimer <= 0) {
                 if (cat.x + 4 < fb.x + fb.w && cat.x + cat.w - 4 > fb.x && cat.y + 4 < fb.y + fb.h && cat.y + cat.h - 4 > fb.y) {
+                    if (boss && boss.glitched) glitchScreenTimer = 45;
                     if (fireProtectTimer > 0) {
                         // Fire protected — absorb the fireball
                         addParticle(fb.x + fb.w / 2, fb.y + fb.h / 2, '#FF6B00', 8, 4);
@@ -4022,6 +4145,7 @@
             }
             if (coopMode && !cat2.dead && invincibleTimer2 <= 0) {
                 if (cat2.x + 4 < fb.x + fb.w && cat2.x + cat2.w - 4 > fb.x && cat2.y + 4 < fb.y + fb.h && cat2.y + cat2.h - 4 > fb.y) {
+                    if (boss && boss.glitched) glitchScreenTimer = 45;
                     killCat2();
                 }
             }
@@ -6411,7 +6535,10 @@
             const raw = LEVEL_DATA[idx];
             for (let r = 0; r < raw.length; r++) {
                 for (let c = 0; c < raw[r].length; c++) {
-                    if (raw[r][c] === 'X') { boss = createBoss(c * T - 16, r * T - 64 + T, isPirate, isMiner); }
+                    const isPirate = idx === 10;
+                    const isMiner = idx === 25;
+                    const isGlitched = idx === 29 || idx >= 26;
+                    if (raw[r][c] === 'X') { boss = createBoss(c * T - 16, r * T - 64 + T, isPirate, isMiner, isGlitched); }
                 }
             }
         } else {
@@ -7605,6 +7732,14 @@
             }
             // Particles
             drawParticles();
+            // Screen Glitch Overlay effect
+            if (glitchScreenTimer > 0) {
+                glitchScreenTimer--;
+                ctx.save();
+                ctx.fillStyle = (frameCount % 2 === 0) ? 'rgba(157, 0, 255, 0.18)' : 'rgba(0, 255, 255, 0.18)';
+                ctx.fillRect(0, 0, W, H);
+                ctx.restore();
+            }
             // Hotbar & HUD overlays
             drawHotbar();
             drawLoreNotification();
