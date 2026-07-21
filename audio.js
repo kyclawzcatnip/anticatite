@@ -142,25 +142,6 @@ class AudioEngine {
         osc.start(now);
         osc.stop(now + 0.1);
     }
-
-    playGlitch() {
-        this.ensureContext();
-        if (!this.ctx) return;
-        const now = this.ctx.currentTime;
-        const osc = this.ctx.createOscillator();
-        const gain = this.ctx.createGain();
-        osc.type = 'sawtooth';
-        osc.frequency.setValueAtTime(120, now);
-        osc.frequency.linearRampToValueAtTime(30, now + 0.1);
-        osc.frequency.setValueAtTime(60, now + 0.15);
-        osc.frequency.linearRampToValueAtTime(1000, now + 0.35);
-        gain.gain.setValueAtTime(this.masterVolume * 0.6, now);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
-        osc.connect(gain);
-        gain.connect(this.ctx.destination);
-        osc.start(now);
-        osc.stop(now + 0.45);
-    }
 }
 
 const audio = new AudioEngine();

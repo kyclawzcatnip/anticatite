@@ -7733,6 +7733,50 @@
         ctx.lineWidth = 1;
     }
 
+    // ==================== CATNIP STUDIOS LEADERBOARD CONNECTOR ====================
+    function submitToLeaderboard(difficulty, bossesDefeated, runTime) {
+      const diffLower = String(difficulty).toLowerCase();
+      let qualified = false;
+      let modeLabel = "";
+
+      // Check boss qualifications: Hard (3), Medium (2), Easy (1)
+      if (diffLower === 'hard' && bossesDefeated >= 3) {
+        qualified = true;
+        modeLabel = "Hard (3 Bosses)";
+      } else if (diffLower === 'medium' && bossesDefeated >= 2) {
+        qualified = true;
+        modeLabel = "Medium (2 Bosses)";
+      } else if (diffLower === 'easy' && bossesDefeated >= 1) {
+        qualified = true;
+        modeLabel = "Easy (1 Boss)";
+      }
+
+      if (!qualified) return; // Exit if they didn't defeat enough bosses
+
+      // Ask player: OK = Send to board | Cancel = Na i'll do that next time
+      const send = confirm(
+        `🏆 LEADERBOARD QUALIFIED!\n\n[ ${modeLabel} - Time: ${runTime} ]\n\nClick "OK" to Send to Board.\nClick "Cancel" for: Na i'll do that next time.`
+      );
+
+      if (!send) return;
+
+      const playerName = prompt("Enter your name:", "Catnip") || "Anonymous Cat";
+
+      const newRecord = {
+        name: playerName.trim(),
+        mode: modeLabel,
+        time: runTime,
+        date: new Date().toLocaleDateString()
+      };
+
+      const scores = JSON.parse(localStorage.getItem('scw_local_leaderboard') || '[]');
+      scores.push(newRecord);
+      localStorage.setItem('scw_local_leaderboard', JSON.stringify(scores));
+
+      alert("🎉 Sent to board!");
+    }
+    // ==============================================================================
+
     function loop() {
         update();
         draw();
