@@ -571,7 +571,21 @@
                 }
             });
         }
-        return { grid, rows, cols, enemies, coins, oneUps, fireFlowers, checkpoints, spawnX, spawnY, flagX, flagY };
+        const loreBooks = [];
+        const levelBook = LORE_BOOKS.find(b => b.level === idx);
+        if (levelBook) {
+            let bookCol = Math.floor(cols * 0.4);
+            let bookRow = 6;
+            for (let r = 0; r < rows - 2; r++) {
+                if (!grid[r][bookCol] && grid[r + 1][bookCol]) { bookRow = r; break; }
+            }
+            loreBooks.push({
+                id: levelBook.id, title: levelBook.title, text: levelBook.text,
+                x: bookCol * T + 4, y: bookRow * T + 4, w: 24, h: 24,
+                collected: false, bob: Math.random() * Math.PI * 2
+            });
+        }
+        return { grid, rows, cols, enemies, coins, oneUps, fireFlowers, checkpoints, loreBooks, spawnX, spawnY, flagX, flagY };
     }
 
     // GAME STATE
@@ -607,6 +621,35 @@
     const MAX_INVENTORY = 5;
     let hotbarFlash = -1; // slot index that was just used (for flash effect)
     let hotbarFlashTimer = 0;
+    // LORE BOOKS SYSTEM
+    const LORE_BOOKS = [
+        { id: 1, level: 0, title: 'I. The First Meow', text: 'Long ago, the Great Catnip Tree gave birth to the Nine Feline Realms. The Cat Clan lived in peace... until the Rat King coveted the Golden Catnip.' },
+        { id: 2, level: 3, title: 'II. Whispers in the Wall', text: 'The Rat King constructed his fortress atop ancient ruins, forging iron-tipped spears and training archers to repel any feline intruders.' },
+        { id: 3, level: 4, title: 'III. Secrets of the Throne', text: 'When cornered, the Rat King unleashes floor traps and shadow clones. Legend says only well-timed stomps can shatter his defense.' },
+        { id: 4, level: 6, title: 'IV. Ships in the Sky', text: 'Pirate Captain Rattail fled to the sky islands, building floating warships to hoard sky coins away from land-dwelling cats.' },
+        { id: 5, level: 10, title: 'V. The Sky Captain\'s Vow', text: 'Captain Rattail swore never to drop anchor until he found the Legendary Sky Fish. His flagship is armed with heavy cannons and spinning yarn!' },
+        { id: 6, level: 12, title: 'VI. Crystal Depths', text: 'Deep beneath the mountains lie crystal caverns and rivers of magma. Only cats with Fire Protection can withstand the subterranean heat.' },
+        { id: 7, level: 21, title: 'VII. The Miner\'s Greed', text: 'Miner Boss Rattock dug too deep into the ancient ore veins, unleashing cave-ins and volatile minecart explosives.' },
+        { id: 8, level: 25, title: 'VIII. The Glitched Realm', text: 'Beyond the silver pipes lies a shifting dimension of corrupted code and inverted gravity. Few cats ever return from this frontier.' }
+    ];
+    let unlockedLore = JSON.parse(localStorage.getItem('scw_unlocked_lore') || '[]');
+    let loreNotification = null; // { title, text, timer }
+    let codexSelection = 0;
+    let codexPrevState = 'start';
+
+    window._openCodex = function() {
+        if (state === 'codex') {
+            state = codexPrevState || 'start';
+            if (state === 'start' || state === 'over' || state === 'win') {
+                showOverlay('SUPER CAT WORLD', 'PRESS SPACE TO START\nPRESS 2 FOR CO-OP\nPRESS 3 FOR ONLINE\nPRESS H FOR HOW TO PLAY');
+            }
+        } else {
+            codexPrevState = state;
+            state = 'codex';
+            if (overlay) overlay.classList.remove('visible');
+        }
+    };
+
     let tutorialPrevState = 'start'; // state to return to when closing tutorial
 
     // ONLINE MULTIPLAYER STATE
@@ -824,6 +867,16 @@
         if (devInput.length > devCode.length) devInput.shift();
         if (devInput.length === devCode.length && devInput.every((k, i) => k === devCode[i])) {
             devMode = !devMode; devInput = [];
+        }
+        if (e.code === 'KeyB') {
+            window._openCodex();
+            return;
+        }
+        if (state === 'codex') {
+            if (e.code === 'ArrowLeft' || e.code === 'KeyA') { codexSelection = (codexSelection - 1 + LORE_BOOKS.length) % LORE_BOOKS.length; return; }
+            if (e.code === 'ArrowRight' || e.code === 'KeyD') { codexSelection = (codexSelection + 1) % LORE_BOOKS.length; return; }
+            if (e.code === 'Escape') { window._openCodex(); return; }
+            return;
         }
         if (state === 'start' || state === 'over' || state === 'win') {
             if (e.code === 'Space' || e.code === 'Digit1') { coopMode = false; startGame(); return; }
@@ -2194,6 +2247,39 @@
                         }
                     }
                 });
+            }
+        });
+    }
+
+    function updateLoreBooks() {
+        if (!level || !level.loreBooks) return;
+        level.loreBooks.forEach(bk => {
+            if (bk.collected) return;
+            bk.bob += 0.05;
+            let ox = cat.x + 4, oy = cat.y + 2, ow = cat.w - 8, oh = cat.h - 2;
+            if (ox < bk.x + bk.w && ox + ow > bk.x && oy < bk.y + bk.h && oy + oh > bk.y) {
+                bk.collected = true;
+                if (!unlockedLore.includes(bk.id)) {
+                    unlockedLore.push(bk.id);
+                    localStorage.setItem('scw_unlocked_lore', JSON.stringify(unlockedLore));
+                }
+                if (window.audio) audio.playPowerUp();
+                addParticle(bk.x + bk.w / 2, bk.y + bk.h / 2, '#FFD700', 15, 6);
+                addParticle(bk.x + bk.w / 2, bk.y + bk.h / 2, '#FFFFFF', 10, 4);
+                loreNotification = { title: bk.title, text: bk.text, timer: 180 };
+            }
+            if (coopMode && !cat2.dead && !bk.collected) {
+                let ox2 = cat2.x + 4, oy2 = cat2.y + 2, ow2 = cat2.w - 8, oh2 = cat2.h - 2;
+                if (ox2 < bk.x + bk.w && ox2 + ow2 > bk.x && oy2 < bk.y + bk.h && oy2 + oh2 > bk.y) {
+                    bk.collected = true;
+                    if (!unlockedLore.includes(bk.id)) {
+                        unlockedLore.push(bk.id);
+                        localStorage.setItem('scw_unlocked_lore', JSON.stringify(unlockedLore));
+                    }
+                    if (window.audio) audio.playPowerUp();
+                    addParticle(bk.x + bk.w / 2, bk.y + bk.h / 2, '#FFD700', 15, 6);
+                    loreNotification = { title: bk.title, text: bk.text, timer: 180 };
+                }
             }
         });
     }
@@ -7242,7 +7328,7 @@
             }
         }
 
-        updateCat(); updateCat2(); updateEnemies(); updateCoins(); updateOneUps(); updateFireFlowers(); updateFireballs(); updatePickaxes(); updateArrows(); updateBoss(); updateCheckpoints(); checkFlag();
+        updateCat(); updateCat2(); updateEnemies(); updateCoins(); updateOneUps(); updateLoreBooks(); updateFireFlowers(); updateFireballs(); updatePickaxes(); updateArrows(); updateBoss(); updateCheckpoints(); checkFlag();
         // Update P3/P4 on host
         if (fourPlayerMode && isOnlineHost) {
             const r3 = updateExtraCat(cat3, keys3, p3HP, cat3DeathTimer, invincibleTimer3);
@@ -7458,6 +7544,7 @@
             powerUps.forEach(drawPowerUp);
             level.oneUps.forEach(drawOneUp);
             level.fireFlowers.forEach(drawFireFlower);
+            if (level.loreBooks) level.loreBooks.forEach(drawLoreBook);
             // Checkpoints
             drawCheckpoints();
             // Ship decorations on sky levels
@@ -7517,8 +7604,9 @@
             }
             // Particles
             drawParticles();
-            // Hotbar
+            // Hotbar & HUD overlays
             drawHotbar();
+            drawLoreNotification();
             // Co-op HP bars
             if (coopMode) drawCoopHP();
             // Online disconnect message
@@ -7555,7 +7643,135 @@
         if (state === 'closet') { drawCloset(); }
         // Tutorial overlay
         if (state === 'tutorial') { drawTutorial(); }
+        // Codex / Lore Books overlay
+        if (state === 'codex') { drawCodex(); }
         ctx.restore();
+    }
+
+    function drawLoreBook(bk) {
+        if (bk.collected) return;
+        const bx = Math.round(bk.x - cam.x), by = Math.round(bk.y + Math.sin(bk.bob) * 3);
+        if (bx < -32 || bx > W + 32) return;
+        ctx.fillStyle = '#FFD700';
+        ctx.fillRect(bx, by, 22, 18);
+        ctx.fillStyle = '#8B0000';
+        ctx.fillRect(bx + 2, by + 2, 18, 14);
+        ctx.fillStyle = '#FFF';
+        ctx.fillRect(bx + 10, by + 2, 2, 14);
+        ctx.fillStyle = '#FFD700';
+        ctx.font = '10px monospace';
+        ctx.fillText('📖', bx + 2, by + 13);
+    }
+
+    function drawLoreNotification() {
+        if (!loreNotification || loreNotification.timer <= 0) return;
+        loreNotification.timer--;
+        ctx.save();
+        ctx.fillStyle = 'rgba(10, 10, 25, 0.9)';
+        ctx.strokeStyle = '#FFD700';
+        ctx.lineWidth = 2;
+        const nw = 380, nh = 40, nx = (W - nw) / 2, ny = 12;
+        ctx.fillRect(nx, ny, nw, nh);
+        ctx.strokeRect(nx, ny, nw, nh);
+
+        ctx.fillStyle = '#FFD700';
+        ctx.font = '8px "Press Start 2P", monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText('📖 LORE BOOK UNLOCKED!', W / 2, ny + 15);
+        ctx.fillStyle = '#FFF';
+        ctx.font = '7px "Press Start 2P", monospace';
+        ctx.fillText(loreNotification.title + ' (Press B for Codex)', W / 2, ny + 30);
+        ctx.restore();
+    }
+
+    function drawCodex() {
+        // Dark parchment overlay
+        ctx.fillStyle = 'rgba(10, 10, 25, 0.95)';
+        ctx.fillRect(0, 0, W, H);
+
+        // Title
+        ctx.fillStyle = '#FFD700';
+        ctx.font = '14px "Press Start 2P", monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText('📖 CAT CODEX — LORE BOOKS', W / 2, 30);
+
+        const unlockedCount = unlockedLore.length;
+        ctx.font = '7px "Press Start 2P", monospace';
+        ctx.fillStyle = '#AAA';
+        ctx.fillText('← → / A D to select  |  UNLOCKED: ' + unlockedCount + ' / ' + LORE_BOOKS.length + '  |  B or ESC to close', W / 2, 48);
+
+        const book = LORE_BOOKS[codexSelection];
+        const isUnlocked = unlockedLore.includes(book.id);
+
+        // Left list (cards)
+        const listX = 16, listY = 64, listW = 210, itemH = 34, gap = 5;
+        LORE_BOOKS.forEach((b, idx) => {
+            const iy = listY + idx * (itemH + gap);
+            const sel = idx === codexSelection;
+            const unl = unlockedLore.includes(b.id);
+
+            ctx.fillStyle = sel ? 'rgba(255,215,0,0.25)' : 'rgba(30,30,50,0.7)';
+            ctx.fillRect(listX, iy, listW, itemH);
+
+            ctx.strokeStyle = sel ? '#FFD700' : unl ? '#00FF88' : '#444';
+            ctx.lineWidth = sel ? 2 : 1;
+            ctx.strokeRect(listX, iy, listW, itemH);
+
+            ctx.font = '6px "Press Start 2P", monospace';
+            ctx.textAlign = 'left';
+            ctx.fillStyle = unl ? (sel ? '#FFD700' : '#FFF') : '#666';
+            const icon = unl ? '📖' : '🔒';
+            ctx.fillText(icon + ' ' + (unl ? b.title : '??? (Book ' + b.id + ')'), listX + 8, iy + 21);
+        });
+
+        // Right display panel
+        const panelX = 236, panelY = 64, panelW = W - 252, panelH = H - 80;
+        ctx.fillStyle = 'rgba(20, 20, 40, 0.95)';
+        ctx.fillRect(panelX, panelY, panelW, panelH);
+        ctx.strokeStyle = '#FFD700';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(panelX, panelY, panelW, panelH);
+
+        ctx.textAlign = 'center';
+        ctx.fillStyle = '#FFD700';
+        ctx.font = '10px "Press Start 2P", monospace';
+        ctx.fillText(isUnlocked ? book.title : '🔒 LOCKED LORE BOOK', panelX + panelW / 2, panelY + 28);
+
+        ctx.font = '6px "Press Start 2P", monospace';
+        ctx.fillStyle = '#888';
+        ctx.fillText(isUnlocked ? 'Found in Level ' + (book.level + 1) : 'Search Level ' + (book.level + 1) + ' to unlock!', panelX + panelW / 2, panelY + 44);
+
+        ctx.strokeStyle = 'rgba(255,215,0,0.3)';
+        ctx.beginPath(); ctx.moveTo(panelX + 20, panelY + 54); ctx.lineTo(panelX + panelW - 20, panelY + 54); ctx.stroke();
+
+        if (isUnlocked) {
+            ctx.fillStyle = '#EEE';
+            ctx.font = '9px monospace';
+            ctx.textAlign = 'left';
+            const words = book.text.split(' ');
+            let line = '';
+            let lineY = panelY + 74;
+            const maxW = panelW - 36;
+            words.forEach(w => {
+                const testLine = line + w + ' ';
+                if (ctx.measureText(testLine).width > maxW) {
+                    ctx.fillText(line, panelX + 18, lineY);
+                    line = w + ' ';
+                    lineY += 16;
+                } else {
+                    line = testLine;
+                }
+            });
+            if (line) ctx.fillText(line, panelX + 18, lineY);
+        } else {
+            ctx.fillStyle = '#777';
+            ctx.font = '9px monospace';
+            ctx.textAlign = 'center';
+            ctx.fillText('This ancient chapter has not been discovered yet.', panelX + panelW / 2, panelY + 100);
+            ctx.fillText('Explore Level ' + (book.level + 1) + ' to collect this Lore Book!', panelX + panelW / 2, panelY + 120);
+        }
+
+        ctx.textAlign = 'left';
     }
 
     function drawCloset() {
