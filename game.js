@@ -6366,6 +6366,7 @@
 
     // GAME FLOW
     function loadLevel(idx) {
+        boss = null;
         level = parseLevel(idx);
         cat.x = level.spawnX * T; cat.y = level.spawnY * T - cat.h;
         cat.vx = 0; cat.vy = 0; cat.grounded = false; cat.dead = false;
