@@ -575,6 +575,7 @@
 
     // GAME STATE
     let state = 'start', currentLevel = 0, score = 0, lives = 3, coinCount = 0, frameCount = 0;
+    let bossesDefeated = 0, gameStartTime = Date.now(), gameDifficulty = 'Easy';
     let level = null, cam = { x: 0 }, shakeTimer = 0, shakeAmt = 0;
     let invincibleTimer = 0, deathTimer = 0, winTimer = 0;
     let questionHits = [];// tracks which question blocks have been hit
@@ -827,6 +828,7 @@
             if (e.code === 'Space' || e.code === 'Digit1') { coopMode = false; startGame(); return; }
             if (e.code === 'Digit2') { coopMode = true; startGame(); return; }
             if (e.code === 'Digit3') { openLobby(); return; }
+            if (e.code === 'KeyL') { showLeaderboard(); return; }
             if (e.code === 'KeyH') { tutorialPrevState = state; state = 'tutorial'; overlay.classList.remove('visible'); return; }
         }
         if (state === 'tutorial') {
@@ -2905,6 +2907,16 @@
                     bossPipeSpawned = true;
                     score += boss.pirate ? 10000 : 5000;
                     coinCount += boss.pirate ? 200 : 100;
+
+                    // Trigger leaderboard qualification check
+                    const diff = bossesDefeated >= 3 ? 'Hard' : (bossesDefeated === 2 ? 'Medium' : 'Easy');
+                    const elapsedSec = Math.floor((Date.now() - gameStartTime) / 1000);
+                    const mins = String(Math.floor(elapsedSec / 60)).padStart(2, '0');
+                    const secs = String(elapsedSec % 60).padStart(2, '0');
+                    const runTimeStr = `${mins}:${secs}`;
+                    setTimeout(() => {
+                        submitToLeaderboard(diff, bossesDefeated, runTimeStr);
+                    }, 500);
                     // Find the ground row near the boss death position (search bottom-up for floor)
                     const pipeCol = Math.floor((boss.x + boss.w / 2) / T);
                     let groundRow = level.rows - 1;
@@ -3328,6 +3340,7 @@
                 // Actually die — Phase 3 completed
                 boss.alive = false;
                 boss.deathTimer = 120;
+                bossesDefeated++;
                 addParticle(boss.x + boss.w / 2, boss.y + boss.h / 2, '#FFD700', 30, 10);
                 addParticle(boss.x + boss.w / 2, boss.y + boss.h / 2, '#FF4500', 20, 8);
                 score += 5000;
@@ -6321,6 +6334,7 @@
 
     function startGame() {
         state = 'playing'; score = 0; lives = 3; coinCount = 0; currentLevel = 0; hasFire = false; fireCooldown = 0; fireballs = []; activeCheckpoint = null; speedBoost = 0; shieldHits = 0;
+        bossesDefeated = 0; gameStartTime = Date.now();
         hasPickaxe = false; pickaxes = []; pickaxeCooldown = 0; pickaxeAmmo = 5; pickaxeReloading = false; pickaxeReloadTimer = 0;
         inventory = [];
         cat2SelectedSkin = selectedSkin === 1 ? 0 : 1; // P2 uses different skin
@@ -7731,6 +7745,19 @@
 
         ctx.textAlign = 'left';
         ctx.lineWidth = 1;
+    }
+
+    function showLeaderboard() {
+      const scores = JSON.parse(localStorage.getItem('scw_local_leaderboard') || '[]');
+      if (scores.length === 0) {
+        alert("🏆 LEADERBOARD\n\nNo records yet! Defeat a boss to set a record.");
+      } else {
+        let text = "🏆 CATNIP STUDIOS LEADERBOARD 🏆\n\n";
+        scores.forEach((s, i) => {
+          text += `${i + 1}. ${s.name} | ${s.mode} | Time: ${s.time} (${s.date})\n`;
+        });
+        alert(text);
+      }
     }
 
     // ==================== CATNIP STUDIOS LEADERBOARD CONNECTOR ====================
