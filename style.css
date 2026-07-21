@@ -92,6 +92,19 @@ canvas {
   white-space: pre-line;
 }
 
+#news-banner {
+  margin-top: 16px;
+  font-size: 8px;
+  color: #FFD700;
+  background: rgba(255, 215, 0, 0.1);
+  padding: 8px 14px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 215, 0, 0.3);
+  text-shadow: 0 0 8px rgba(255, 215, 0, 0.4);
+  max-width: 90%;
+  line-height: 1.5;
+}
+
 .mobile-only-btn {
   display: none;
   margin-top: 10px;

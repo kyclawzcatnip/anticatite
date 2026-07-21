@@ -7152,6 +7152,8 @@
     function showOverlay(title, sub) {
         overlayTitle.textContent = title; overlaySub.textContent = sub;
         overlay.classList.add('visible');
+        const newsEl = document.getElementById('news-banner');
+        if (newsEl) newsEl.style.display = (title === 'SUPER CAT WORLD') ? 'block' : 'none';
     }
 
     // UPDATE
