@@ -3059,7 +3059,7 @@
                     bossSpears = [];
                     bossDaggers = [];
                     bossFireballs2 = [];
-                    const title = boss.pirate ? '🏴‍☠️ PIRATE CAPTAIN DEFEATED!' : '👑 RAT KING DEFEATED!';
+                    const title = boss.glitched ? '👾 GLITCHED CORE DEFEATED!' : boss.miner ? '⛏️ MINE FOREMAN DEFEATED!' : boss.pirate ? '🏴‍☠️ PIRATE CAPTAIN DEFEATED!' : '👑 RAT KING DEFEATED!';
                     const sub = 'A SILVER PIPE HAS APPEARED!\nENTER IT TO CONTINUE...\n\nSCORE: ' + score;
                     showOverlay(title, sub);
                     // Auto-dismiss the overlay after 3 seconds so the player can move

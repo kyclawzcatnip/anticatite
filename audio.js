@@ -142,6 +142,25 @@ class AudioEngine {
         osc.start(now);
         osc.stop(now + 0.1);
     }
+
+    playGlitch() {
+        this.ensureContext();
+        if (!this.ctx) return;
+        const now = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(150, now);
+        osc.frequency.linearRampToValueAtTime(800, now + 0.05);
+        osc.frequency.linearRampToValueAtTime(100, now + 0.15);
+        gain.gain.setValueAtTime(this.masterVolume * 0.3, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.15);
+    }
 }
 
-const audio = new AudioEngine();
+window.AudioEngine = AudioEngine;
+window.audio = new AudioEngine();
