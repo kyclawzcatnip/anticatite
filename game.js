@@ -723,27 +723,6 @@
     const BOSS_MAX_HP = 10;
     const PIRATE_BOSS_HP = 12;
     const MINER_BOSS_HP = 14;
-    // Boss dialogue state
-    let bossDialogueActive = false;
-    let bossDialogueText = '';
-    let bossDialogueCharIndex = 0;
-    let bossDialogueTimer = 0;
-    let bossDialogueDone = false; // true after dialogue fully shown
-    let bossDialogueDismissed = false; // true after player presses space
-    // Boss taunt system (quick speech bubble during attacks, doesn't pause game)
-    let bossTauntText = '';
-    let bossTauntTimer = 0;
-    // Boss Phase 1 projectile arrays
-    let bossSpears = [];      // floor spear traps
-    let bossDaggers = [];     // dagger projectiles (large + small)
-    let bossFireballs2 = [];  // boss's bouncing fireballs (separate from player fireballs)
-    // Boss Phase 2 state
-    let bossColorWalls = [];  // { x, color: 'blue'|'red', w, h }
-    let bossBarrier = null;   // { x, y, w, h, vx } sweeping wall
-    let bossDarkCats = [];    // shadow cats that chase player
-    const BOSS_MAX_HP = 10;
-    const PIRATE_BOSS_HP = 12;
-    const MINER_BOSS_HP = 14;
     const GLITCHED_BOSS_HP = 16;
     // Boss dialogue state
     let bossDialogueActive = false;
