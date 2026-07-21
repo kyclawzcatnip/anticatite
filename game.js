@@ -10,8 +10,8 @@
     const overlaySub = document.getElementById('overlay-sub');
 
     // CONSTANTS
-    const T = 32, GRAVITY = 0.55, MAX_FALL = 10, JUMP = -15, WALK = 3.5, COLS = Math.ceil(W / T) + 2;
-    const ENEMY_SPEED = 1.2, COIN_ANIM = 0.08;
+    const T = 32, GRAVITY = 0.75, MAX_FALL = 12, JUMP = -16, WALK = 5.5, COLS = Math.ceil(W / T) + 2;
+    const ENEMY_SPEED = 2.0, COIN_ANIM = 0.08;
 
     // TILE TYPES: 0=air,1=ground,2=brick,3=question,4=pipe_tl,5=pipe_tr,6=pipe_bl,7=pipe_br,8=used_q,9=platform,10=flag,14=mine_rock,15=mine_rails,16-19=silver_pipe(end)
     const TILE_COLORS = {
