@@ -3462,7 +3462,7 @@
                 bossRaygun = null; bossYarnBalls = []; bossCross = null;
                 bossDialogueActive = true;
                 bossDialogueText = boss.glitched
-                    ? 'CRITICAL FAILURE! SHATTERING CORE DIMENSION! EVERYTHING WILL BE ERASED!'
+                    ? 'CRITICAL ERROR! SHATTERING CORE DIMENSION! EVERYTHING WILL BE ERASED!'
                     : boss.miner
                         ? 'THAT\'S IT!!! I\'LL COLLAPSE THIS ENTIRE MINE ON YOUR HEAD!!! CAVE-IN TIME!!!'
                         : boss.pirate
