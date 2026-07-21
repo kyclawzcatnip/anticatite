@@ -4,6 +4,7 @@
     const canvas = document.getElementById('gameCanvas'), ctx = canvas.getContext('2d');
     const W = canvas.width, H = canvas.height;
     const livesEl = document.getElementById('lives-display'), coinEl = document.getElementById('coin-display');
+    const timerEl = document.getElementById('timer-display');
     const scoreEl = document.getElementById('score-display'), levelEl = document.getElementById('level-display');
     const overlay = document.getElementById('overlay'), overlayTitle = document.getElementById('overlay-title');
     const overlaySub = document.getElementById('overlay-sub');
@@ -7192,6 +7193,10 @@
                 livesEl.textContent = p1Str + p2Str + extraStr + (hasFire ? ' 🔥' : '');
             }
             coinEl.textContent = '🪙 × ' + coinCount;
+            const elapsedGuest = Math.floor((Date.now() - gameStartTime) / 1000);
+            const gMins = String(Math.floor(elapsedGuest / 60)).padStart(2, '0');
+            const gSecs = String(elapsedGuest % 60).padStart(2, '0');
+            if (timerEl) timerEl.textContent = '⏱️ ' + gMins + ':' + gSecs;
             scoreEl.textContent = 'SCORE: ' + score;
             levelEl.textContent = currentLevel >= 26 ? 'ERR: GLITCH ' + (currentLevel - 25) : (boss ? (boss.pirate ? 'SKY BOSS' : 'BOSS') : (currentLevel >= 22 ? 'MINE ' + (currentLevel - 21) : currentLevel >= 11 ? 'CAVE ' + (currentLevel - 10) : currentLevel >= 5 ? 'SKY ' + (currentLevel - 4) : 'WORLD ' + (currentLevel + 1)));
             if (state === 'over') { showOverlay('GAME OVER', 'SCORE: ' + score + '\n\nPRESS SPACE TO RETRY'); }
@@ -7268,6 +7273,10 @@
             livesEl.textContent = '🐱 × ' + (devMode ? '∞' : Math.max(0, lives)) + (hasFire ? ' 🔥' : '');
         }
         coinEl.textContent = '🪙 × ' + coinCount;
+        const elapsedSec = Math.floor((Date.now() - gameStartTime) / 1000);
+        const mins = String(Math.floor(elapsedSec / 60)).padStart(2, '0');
+        const secs = String(elapsedSec % 60).padStart(2, '0');
+        if (timerEl) timerEl.textContent = '⏱️ ' + mins + ':' + secs;
         scoreEl.textContent = 'SCORE: ' + score;
         levelEl.textContent = currentLevel >= 26 ? 'ERR: GLITCH ' + (currentLevel - 25) : (boss ? (boss.pirate ? 'SKY BOSS' : 'BOSS') : (currentLevel >= 22 ? 'MINE ' + (currentLevel - 21) : currentLevel >= 11 ? 'CAVE ' + (currentLevel - 10) : currentLevel >= 5 ? 'SKY ' + (currentLevel - 4) : 'WORLD ' + (currentLevel + 1)));
         // Check game over
