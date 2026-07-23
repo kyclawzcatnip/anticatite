@@ -606,7 +606,7 @@
     }
 
     // GAME STATE
-    let state = 'start', currentLevel = 0, score = 0, lives = 3, coinCount = 0, frameCount = 0;
+    let state = 'start', currentLevel = 0, score = 0, lives = 3, coinCount = 0, frameCount = 0, sessionLevelsCompleted = 0;
     let bossesDefeated = 0, gameStartTime = Date.now(), gameDifficulty = 'Easy';
     let glitchScreenTimer = 0;
     let level = null, cam = { x: 0 }, shakeTimer = 0, shakeAmt = 0;
@@ -7030,6 +7030,15 @@
 
     function nextLevel() {
         currentLevel++;
+        sessionLevelsCompleted++;
+        
+        if (sessionLevelsCompleted >= 2) {
+            sessionLevelsCompleted = 0;
+            if (confirm("You completed 2 levels! Do you want to convert your collected in-game gold coins (" + coinCount + ") to website Catnip Coins?")) {
+                window.open("https://kyclawzcatnip.github.io/catnipweb/?claim_coins=" + coinCount, "_blank");
+            }
+        }
+
         if (currentLevel >= LEVEL_DATA.length) { state = 'win'; return; }
         loadLevel(currentLevel); state = 'playing'; overlay.classList.remove('visible');
     }
