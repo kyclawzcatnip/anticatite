@@ -23,7 +23,8 @@
         14: ['#4A3828', '#3A2818'], // 14=mineshaft rock
         15: ['#5C4A3A', '#4A382A'], // 15=mine rails
         16: ['#C0C0C0', '#A0A0A0'], 17: ['#C0C0C0', '#A0A0A0'], // 16-17=silver pipe top
-        18: ['#B0B0B0', '#909090'], 19: ['#B0B0B0', '#909090']  // 18-19=silver pipe body
+        18: ['#B0B0B0', '#909090'], 19: ['#B0B0B0', '#909090'], // 18-19=silver pipe body
+        20: ['#A09890', '#8C847C'] // 20=ancient ruins
     };
 
     // LEVELS (each row is a horizontal row; stored top-to-bottom)
@@ -52,10 +53,10 @@
             "                                                                                                                                        ",
             "                                                                                                                                        ",
             "                         C C C                                         CCC                                                              ",
-            "                        BBBBBBB                C                      BBBBB             C   C                                           ",
+            "                        UUUUUUU                C                      UUUUU             C   C                                           ",
             "            CC                        C C   Q              C                     L                       CCC                            ",
-            "          QBBBBQ        W     R    BBBBBBBBB         R          R  BBB    BBZ       BBBBBBB                                            ",
-            "                           GGGGG              GGGGG      GGGGG              GG           R      Q  BBBBBB                             ",
+            "          QUUUUQ        W     R    UUUUUUUUU         R          R  UUU    UUZ       UUUUUUU                                            ",
+            "                           GGGGG              GGGGG      GGGGG              GG           R      Q  UUUUUU                             ",
             "  S        R    V   A  GG  V    GG  H R    V AGG     V GG    V         GGGGG  A  V  GGGGG       GG      A   GGGG  A                   ",
             "GGGGG   GGGGG   GG  GGGG        GGGGGGGG  GGGGG          GGG    GGGG         GGG          GGG       GGGGG       GGGG<>GGGGGGGGGGGGG",
             "GGGGG   GGGGG   GGGGGGGG        GGGGGGGG  GGGGG          GGG    GGGG         GGG          GGG       GGGGG       GGGG()GGGGGGGGGGGGG",
@@ -68,10 +69,10 @@
             "                                                                                                                              KKK                       KKK      ",
             "                                                                                                                              KKK                       KKK      ",
             "                  C                                                                     CCC                                   KKK  K K K K K K K K K K  KKK      ",
-            "                                     C C                           C  C  C           Q BBBBB          L                        KKKKKKKKKKKKKKKKKKKKKKKKKKKKKK      ",
-            "         C C C  BBQ           CCC   BBBBB     C           CCC              H                         C                        KKKKKKKKKKKKKKKKKKKKKKKKKKKKKK      ",
-            "        BBBBBBB          W                       Q BBBBB                BBBBB                    BBBZBBB   C                   KKKKKKKKKKKKKKKKKKKKKKKKKKKKKK      ",
-            "                    GGGGG    V GGGGG     R     V  GGGGG    R   V  GGG    R  GGG V GGGGG    V        BBB                        KKKKKKKKKKKKKKKKKKKKKKKKKKKKKK      ",
+            "                                     C C                           C  C  C           Q UUUUU          L                        KKKKKKKKKKKKKKKKKKKKKKKKKKKKKK      ",
+            "         C C C  UUQ           CCC   UUUUU     C           CCC              H                         C                        KKKKKKKKKKKKKKKKKKKKKKKKKKKKKK      ",
+            "        UUUUUUU          W                       Q UUUUU                UUUUU                    UUUZUUU   C                   KKKKKKKKKKKKKKKKKKKKKKKKKKKKKK      ",
+            "                    GGGGG    V GGGGG     R     V  GGGGG    R   V  GGG    R  GGG V GGGGG    V        UUU                        KKKKKKKKKKKKKKKKKKKKKKKKKKKKKK      ",
             "  SA    VA       GG      GG   A V    GGG   GGGGG  GGG    V  GG    GG    V  GGG    V  GG     GG   V  GG     GGGGGGGGGGGGGGGGGGGDDKKKKKKKKKKKKKKKKKKKKKKKKKKKK      ",
             "GGGGG  GGG  GG    R  R        GGG                                                                     R    GGGGGGGGGGGGGGGGGGGDDKKKKKKKKKKKKKKKKKKKKKKKKKKKK      ",
             "GGGGG  GGG  GGG    GGGGG   GGGGG   GGGGG    GGGG   GGGGG    GGG   GGGGG   GGG    GGGGG   GGG    GGG   GGGGGGGGGGGGGGGGGGGGGGGKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK      ",
@@ -92,9 +93,9 @@
             "K                KKKK                           R  A               R                    DDDDDDDK",
             "K           R        KKKK    C  L     KKK   KKKKKKKK        KKKK      KKKK    W    KKKKDDDDDDDK",
             "K S      KKKKKK          KKKKKKKKK        R                     KKKK       KKKKKKKKKKKKDDDDDDDK",
-            "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
-            "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
-            "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
+            "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
+            "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
+            "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
         ],
         // Level 5 — BOSS ARENA (Castle Interior)
         [
@@ -577,6 +578,7 @@
                 else if (ch === '(') grid[r][c] = 18; // silver pipe body-left (end pipe)
                 else if (ch === ')') grid[r][c] = 19; // silver pipe body-right (end pipe)
                 else if (ch === 'X') { grid[r][c] = 0; } // boss spawn marker handled separately
+                else if (ch === 'U') grid[r][c] = 20; // ancient ruins
                 else if (ch === 'S') { grid[r][c] = 0; spawnX = c; spawnY = r; }
                 else grid[r][c] = 0;
             }
@@ -1212,7 +1214,7 @@
         if (!level || r < 0 || r >= level.rows || c < 0 || c >= level.cols) return false;
         if (isTileGlitchedOut(r, c)) return false;
         const t = level.grid[r][c];
-        return t === 1 || t === 2 || t === 3 || t === 4 || t === 5 || t === 6 || t === 7 || t === 8 || t === 9 || t === 10 || t === 11 || t === 13 || t === 14 || t === 16 || t === 17 || t === 18 || t === 19;
+        return t === 1 || t === 2 || t === 3 || t === 4 || t === 5 || t === 6 || t === 7 || t === 8 || t === 9 || t === 10 || t === 11 || t === 13 || t === 14 || t === 16 || t === 17 || t === 18 || t === 19 || t === 20;
     }
 
     function tileAt(px, py) { return { r: Math.floor(py / T), c: Math.floor(px / T) }; }
@@ -5122,6 +5124,34 @@
             // Door handle
             ctx.fillStyle = '#DAA520';
             ctx.beginPath(); ctx.arc(x + T - 10, y + T / 2 + 4, 2.5, 0, Math.PI * 2); ctx.fill();
+        }
+        // Ancient Cat Ruins rendering (U-blocks, tile 20)
+        if (type === 20) {
+            // Weathered sandstone base
+            ctx.fillStyle = '#A09890'; ctx.fillRect(x, y, T, T);
+            ctx.fillStyle = '#8C847C'; ctx.fillRect(x + 1, y + 1, T - 2, T - 2);
+
+            // Carved Ancient Cat Glyph (eyes + nose)
+            ctx.fillStyle = '#6E665E';
+            ctx.fillRect(x + 8, y + 10, 3, 2); // left eye
+            ctx.fillRect(x + 21, y + 10, 3, 2); // right eye
+            ctx.fillRect(x + 15, y + 15, 2, 2); // nose
+            ctx.strokeStyle = '#6E665E'; ctx.lineWidth = 1;
+            ctx.beginPath(); ctx.moveTo(x + 13, y + 18); ctx.lineTo(x + 15, y + 20); ctx.lineTo(x + 17, y + 18); ctx.stroke(); // mouth
+
+            // Weathered cracks
+            ctx.strokeStyle = '#5E564E';
+            ctx.beginPath(); ctx.moveTo(x + 2, y + 4); ctx.lineTo(x + 6, y + 8); ctx.lineTo(x + 4, y + 16); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(x + 28, y + 22); ctx.lineTo(x + 24, y + 26); ctx.stroke();
+
+            // Moss/Ivy growth on top/sides
+            ctx.fillStyle = '#557A46';
+            ctx.fillRect(x, y, T, 3); // moss on top
+            ctx.fillRect(x + 4, y + 3, 4, 3);
+            ctx.fillRect(x + 20, y + 3, 5, 4);
+            ctx.fillStyle = '#3E5C31'; // dark moss shadows
+            ctx.fillRect(x + 6, y, 2, 5);
+            ctx.fillRect(x + 22, y, 2, 6);
         }
 
     }
