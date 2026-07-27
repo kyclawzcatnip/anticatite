@@ -115,20 +115,37 @@
             "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
             "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
         ],
-        // Level 6 — Sky Islands: The Ascent
+        // Level 6 — Castle Dungeons (Rescuing the kittens)
         [
-            "KKKKKKKKKKKKKKKK                                                                                                                    ",
-            "K              K                                                                                                                    ",
-            "K              K                                                                                                                    ",
-            "K              K                                                                                                                    ",
-            "K              K                                                     C C C          H                                               ",
-            "K              K                                                    BBBBBBB                   C C                                   ",
-            "K              K       C C C      Y        C C           Y                    C C C       BBBBB         Y                           ",
-            "K          KKKKK C    BBBBBBB             BBBBB      C  C          BBBBB         BBBBBBB                                  <>        ",
-            "K   S   N  K   K K      V        R    V  R      R   BBBBBBB  V R      A  V                     A     C C C                ()        ",
-            "KKKKKKKKKKKK   K              BBB        BBB                             BBB     BBB              BBB    BBBBBBB              ()    ",
-            "KKKKKKKKKKKKKKKK                                      BBBBB                              BBB                        BBBBBBBBBBBBBBBB",
-            "KKKKKKKKKKKKKKKK       BBB        BBB                          BBB       BBBBB                   BBBB                               ",
+            "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
+            "K                                                                                                                                  K",
+            "K                                                                                                                                  K",
+            "K         C C             C C               CCC                     C C C               C C C               C C                    K",
+            "K        KKKKK           KKKKK             KKKKK                   KKKKKKK             KKKKKKK             KKKKK                   K",
+            "K                                                                                                                                  K",
+            "K                 C C C         C C C               C C C                     C C C               C C C                            K",
+            "K   S   N        KKKKKKK       KKKKKKK             KKKKKKK                   KKKKKKK             KKKKKKK                   <>      K",
+            "KKKKKKKKK              R             R    V              R    V    H    R              R     V             R                 ()    K",
+            "K       K             KKK           KKK                 KKK       KKK  KKK            KKK                 KKK                ()    K",
+            "K       KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
+            "K       KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
+            "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
+            "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
+        ],
+        // Level 7 — Sky Islands: The Ascent
+        [
+            "                                                                                                                                    ",
+            "                                                                                                                                    ",
+            "                                                                                                                                    ",
+            "                                                                                                                                    ",
+            "                                                                     C C C          H                                               ",
+            "                                                                    BBBBBBB                   C C                                   ",
+            "                       C C C      Y        C C           Y                    C C C       BBBBB         Y                           ",
+            "             C C      BBBBBBB             BBBBB      C  C          BBBBB         BBBBBBB                                  <>        ",
+            "            BBBBB       V        R    V  R      R   BBBBBBB  V R      A  V                     A     C C C                ()        ",
+            "                          BBB        BBB                             BBB     BBB              BBB    BBBBBBB              ()        ",
+            "  S      BBBBB                                        BBBBB                              BBB                        BBBBBBBBBBBBBBBBBBBB",
+            "BBBBB                  BBB        BBB                          BBB       BBBBB                   BBBB                               ",
             "                                                                                                                                    ",
             "                                                                                                                                    ",
         ],
@@ -648,12 +665,12 @@
         { id: 1, level: 0, title: 'I. The First Meow', text: 'Long ago, before time had a name, the Great Catnip Tree sprouted in the center of the cosmos. Its roots tapped into ancient wells of magic, and its leaves breathed life into the world, bringing forth the Nine Feline Realms. The Cat Clan built their grand cities in its shade, living in eternal peace and harmony. They guarded the Golden Catnip, a sacred relic keeping their magic alive. But darkness brewed in the lowlands. The Rat King, Miner rat and the pirate rat, jealous of their prosperity, coveted the Golden Catnip\'s power to fuel his dark legion.' },
         { id: 2, level: 3, title: 'II. Whispers in the Wall', text: 'Following his sudden invasion, the Rat King seized the sacred grounds and constructed his iron fortress directly atop the ancient cat ruins. He forced his subjects to mine the deep mountains, forging iron-tipped spears and heavy armor for his soldiers. He trained legions of archers, positioning them along the high stone ramparts to repel feline scout parties. Whispers echoed in the walls of the castle of hidden passages and dark dungeons where captured kittens were locked away, waiting for a savior.' },
         { id: 3, level: 4, title: 'III. Secrets of the Throne', text: 'A dusty scroll found in the castle vaults details the secrets of the throne room. When cornered, the Rat King relies on illusion magic, summoning shadow clones to confuse his attackers while hiding behind iron shields. He triggers floor spike traps to catch foes off balance. However, the scroll notes a critical weakness: his crown is heavy, making his head vulnerable. Legend says only well-timed stomps from above can shatter his defense and break his magical barrier.' },
-        { id: 4, level: 6, title: 'IV. Ships in the Sky', text: 'When the Rat King\'s ground fortress fell, his chief naval commander, Pirate Captain Rattail, refused to surrender. Gathering the remaining royal treasures, he fled to the sky islands. There, using floating lumber and sky sails, he constructed an armada of massive wooden warships. He began raiding the trade routes, hoarding thousands of golden sky coins on his vessels. Safe in the clouds, he believed no land-dwelling cat could ever reach his airborne treasury or breach his fleet.' },
-        { id: 5, level: 10, title: 'V. The Sky Captain\'s Vow', text: 'Obsessed with the legends of the clouds, Captain Rattail made a solemn vow to never drop anchor until he caught the Legendary Sky Fish, a mythical creature said to grant infinite wishes. His massive flagship, the Sea-Rat, was custom-built for this hunt, armed with double-deck heavy cannons firing explosive iron balls. To repel agile invaders, he rigged spinning yarn launch pads and flying harpoons across the decks, turning his flagship into a floating fortress of death.' },
-        { id: 6, level: 12, title: 'VI. Crystal Depths', text: 'Beneath the roots of the world lies a network of ancient caves, glowing with giant luminous crystals and flowing rivers of boiling magma. Feline miners once gathered rare gems here, but the heat grew too intense as volcanic fissures opened. The texts warn that the deep caverns are completely impassable without magical protection. Only a hero wearing the Fire Protector aura can walk through the ash storms, withstand the magma hazards, and survive the scorching subterranean beasts.' },
-        { id: 7, level: 21, title: 'VII. The Miner\'s Greed', text: 'Blinded by a thirst for riches, Miner Boss Rattock commanded his workers to dig deeper into the mountain than anyone had ever dared. They breached the ancient volcanic core, triggers earthquakes and mine collapses. Rather than retreating, Rattock weaponized the chaos. He designed high-speed minecarts filled with unstable TNT explosives and rigged the cavern arches to drop crushing boulders on intruders. His greed consumed him, transforming him into a paranoid warden of the dark mines.' },
-        { id: 8, level: 25, title: 'VIII. The Glitched Realm', text: 'At the edge of reality, hidden behind the secret silver pipes, lies a fractured dimension known as the Glitched Lands. In this bizarre realm, the laws of physics break down entirely. Platforms flicker in and out of existence, gravity flips upside down at a moment\'s notice, and reality itself appears corrupted by digital anomalies. The elder cats warned that this frontier is a one-way trip, as the unstable fabric of the realm tears apart any traveler who lacks absolute focus.' },
-        { id: 9, level: 29, title: 'IX. The Glitched Core', text: 'Deep inside the glitched dimension floats the source of all instability: the Glitched Core. It is a sentient, pulsing heart made of corrupted source code and chaotic energy. The Core seeks to rewrite the entire universe in its own image, threatening to dissolve the Nine Feline Realms into static. The ancient prophets wrote that only a hero brave enough to navigate the shifting gravity fields and destroy the Core\'s firewall can permanently stabilize the code, saving reality.' }
+        { id: 4, level: 7, title: 'IV. Ships in the Sky', text: 'When the Rat King\'s ground fortress fell, his chief naval commander, Pirate Captain Rattail, refused to surrender. Gathering the remaining royal treasures, he fled to the sky islands. There, using floating lumber and sky sails, he constructed an armada of massive wooden warships. He began raiding the trade routes, hoarding thousands of golden sky coins on his vessels. Safe in the clouds, he believed no land-dwelling cat could ever reach his airborne treasury or breach his fleet.' },
+        { id: 5, level: 11, title: 'V. The Sky Captain\'s Vow', text: 'Obsessed with the legends of the clouds, Captain Rattail made a solemn vow to never drop anchor until he caught the Legendary Sky Fish, a mythical creature said to grant infinite wishes. His massive flagship, the Sea-Rat, was custom-built for this hunt, armed with double-deck heavy cannons firing explosive iron balls. To repel agile invaders, he rigged spinning yarn launch pads and flying harpoons across the decks, turning his flagship into a floating fortress of death.' },
+        { id: 6, level: 13, title: 'VI. Crystal Depths', text: 'Beneath the roots of the world lies a network of ancient caves, glowing with giant luminous crystals and flowing rivers of boiling magma. Feline miners once gathered rare gems here, but the heat grew too intense as volcanic fissures opened. The texts warn that the deep caverns are completely impassable without magical protection. Only a hero wearing the Fire Protector aura can walk through the ash storms, withstand the magma hazards, and survive the scorching subterranean beasts.' },
+        { id: 7, level: 22, title: 'VII. The Miner\'s Greed', text: 'Blinded by a thirst for riches, Miner Boss Rattock commanded his workers to dig deeper into the mountain than anyone had ever dared. They breached the ancient volcanic core, triggers earthquakes and mine collapses. Rather than retreating, Rattock weaponized the chaos. He designed high-speed minecarts filled with unstable TNT explosives and rigged the cavern arches to drop crushing boulders on intruders. His greed consumed him, transforming him into a paranoid warden of the dark mines.' },
+        { id: 8, level: 26, title: 'VIII. The Glitched Realm', text: 'At the edge of reality, hidden behind the secret silver pipes, lies a fractured dimension known as the Glitched Lands. In this bizarre realm, the laws of physics break down entirely. Platforms flicker in and out of existence, gravity flips upside down at a moment\'s notice, and reality itself appears corrupted by digital anomalies. The elder cats warned that this frontier is a one-way trip, as the unstable fabric of the realm tears apart any traveler who lacks absolute focus.' },
+        { id: 9, level: 30, title: 'IX. The Glitched Core', text: 'Deep inside the glitched dimension floats the source of all instability: the Glitched Core. It is a sentient, pulsing heart made of corrupted source code and chaotic energy. The Core seeks to rewrite the entire universe in its own image, threatening to dissolve the Nine Feline Realms into static. The ancient prophets wrote that only a hero brave enough to navigate the shifting gravity fields and destroy the Core\'s firewall can permanently stabilize the code, saving reality.' }
     ];
     let unlockedLore = JSON.parse(localStorage.getItem('scw_unlocked_lore') || '[]');
     let loreNotification = null; // { title, text, timer }
@@ -717,8 +734,8 @@
         { name: 'Fire Protector', icon: '🔶', desc: 'Fire immunity 3 min', cost: 15, action: () => { fireProtectTimer = 10800; if(window.audio) audio.playPowerUp(); } },
     ];
     function getVisibleShopItems() {
-        const isSky = currentLevel >= 5;
-        const isCave = currentLevel >= 11;
+        const isSky = currentLevel >= 6;
+        const isCave = currentLevel >= 12;
         return SHOP_ITEMS.filter(item => (!item.skyOnly || isSky) && (!item.caveOnly || isCave) && (!item.coopOnly || coopMode));
     }
 
@@ -959,7 +976,7 @@
             if (e.code === 'Digit9') { tryBuyItem(8); return; }
             return;
         }
-        if (state === 'playing' && e.code === 'KeyN') { const maxLvl = devMode ? LEVEL_DATA.length : 26; currentLevel++; if (currentLevel >= maxLvl) { currentLevel = 0; } if (currentLevel === 26) { enterGlitchedLands(); } else { loadLevel(currentLevel); } return; }
+        if (state === 'playing' && e.code === 'KeyN') { const maxLvl = devMode ? LEVEL_DATA.length : 27; currentLevel++; if (currentLevel >= maxLvl) { currentLevel = 0; } if (currentLevel === 27) { enterGlitchedLands(); } else { loadLevel(currentLevel); } return; }
         // P+2 toggles co-op on/off
         if (state === 'playing' && e.code === 'Digit2' && keys2._pHeld) {
             coopMode = !coopMode;
@@ -983,7 +1000,7 @@
             throwPickaxe();
         }
         if (state === 'playing' && (e.code === 'KeyF' || e.code === 'KeyX') && scratchCooldown <= 0 && !cat.dead) {
-            if (!isMobile && currentLevel === 25 && isStandingOnSilverPipe(cat)) {
+            if (!isMobile && currentLevel === 26 && isStandingOnSilverPipe(cat)) {
                 enterGlitchedLands();
                 return;
             }
@@ -1011,7 +1028,7 @@
         if (state === 'playing' && coopMode && e.code === 'KeyI' && hasPickaxe && pickaxeCooldown <= 0 && !cat2.dead && pickaxeAmmo > 0 && !pickaxeReloading) { throwPickaxe2(); }
         // P2 scratch/throw
         if (state === 'playing' && coopMode && e.code === 'KeyO' && cat2ScratchCooldown <= 0 && !cat2.dead) {
-            if (!isMobile && currentLevel === 25 && isStandingOnSilverPipe(cat2)) {
+            if (!isMobile && currentLevel === 26 && isStandingOnSilverPipe(cat2)) {
                 enterGlitchedLands();
                 return;
             }
@@ -1179,7 +1196,7 @@
 
     // TILE COLLISION
     function isTileGlitchedOut(r, c) {
-        if (!level || state !== 'playing' || currentLevel < 26) return false;
+        if (!level || state !== 'playing' || currentLevel < 27) return false;
         if (c <= 6) return false; // safe start
         if (c >= level.cols - 4) return false; // safe end pipe
         const colSection = Math.floor(c / 3);
@@ -1202,8 +1219,8 @@
 
     function enterGlitchedLands() {
         audio.playGlitch();
-        currentLevel = 26;
-        loadLevel(26);
+        currentLevel = 27;
+        loadLevel(27);
         state = 'playing';
         if (overlay) overlay.classList.remove('visible');
         shakeTimer = 45; shakeAmt = 8;
@@ -4883,7 +4900,7 @@
         }
 
         // Corrupted block check
-        if (currentLevel >= 26 && (r * 7 + c * 3) % 5 === 0) {
+        if (currentLevel >= 27 && (r * 7 + c * 3) % 5 === 0) {
             ctx.fillStyle = '#000';
             ctx.fillRect(x, y, T, T);
             const bands = 4;
@@ -4963,7 +4980,7 @@
             return;
         }
         // Underground cave rock rendering for G-blocks
-        if (type === 1 && currentLevel >= 11 && currentLevel < 22) {
+        if (type === 1 && currentLevel >= 12 && currentLevel < 23) {
             ctx.fillStyle = '#555'; ctx.fillRect(x, y, T, T);
             ctx.fillStyle = '#666'; ctx.fillRect(x + 1, y + 1, T - 2, T - 2);
             // Rock texture cracks
@@ -5063,7 +5080,7 @@
         }
         // Brick lines / Ship planks
         if (type === 2) {
-            if (currentLevel >= 5 && currentLevel <= 10) {
+            if (currentLevel >= 6 && currentLevel <= 11) {
                 // Sky levels: wooden ship planks
                 ctx.fillStyle = '#6B4226'; ctx.fillRect(x, y, T, T);
                 ctx.fillStyle = '#8B5A2B'; ctx.fillRect(x + 1, y + 1, T - 2, T - 2);
@@ -5078,7 +5095,7 @@
                 ctx.fillRect(x + T - 5, y + 3, 2, 2);
                 ctx.fillRect(x + 3, y + T - 5, 2, 2);
                 ctx.fillRect(x + T - 5, y + T - 5, 2, 2);
-            } else if (currentLevel >= 22) {
+            } else if (currentLevel >= 23) {
                 // Mineshaft: reinforced wooden planks
                 ctx.fillStyle = '#5C3A1E'; ctx.fillRect(x, y, T, T);
                 ctx.fillStyle = '#6E4C2C'; ctx.fillRect(x + 1, y + 1, T - 2, T - 2);
@@ -5487,9 +5504,9 @@
         }
 
 
-        const isCave = currentLevel >= 11 && currentLevel < 22;
-        const isSky = currentLevel >= 5 && currentLevel <= 10;
-        const isMine = currentLevel >= 22;
+        const isCave = currentLevel >= 12 && currentLevel < 23;
+        const isSky = currentLevel >= 6 && currentLevel <= 11;
+        const isMine = currentLevel >= 23;
 
         // === RATTER (Koopa-style rat) ===
         if (e.type === 'ratter') {
@@ -6318,11 +6335,11 @@
     }
 
     function drawBackground() {
-        if (currentLevel >= 26) { drawGlitchedBackground(); return; }
-        if (currentLevel >= 22) { drawMineshaftBackground(); return; }
-        if (currentLevel >= 11) { drawCaveBackground(); return; }
-        if (currentLevel >= 5) { drawSkyIslandBackground(); return; }
-        if (currentLevel >= 3 && currentLevel <= 4) { drawCastleBackground(); return; }
+        if (currentLevel >= 27) { drawGlitchedBackground(); return; }
+        if (currentLevel >= 23) { drawMineshaftBackground(); return; }
+        if (currentLevel >= 12) { drawCaveBackground(); return; }
+        if (currentLevel >= 6) { drawSkyIslandBackground(); return; }
+        if (currentLevel >= 3 && currentLevel <= 5) { drawCastleBackground(); return; }
         // Sky
         const grad = ctx.createLinearGradient(0, 0, 0, H);
         grad.addColorStop(0, '#4A90D9'); grad.addColorStop(0.6, '#87CEEB'); grad.addColorStop(1, '#B8E6B8');
@@ -7518,7 +7535,7 @@
             const gSecs = String(elapsedGuest % 60).padStart(2, '0');
             if (timerEl) timerEl.textContent = '⏱️ ' + gMins + ':' + gSecs;
             scoreEl.textContent = 'SCORE: ' + score;
-            levelEl.textContent = currentLevel >= 26 ? 'ERR: GLITCH ' + (currentLevel - 25) : (boss ? (boss.pirate ? 'SKY BOSS' : 'BOSS') : (currentLevel >= 22 ? 'MINE ' + (currentLevel - 21) : currentLevel >= 11 ? 'CAVE ' + (currentLevel - 10) : currentLevel >= 5 ? 'SKY ' + (currentLevel - 4) : 'WORLD ' + (currentLevel + 1)));
+            levelEl.textContent = currentLevel >= 27 ? 'ERR: GLITCH ' + (currentLevel - 26) : (boss ? (boss.pirate ? 'SKY BOSS' : 'BOSS') : (currentLevel >= 23 ? 'MINE ' + (currentLevel - 22) : currentLevel >= 12 ? 'CAVE ' + (currentLevel - 11) : currentLevel >= 6 ? 'SKY ' + (currentLevel - 5) : 'WORLD ' + (currentLevel + 1)));
             if (state === 'over') { showOverlay('GAME OVER', 'SCORE: ' + score + '\n\nPRESS SPACE TO RETRY'); }
             if (state === 'levelcomplete') { showOverlay('LEVEL COMPLETE!', 'SCORE: ' + score + '\n\nWAITING FOR HOST...'); }
             if (state === 'win') { showOverlay('YOU WIN! 🎉', 'FINAL SCORE: ' + score); }
@@ -7598,7 +7615,7 @@
         const secs = String(elapsedSec % 60).padStart(2, '0');
         if (timerEl) timerEl.textContent = '⏱️ ' + mins + ':' + secs;
         scoreEl.textContent = 'SCORE: ' + score;
-        levelEl.textContent = currentLevel >= 26 ? 'ERR: GLITCH ' + (currentLevel - 25) : (boss ? (boss.pirate ? 'SKY BOSS' : 'BOSS') : (currentLevel >= 22 ? 'MINE ' + (currentLevel - 21) : currentLevel >= 11 ? 'CAVE ' + (currentLevel - 10) : currentLevel >= 5 ? 'SKY ' + (currentLevel - 4) : 'WORLD ' + (currentLevel + 1)));
+        levelEl.textContent = currentLevel >= 27 ? 'ERR: GLITCH ' + (currentLevel - 26) : (boss ? (boss.pirate ? 'SKY BOSS' : 'BOSS') : (currentLevel >= 23 ? 'MINE ' + (currentLevel - 22) : currentLevel >= 12 ? 'CAVE ' + (currentLevel - 11) : currentLevel >= 6 ? 'SKY ' + (currentLevel - 5) : 'WORLD ' + (currentLevel + 1)));
         // Check game over
         if (state === 'over') { showOverlay('GAME OVER', 'SCORE: ' + score + '\n\nPRESS SPACE TO RETRY\nPRESS 2 FOR CO-OP'); }
         if (state === 'levelcomplete') { showOverlay('LEVEL COMPLETE!', 'SCORE: ' + score + '\n\nPRESS SPACE TO CONTINUE'); }
@@ -7780,7 +7797,7 @@
             // Checkpoints
             drawCheckpoints();
             // Ship decorations on sky levels
-            if (currentLevel >= 5 && currentLevel <= 10) drawShipDecorations();
+            if (currentLevel >= 6 && currentLevel <= 11) drawShipDecorations();
             // Enemies
             level.enemies.forEach(drawEnemy);
             // Fireballs
