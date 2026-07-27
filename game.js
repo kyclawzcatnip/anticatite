@@ -118,15 +118,15 @@
         // Level 6 — Castle Dungeons (Rescuing the kittens)
         [
             "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
-            "K                                                                                                                                  K",
-            "K                                                                                                                                  K",
-            "K         C C             C C               CCC                     C C C               C C C               C C                    K",
-            "K        KKKKK           KKKKK             KKKKK                   KKKKKKK             KKKKKKK             KKKKK                   K",
-            "K                                                                                                                                  K",
-            "K                 C C C         C C C               C C C                     C C C               C C C                            K",
-            "K   S   N        KKKKKKK       KKKKKKK             KKKKKKK                   KKKKKKK             KKKKKKK                   <>      K",
-            "KKKKKKKKK              R             R    V              R    V    H    R              R     V             R                 ()    K",
-            "K       K             KKK           KKK                 KKK       KKK  KKK            KKK                 KKK                ()    K",
+            "K   N                                                                  N                                       N                   K",
+            "K  KKK       C C C                                                   KKKKK                                    KKK                  K",
+            "K             KKK                   N                C C C                                    N                                    K",
+            "K                                 KKKKK             KKKKKKK                                 KKKKK                                  K",
+            "K        C C                                                                    C C                                     C C        K",
+            "K       KKKKK             N              C C C                     N           KKKKK             N             N       KKKKK       K",
+            "K   S   N                KKK            KKKKKKK                   KKK                           KKK           KKK            <>    K",
+            "KKKKKKKKK         R              R               R    V    H    R              R     V             R             R         ()    K K",
+            "K       K        KKK            KKK             KKK       KKK  KKK            KKK                 KKK           KKK        ()    K K",
             "K       KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
             "K       KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
             "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
@@ -660,6 +660,7 @@
     const MAX_INVENTORY = 5;
     let hotbarFlash = -1; // slot index that was just used (for flash effect)
     let hotbarFlashTimer = 0;
+    let rescuedKittensCount = 0; // dungeon kittens rescued count
     // LORE BOOKS SYSTEM
     const LORE_BOOKS = [
         { id: 1, level: 0, title: 'I. The First Meow', text: 'Long ago, before time had a name, the Great Catnip Tree sprouted in the center of the cosmos. Its roots tapped into ancient wells of magic, and its leaves breathed life into the world, bringing forth the Nine Feline Realms. The Cat Clan built their grand cities in its shade, living in eternal peace and harmony. They guarded the Golden Catnip, a sacred relic keeping their magic alive. But darkness brewed in the lowlands. The Rat King, Miner rat and the pirate rat, jealous of their prosperity, coveted the Golden Catnip\'s power to fuel his dark legion.' },
@@ -1231,6 +1232,11 @@
 
     function rescueKittens(r, c) {
         if (!level || level.grid[r][c] !== 22) return;
+        
+        // Remove only this specific cage
+        level.grid[r][c] = 0;
+        if (onlineMode && isOnlineHost) netGridChanges.push({ r, c, v: 0 });
+        
         if (window.audio) {
             audio.playPowerUp();
             audio.playGlitch();
@@ -1238,17 +1244,18 @@
         for (let i = 0; i < 25; i++) {
             addParticle(c * T + T/2, r * T + T/2, ['#FF69B4', '#FFB6C1', '#FFC0CB', '#FF1493', '#FFFF00', '#00FFFF'][Math.floor(Math.random() * 6)], 4 + Math.random() * 4, 6);
         }
-        for (let row = 0; row < level.rows; row++) {
-            for (let col = 0; col < level.cols; col++) {
-                if (level.grid[row][col] === 22) {
-                    level.grid[row][col] = 0;
-                    if (onlineMode && isOnlineHost) netGridChanges.push({ r: row, c: col, v: 0 });
-                }
-            }
+        
+        rescuedKittensCount++;
+        
+        if (rescuedKittensCount < 10) {
+            score += 200;
+            showOverlay('KITTEN RESCUED! 🐱', 'YOU FREED A CAPTURED KITTEN FROM THE DUNGEON!\n\nRESCUED: ' + rescuedKittensCount + ' / 10\n\nSCORE +200');
+            setTimeout(() => { if (state === 'playing') overlay.classList.remove('visible'); }, 1200);
+        } else {
+            score += 1000;
+            showOverlay('🐱 ALL KITTENS FREED! 🎉', 'ALL 10 CAPTURED KITTENS HAVE BEEN RESCUED!\nTHE ESCAPE ROUTE IS NOW OPEN!\n\nBONUS +1000 SCORE');
+            setTimeout(() => { if (state === 'playing') overlay.classList.remove('visible'); }, 3000);
         }
-        score += 1000;
-        showOverlay('🐱 KITTENS RESCUED!', 'THE CAPTURED KITTENS WERE FREED FROM THE DUNGEON!\nTHEY ESCAPED SAFELY BACK TO THE CLAN!\n\nSCORE +1000');
-        setTimeout(() => { overlay.classList.remove('visible'); }, 3000);
     }
 
     function solid(r, c) {
@@ -4846,7 +4853,12 @@
         }
 
         if (onSilverPipe(cat, keys) || (coopMode && onSilverPipe(cat2, keys2))) {
-            if (currentLevel === 25) {
+            if (currentLevel === 5 && rescuedKittensCount < 10) {
+                showOverlay('🐱 RESCUE ALL KITTENS!', 'YOU MUST FIND AND FREE ALL 10 CAPTURED KITTENS BEFORE ESCAPING THE DUNGEON!\n\nKITTENS RESCUED: ' + rescuedKittensCount + ' / 10');
+                setTimeout(() => { if (state === 'playing') overlay.classList.remove('visible'); }, 2000);
+                return;
+            }
+            if (currentLevel === 26) {
                 state = 'win'; score += 5000;
             } else if (currentLevel < LEVEL_DATA.length - 1) {
                 state = 'levelcomplete'; winTimer = 120; score += 1000;
@@ -6603,6 +6615,7 @@
     // GAME FLOW
     function loadLevel(idx) {
         boss = null;
+        rescuedKittensCount = 0;
         level = parseLevel(idx);
         cat.x = level.spawnX * T; cat.y = level.spawnY * T - cat.h;
         cat.vx = 0; cat.vy = 0; cat.grounded = false; cat.dead = false;
