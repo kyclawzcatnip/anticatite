@@ -24,7 +24,8 @@
         15: ['#5C4A3A', '#4A382A'], // 15=mine rails
         16: ['#C0C0C0', '#A0A0A0'], 17: ['#C0C0C0', '#A0A0A0'], // 16-17=silver pipe top
         18: ['#B0B0B0', '#909090'], 19: ['#B0B0B0', '#909090'], // 18-19=silver pipe body
-        20: ['#A09890', '#8C847C'] // 20=ancient ruins
+        20: ['#A09890', '#8C847C'], // 20=ancient ruins
+        22: ['#2A201A', '#777777']  // 22=kitten cage
     };
 
     // LEVELS (each row is a horizontal row; stored top-to-bottom)
@@ -116,20 +117,20 @@
         ],
         // Level 6 — Sky Islands: The Ascent
         [
+            "KKKKKKKKKKKKKKKK                                                                                                                    ",
+            "K              K                                                                                                                    ",
+            "K              K                                                                                                                    ",
+            "K              K                                                                                                                    ",
+            "K              K                                                     C C C          H                                               ",
+            "K              K                                                    BBBBBBB                   C C                                   ",
+            "K              K       C C C      Y        C C           Y                    C C C       BBBBB         Y                           ",
+            "K          KKKKK C    BBBBBBB             BBBBB      C  C          BBBBB         BBBBBBB                                  <>        ",
+            "K   S   N  K   K K      V        R    V  R      R   BBBBBBB  V R      A  V                     A     C C C                ()        ",
+            "KKKKKKKKKKKK   K              BBB        BBB                             BBB     BBB              BBB    BBBBBBB              ()    ",
+            "KKKKKKKKKKKKKKKK                                      BBBBB                              BBB                        BBBBBBBBBBBBBBBB",
+            "KKKKKKKKKKKKKKKK       BBB        BBB                          BBB       BBBBB                   BBBB                               ",
             "                                                                                                                                    ",
             "                                                                                                                                    ",
-            "                                                                                                                                    ",
-            "                                                                                                                                    ",
-            "                                                                     C C C          H                                              ",
-            "                                                                    BBBBBBB                   C C                                   ",
-            "                       C C C      Y        C C           Y                    C C C       BBBBB         Y                            ",
-            "             C C      BBBBBBB             BBBBB      C  C          BBBBB         BBBBBBB                                  <>         ",
-            "            BBBBB       V        R    V  R      R   BBBBBBB  V R      A  V                     A     C C C                ()        ",
-            "                          BBB        BBB                             BBB     BBB              BBB    BBBBBBB              ()         ",
-            "  S      BBBBB                                        BBBBB                              BBB                        BBBBBBBBBBBBBBBBBBBB",
-            "BBBBB                  BBB        BBB                          BBB       BBBBB                   BBBB                              ",
-            "                                                                                                                                   ",
-            "                                                                                                                                   ",
         ],
         // Level 7 — Sky Islands: Pirate Ship
         [
@@ -579,6 +580,7 @@
                 else if (ch === ')') grid[r][c] = 19; // silver pipe body-right (end pipe)
                 else if (ch === 'X') { grid[r][c] = 0; } // boss spawn marker handled separately
                 else if (ch === 'U') grid[r][c] = 20; // ancient ruins
+                else if (ch === 'N') grid[r][c] = 22; // kitten cage
                 else if (ch === 'S') { grid[r][c] = 0; spawnX = c; spawnY = r; }
                 else grid[r][c] = 0;
             }
@@ -1210,11 +1212,33 @@
         addParticle(cat.x + cat.w / 2, cat.y + cat.h / 2, '#FFFF00', 30, 8);
     }
 
+    function rescueKittens(r, c) {
+        if (!level || level.grid[r][c] !== 22) return;
+        if (window.audio) {
+            audio.playPowerUp();
+            audio.playGlitch();
+        }
+        for (let i = 0; i < 25; i++) {
+            addParticle(c * T + T/2, r * T + T/2, ['#FF69B4', '#FFB6C1', '#FFC0CB', '#FF1493', '#FFFF00', '#00FFFF'][Math.floor(Math.random() * 6)], 4 + Math.random() * 4, 6);
+        }
+        for (let row = 0; row < level.rows; row++) {
+            for (let col = 0; col < level.cols; col++) {
+                if (level.grid[row][col] === 22) {
+                    level.grid[row][col] = 0;
+                    if (onlineMode && isOnlineHost) netGridChanges.push({ r: row, c: col, v: 0 });
+                }
+            }
+        }
+        score += 1000;
+        showOverlay('🐱 KITTENS RESCUED!', 'THE CAPTURED KITTENS WERE FREED FROM THE DUNGEON!\nTHEY ESCAPED SAFELY BACK TO THE CLAN!\n\nSCORE +1000');
+        setTimeout(() => { overlay.classList.remove('visible'); }, 3000);
+    }
+
     function solid(r, c) {
         if (!level || r < 0 || r >= level.rows || c < 0 || c >= level.cols) return false;
         if (isTileGlitchedOut(r, c)) return false;
         const t = level.grid[r][c];
-        return t === 1 || t === 2 || t === 3 || t === 4 || t === 5 || t === 6 || t === 7 || t === 8 || t === 9 || t === 10 || t === 11 || t === 13 || t === 14 || t === 16 || t === 17 || t === 18 || t === 19 || t === 20;
+        return t === 1 || t === 2 || t === 3 || t === 4 || t === 5 || t === 6 || t === 7 || t === 8 || t === 9 || t === 10 || t === 11 || t === 13 || t === 14 || t === 16 || t === 17 || t === 18 || t === 19 || t === 20 || t === 22;
     }
 
     function tileAt(px, py) { return { r: Math.floor(py / T), c: Math.floor(px / T) }; }
@@ -1284,11 +1308,17 @@
         if (cat.vx > 0) {
             let tc = Math.floor((cat.x + cat.w - m) / T);
             let tr1 = Math.floor((cat.y + 2) / T), tr2 = Math.floor((cat.y + cat.h - 2) / T);
-            for (let r = tr1; r <= tr2; r++) { if (solid(r, tc)) { cat.x = tc * T - cat.w + m; cat.vx = 0; break; } }
+            for (let r = tr1; r <= tr2; r++) {
+                if (level.grid[r] && level.grid[r][tc] === 22) rescueKittens(r, tc);
+                if (solid(r, tc)) { cat.x = tc * T - cat.w + m; cat.vx = 0; break; }
+            }
         } else if (cat.vx < 0) {
             let tc = Math.floor((cat.x + m) / T);
             let tr1 = Math.floor((cat.y + 2) / T), tr2 = Math.floor((cat.y + cat.h - 2) / T);
-            for (let r = tr1; r <= tr2; r++) { if (solid(r, tc)) { cat.x = (tc + 1) * T - m; cat.vx = 0; break; } }
+            for (let r = tr1; r <= tr2; r++) {
+                if (level.grid[r] && level.grid[r][tc] === 22) rescueKittens(r, tc);
+                if (solid(r, tc)) { cat.x = (tc + 1) * T - m; cat.vx = 0; break; }
+            }
         }
 
         // Move Y
@@ -1299,6 +1329,7 @@
             let tr = Math.floor((cat.y + cat.h) / T);
             let tc1 = Math.floor((cat.x + m) / T), tc2 = Math.floor((cat.x + cat.w - m - 1) / T);
             for (let c = tc1; c <= tc2; c++) {
+                if (level.grid[tr] && level.grid[tr][c] === 22) rescueKittens(tr, c);
                 if (solid(tr, c)) { cat.y = tr * T - cat.h; cat.vy = 0; cat.grounded = true; cat.jumping = false; break; }
             }
         } else if (cat.vy < 0) {
@@ -1306,6 +1337,7 @@
             let tr = Math.floor(cat.y / T);
             let tc1 = Math.floor((cat.x + m) / T), tc2 = Math.floor((cat.x + cat.w - m - 1) / T);
             for (let c = tc1; c <= tc2; c++) {
+                if (level.grid[tr] && level.grid[tr][c] === 22) rescueKittens(tr, c);
                 if (solid(tr, c)) {
                     cat.y = (tr + 1) * T; cat.vy = 1;
                     // Hit question block or rare question block?
@@ -1495,11 +1527,17 @@
         if (cat2.vx > 0) {
             let tc = Math.floor((cat2.x + cat2.w - m) / T);
             let tr1 = Math.floor((cat2.y + 2) / T), tr2 = Math.floor((cat2.y + cat2.h - 2) / T);
-            for (let r = tr1; r <= tr2; r++) { if (solid(r, tc)) { cat2.x = tc * T - cat2.w + m; cat2.vx = 0; break; } }
+            for (let r = tr1; r <= tr2; r++) {
+                if (level.grid[r] && level.grid[r][tc] === 22) rescueKittens(r, tc);
+                if (solid(r, tc)) { cat2.x = tc * T - cat2.w + m; cat2.vx = 0; break; }
+            }
         } else if (cat2.vx < 0) {
             let tc = Math.floor((cat2.x + m) / T);
             let tr1 = Math.floor((cat2.y + 2) / T), tr2 = Math.floor((cat2.y + cat2.h - 2) / T);
-            for (let r = tr1; r <= tr2; r++) { if (solid(r, tc)) { cat2.x = (tc + 1) * T - m; cat2.vx = 0; break; } }
+            for (let r = tr1; r <= tr2; r++) {
+                if (level.grid[r] && level.grid[r][tc] === 22) rescueKittens(r, tc);
+                if (solid(r, tc)) { cat2.x = (tc + 1) * T - m; cat2.vx = 0; break; }
+            }
         }
         cat2.y += cat2.vy;
         cat2.grounded = false;
@@ -1507,12 +1545,14 @@
             let tr = Math.floor((cat2.y + cat2.h) / T);
             let tc1 = Math.floor((cat2.x + m) / T), tc2 = Math.floor((cat2.x + cat2.w - m - 1) / T);
             for (let c = tc1; c <= tc2; c++) {
+                if (level.grid[tr] && level.grid[tr][c] === 22) rescueKittens(tr, c);
                 if (solid(tr, c)) { cat2.y = tr * T - cat2.h; cat2.vy = 0; cat2.grounded = true; cat2.jumping = false; break; }
             }
         } else if (cat2.vy < 0) {
             let tr = Math.floor(cat2.y / T);
             let tc1 = Math.floor((cat2.x + m) / T), tc2 = Math.floor((cat2.x + cat2.w - m - 1) / T);
             for (let c = tc1; c <= tc2; c++) {
+                if (level.grid[tr] && level.grid[tr][c] === 22) rescueKittens(tr, c);
                 if (solid(tr, c)) {
                     cat2.y = (tr + 1) * T; cat2.vy = 1;
                     if (level.grid[tr][c] === 3 || level.grid[tr][c] === 13) { hitQuestion(tr, c); }
@@ -5152,6 +5192,52 @@
             ctx.fillStyle = '#3E5C31'; // dark moss shadows
             ctx.fillRect(x + 6, y, 2, 5);
             ctx.fillRect(x + 22, y, 2, 6);
+        }
+        // Captured Kitten Dungeon Cage (tile 22)
+        if (type === 22) {
+            // Dark stone block background
+            ctx.fillStyle = '#2A201A'; ctx.fillRect(x, y, T, T);
+            
+            // Draw kitten inside cage
+            const kx = x + 8, ky = y + 10;
+            ctx.fillStyle = '#FFA500'; // Orange tabby body
+            ctx.fillRect(kx, ky + 6, 16, 12);
+            ctx.fillRect(kx + 2, ky, 12, 8);
+            ctx.fillStyle = '#FFC0CB'; // Pink inner ear
+            ctx.fillRect(kx + 3, ky - 2, 2, 2);
+            ctx.fillRect(kx + 11, ky - 2, 2, 2);
+            ctx.fillStyle = '#FFA500'; // Outer ear
+            ctx.fillRect(kx + 2, ky - 2, 1, 2);
+            ctx.fillRect(kx + 13, ky - 2, 1, 2);
+            
+            const blink = frameCount % 120 < 6;
+            ctx.fillStyle = blink ? '#FFA500' : '#000';
+            ctx.fillRect(kx + 4, ky + 2, 2, 2);
+            ctx.fillRect(kx + 10, ky + 2, 2, 2);
+            if (!blink) {
+                ctx.fillStyle = '#FFF';
+                ctx.fillRect(kx + 4, ky + 2, 1, 1);
+                ctx.fillRect(kx + 10, ky + 2, 1, 1);
+            }
+            ctx.fillStyle = '#FFB6C1';
+            ctx.fillRect(kx + 7, ky + 5, 2, 1);
+
+            // Draw iron bars in front of kitten
+            ctx.fillStyle = '#777';
+            ctx.fillRect(x, y, T, 3);
+            ctx.fillRect(x, y + T - 3, T, 3);
+            ctx.fillRect(x, y, 3, T);
+            ctx.fillRect(x + T - 3, y, 3, T);
+            
+            ctx.fillStyle = '#555';
+            ctx.fillRect(x + 8, y, 2, T);
+            ctx.fillRect(x + 15, y, 2, T);
+            ctx.fillRect(x + 22, y, 2, T);
+            
+            ctx.fillStyle = '#999';
+            ctx.fillRect(x + 8, y, 1, T);
+            ctx.fillRect(x + 15, y, 1, T);
+            ctx.fillRect(x + 22, y, 1, T);
         }
 
     }
