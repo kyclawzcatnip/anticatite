@@ -28,7 +28,6 @@
       <button id="btn-coop" class="mobile-only-btn">👥 CO-OP</button>
       <button id="btn-online" class="mobile-only-btn">🌐 ONLINE</button>
       <button id="btn-codex" class="mobile-only-btn" style="margin-top:6px; border-color:#FFD700; color:#FFD700;" onclick="window._openCodex()">📖 LORE CODEX</button>
-      <button id="btn-maker" class="mobile-only-btn" style="margin-top:6px; border-color:#00FF00; color:#00FF00;" onclick="window._toggleMakerPanel()">⚙️ MAKER PANEL</button>
     </div>
 
     <!-- ONLINE MULTIPLAYER LOBBY -->
@@ -124,59 +123,6 @@
           </div>
         </div>
 
-      </div>
-    </div>
-
-    <!-- SCW MAKER'S PANEL OVERLAY -->
-    <div id="maker-panel-overlay" class="hidden">
-      <div id="maker-panel">
-        <div id="maker-panel-header">
-          <span>⚙️ SCW MAKER'S PANEL</span>
-          <button id="btn-maker-close" onclick="window._toggleMakerPanel()">✕</button>
-        </div>
-        <div id="maker-panel-content">
-          <!-- Section: Survival -->
-          <div class="maker-section">
-            <div class="maker-section-title">🛡️ SURVIVAL CHEATS</div>
-            <div class="maker-row">
-              <button onclick="window._cheatToggleGodMode()" id="cheat-god-btn">Toggle God Mode (OFF)</button>
-              <button onclick="window._cheatFullHP()">Refill HP / Lives</button>
-            </div>
-          </div>
-          <!-- Section: Level Selector -->
-          <div class="maker-section">
-            <div class="maker-section-title">🌀 LEVEL WARP</div>
-            <div class="maker-row">
-              <select id="cheat-level-select" style="font-family:inherit; font-size: 8px; padding: 4px; background: #222; color: #FFF; border: 1px solid #00FF00; flex-grow: 1;">
-                <!-- We will dynamically populate levels or static options -->
-              </select>
-              <button onclick="window._cheatWarpLevel()" style="margin-left: 6px;">WARP</button>
-            </div>
-          </div>
-          <!-- Section: Power-ups -->
-          <div class="maker-section">
-            <div class="maker-section-title">🍄 POWER-UP SPAWNS</div>
-            <div class="maker-grid">
-              <button onclick="window._cheatGivePower('fire')">🔥 Fire</button>
-              <button onclick="window._cheatGivePower('pickaxe')">⛏️ Pickaxe</button>
-              <button onclick="window._cheatGivePower('glide')">🪂 Glide</button>
-              <button onclick="window._cheatGivePower('shield')">🛡️ Shield</button>
-              <button onclick="window._cheatGivePower('big')">🍄 Big</button>
-              <button onclick="window._cheatGivePower('mini')">🔹 Mini</button>
-              <button onclick="window._cheatGivePower('protect')">🔶 Protect</button>
-              <button onclick="window._cheatGivePower('star')">⭐ Star</button>
-            </div>
-          </div>
-          <!-- Section: Game Mechanics -->
-          <div class="maker-section">
-            <div class="maker-section-title">🔧 LEVEL GIMMICKS</div>
-            <div class="maker-row">
-              <button onclick="window._cheatRescueKittens()">🔑 Rescue All Kittens</button>
-              <button onclick="window._cheatKillEnemies()">💀 Clear Enemies</button>
-              <button onclick="window._cheatDamageBoss()">⚡ Defeat Boss</button>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
 
