@@ -602,7 +602,7 @@
                 else grid[r][c] = 0;
             }
         }
-        if (idx >= 26) {
+        if (idx >= 27) {
             enemies.forEach((e, i) => {
                 if (i % 2 === 0) {
                     e.isGlitchedEnemy = true;
@@ -6653,16 +6653,14 @@
                 isBig4 = false; cat4.h = 32; heldShell4 = null;
             }
         }
-        // Spawn boss on boss arena (index 4), pirate boss (index 10), or miner boss (index 25)
-        if (idx === 4 || idx === 10 || idx === 25) {
-            const isPirate = idx === 10;
-            const isMiner = idx === 25;
+        // Spawn boss on boss arena (index 4), pirate boss (index 11), miner boss (index 26), or glitched core boss (index 30)
+        if (idx === 4 || idx === 11 || idx === 26 || idx === 30) {
+            const isPirate = idx === 11;
+            const isMiner = idx === 26;
+            const isGlitched = idx === 30;
             const raw = LEVEL_DATA[idx];
             for (let r = 0; r < raw.length; r++) {
                 for (let c = 0; c < raw[r].length; c++) {
-                    const isPirate = idx === 10;
-                    const isMiner = idx === 25;
-                    const isGlitched = idx === 29 || idx >= 26;
                     if (raw[r][c] === 'X') { boss = createBoss(c * T - 16, r * T - 64 + T, isPirate, isMiner, isGlitched); }
                 }
             }
