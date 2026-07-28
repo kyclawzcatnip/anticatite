@@ -6807,17 +6807,26 @@
                 isBig4 = false; cat4.h = 32; heldShell4 = null;
             }
         }
+        const numericIdx = Number(idx);
+        console.log("Loading level index:", numericIdx, "type:", typeof numericIdx);
         // Spawn boss on boss arena (index 4), pirate boss (index 11), miner boss (index 26), or glitched core boss (index 30)
-        if (idx === 4 || idx === 11 || idx === 26 || idx === 30) {
-            const isPirate = idx === 11;
-            const isMiner = idx === 26;
-            const isGlitched = idx === 30;
-            const raw = LEVEL_DATA[idx];
+        if (numericIdx === 4 || numericIdx === 11 || numericIdx === 26 || numericIdx === 30) {
+            console.log("This is a boss level! Spawning boss...");
+            const isPirate = numericIdx === 11;
+            const isMiner = numericIdx === 26;
+            const isGlitched = numericIdx === 30;
+            const raw = LEVEL_DATA[numericIdx];
+            let foundX = false;
             for (let r = 0; r < raw.length; r++) {
                 for (let c = 0; c < raw[r].length; c++) {
-                    if (raw[r][c] === 'X') { boss = createBoss(c * T - 16, r * T - 64 + T, isPirate, isMiner, isGlitched); }
+                    if (raw[r][c] === 'X') { 
+                        boss = createBoss(c * T - 16, r * T - 64 + T, isPirate, isMiner, isGlitched); 
+                        foundX = true;
+                        console.log("Boss spawned successfully:", boss);
+                    }
                 }
             }
+            if (!foundX) console.warn("No 'X' spawn marker found in boss level layout!");
         } else {
             boss = null;
         }
@@ -7228,10 +7237,13 @@
         }
         // Boss
         if (data.boss) {
-            if (!boss) boss = createBoss(data.boss.x, data.boss.y, data.boss.pirate);
+            if (!boss) boss = createBoss(data.boss.x, data.boss.y, data.boss.pirate, data.boss.miner, data.boss.glitched);
             boss.x = data.boss.x; boss.y = data.boss.y;
             boss.hp = data.boss.hp; boss.alive = data.boss.alive;
             boss.dir = data.boss.dir; boss.phase = data.boss.phase;
+            boss.pirate = data.boss.pirate || false;
+            boss.miner = data.boss.miner || false;
+            boss.glitched = data.boss.glitched || false;
         } else { boss = null; }
         // Grid changes (question blocks hit)
         if (data.gridChanges && level) {
@@ -7288,7 +7300,7 @@
                 p1HP: p1HP, p2HP: p2HP,
                 hasFire: hasFire,
                 enemies: enemyData, coins: coinData, fireballs: fbData,
-                boss: boss ? { x: Math.round(boss.x), y: Math.round(boss.y), hp: boss.hp, alive: boss.alive, dir: boss.dir, phase: boss.phase, pirate: boss.pirate } : null,
+                boss: boss ? { x: Math.round(boss.x), y: Math.round(boss.y), hp: boss.hp, alive: boss.alive, dir: boss.dir, phase: boss.phase, pirate: boss.pirate, miner: boss.miner, glitched: boss.glitched } : null,
                 shakeTimer: shakeTimer, shakeAmt: shakeAmt,
                 gridChanges: netGridChanges.length > 0 ? netGridChanges.slice() : undefined,
                 frameCount: frameCount,
