@@ -81,7 +81,7 @@
             "GGGGG  GGG  GGG    GGGGG   GGGGG   GGGGG    GGGG   GGGGG    GGG   GGGGG   GGG    GGGGG   GGG    GGG   GGGGGGGGGGGGGGGGGGGGGGGKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK      ",
             "GGGGG  GGG  GGG    GGGGG   GGGGG   GGGGG    GGGG   GGGGG    GGG   GGGGG   GGG    GGGGG   GGG    GGG   GGGGGGGGGGGGGGGGGGGGGGGKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK      ",
         ],
-        // Level 4 — Castle Interior (platforming)
+        // Level 4 — THE RAT OVERLORD ARENA (Mini-Boss)
         [
             "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
             "K                                                                                              K",
@@ -92,7 +92,7 @@
             "K        R    R       KKK   KKKKKK     R    V    KKKK   R    H   KKKKKKKK   V   R              K",
             "K    KKKKKKKKKK    AV    R        KKKKKKKK   KKKK    V    KKKK          KKKK    KKKK    VA     K",
             "K                KKKK                           R  A               R                    DDDDDDDK",
-            "K           R        KKKK    C  L     KKK   KKKKKKKK        KKKK      KKKK    W    KKKKDDDDDDDK",
+            "K           R        KKKK    C  L     KKK   KKKKKKKK        KKKK      KKKK    W   XKKKKDDDDDDDK",
             "K S      KKKKKK          KKKKKKKKK        R                     KKKK       KKKKKKKKKKKKDDDDDDDK",
             "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
             "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
@@ -760,6 +760,16 @@
     let bossSpears = [];      // floor spear traps
     let bossDaggers = [];     // dagger projectiles (large + small)
     let bossFireballs2 = [];  // boss's bouncing fireballs (separate from player fireballs)
+    // Rat Overlord Mini-Boss projectiles
+    let bossDoomArrows = [];    // Arrow of Doom (+1 life)
+    let bossGhostFists = [];    // 5 Ghosty Fists (Doom Hit)
+    let bossAnticatArrows = []; // Anticatite (-2 lives)
+    let floatingTexts = [];     // +1 LIFE! / -2 LIVES! text popups
+
+    function addFloatingText(x, y, text, color) {
+        floatingTexts.push({ x, y, text, color, vy: -1.5, life: 80, maxLife: 80 });
+    }
+
     // Boss Phase 2 state
     let bossColorWalls = [];  // { x, color: 'blue'|'red', w, h }
     let bossBarrier = null;   // { x, y, w, h, vx } sweeping wall
@@ -769,13 +779,23 @@
     let bossYarnBalls = [];   // { x, y, vx, vy, life } tracking yarn balls
     let bossCross = null;     // { x, y, warningTimer, fireTimer, firing }
     const BOSS_ATTACK_COOLDOWN = 180; // 3 seconds at 60fps
-    function createBoss(x, y, isPirate, isMiner, isGlitched) {
+    function createBoss(x, y, isPirate, isMiner, isGlitched, isRatOverlord) {
         // Reset boss projectiles
         bossSpears = [];
         bossDaggers = [];
         bossFireballs2 = [];
+        bossDoomArrows = [];
+        bossGhostFists = [];
+        bossAnticatArrows = [];
         // Reset dialogue state
-        if (isGlitched) {
+        if (isRatOverlord) {
+            bossDialogueActive = true;
+            bossDialogueText = 'FEAR ME! I AM THE RAT OVERLORD! PREPARE TO FACE MY ULTIMATE CHARGE... AND ARROWS OF DOOM!';
+            bossDialogueCharIndex = 0;
+            bossDialogueTimer = 0;
+            bossDialogueDone = false;
+            bossDialogueDismissed = false;
+        } else if (isGlitched) {
             bossDialogueActive = true;
             bossDialogueText = 'ERROR 404: REALITY NOT FOUND. I AM THE GLITCHED CORE. PREPARE FOR DELETION.';
             bossDialogueCharIndex = 0;
@@ -791,7 +811,7 @@
             bossDialogueDismissed = false;
         } else if (!isPirate) {
             bossDialogueActive = true;
-            const skinName = CAT_SKINS[selectedSkin].name;
+            const skinName = typeof CAT_SKINS !== 'undefined' ? CAT_SKINS[selectedSkin].name : 'cat';
             bossDialogueText = 'Well, well, well... if it isn\'t ' + skinName + ' the cat my scouts told me about... NOW YOU DIE.';
             bossDialogueCharIndex = 0;
             bossDialogueTimer = 0;
@@ -799,14 +819,14 @@
             bossDialogueDismissed = false;
         } else {
             bossDialogueActive = true;
-            const skinName = CAT_SKINS[selectedSkin].name;
+            const skinName = typeof CAT_SKINS !== 'undefined' ? CAT_SKINS[selectedSkin].name : 'cat';
             bossDialogueText = 'Arr harr harr! So ' + skinName + ' made it past me rats, did ye? Time to walk the plank!';
             bossDialogueCharIndex = 0;
             bossDialogueTimer = 0;
             bossDialogueDone = false;
             bossDialogueDismissed = false;
         }
-        const bossHP = isGlitched ? GLITCHED_BOSS_HP : isMiner ? MINER_BOSS_HP : isPirate ? PIRATE_BOSS_HP : BOSS_MAX_HP;
+        const bossHP = isRatOverlord ? 14 : (isGlitched ? GLITCHED_BOSS_HP : isMiner ? MINER_BOSS_HP : isPirate ? PIRATE_BOSS_HP : BOSS_MAX_HP);
         return {
             x: x, y: y, w: 64, h: 64,
             vx: 0, vy: 0,
@@ -816,6 +836,7 @@
             pirate: isPirate || false,
             miner: isMiner || false,
             glitched: isGlitched || false,
+            ratOverlord: isRatOverlord || false,
             phase: 'idle',
             phaseTimer: 90,
             dir: -1,
@@ -825,9 +846,12 @@
             grounded: false,
             deathTimer: 0,
             bossPhase: 1,       // multi-phase: 1, 2, 3
-            currentAttack: 0,   // cycles through 0,1,2 for the 3 attacks
+            currentAttack: 0,   // cycles through attacks
             spearWarningTimer: 0,
             spearColumns: [],   // which columns have active spear warnings
+            eyesChanged: false,
+            secretAttackTriggered: false,
+            chargeTimer: 0,
         };
     }
 
@@ -3065,6 +3089,9 @@
         updateBossSpears();
         updateBossDaggers();
         updateBossFireballs2();
+        updateBossDoomArrows();
+        updateBossGhostFists();
+        updateBossAnticatArrows();
         // Phase 2 projectiles
         updateColorWalls();
         updateBarrier();
@@ -3125,7 +3152,10 @@
                     bossSpears = [];
                     bossDaggers = [];
                     bossFireballs2 = [];
-                    const title = boss.glitched ? '👾 GLITCHED CORE DEFEATED!' : boss.miner ? '⛏️ MINE FOREMAN DEFEATED!' : boss.pirate ? '🏴‍☠️ PIRATE CAPTAIN DEFEATED!' : '👑 RAT KING DEFEATED!';
+                    bossDoomArrows = [];
+                    bossGhostFists = [];
+                    bossAnticatArrows = [];
+                    const title = boss.ratOverlord ? '👑 THE RAT OVERLORD DEFEATED!' : boss.glitched ? '👾 GLITCHED CORE DEFEATED!' : boss.miner ? '⛏️ MINE FOREMAN DEFEATED!' : boss.pirate ? '🏴‍☠️ PIRATE CAPTAIN DEFEATED!' : '👑 RAT KING DEFEATED!';
                     const sub = 'A SILVER PIPE HAS APPEARED!\nENTER IT TO CONTINUE...\n\nSCORE: ' + score;
                     showOverlay(title, sub);
                     // Auto-dismiss the overlay after 3 seconds so the player can move
@@ -3180,15 +3210,63 @@
         // Flash timer
         if (boss.flashTimer > 0) boss.flashTimer--;
 
-        // === PHASE AI (shared by Rat King + Pirate Captain) ===
+        // === PHASE AI ===
         {
             boss.phaseTimer--;
             boss.dir = cat.x < boss.x ? -1 : 1;
 
+            // Secret Attack trigger for Rat Overlord (HP <= 7)
+            if (boss.ratOverlord && boss.hp <= 7 && !boss.secretAttackTriggered) {
+                boss.secretAttackTriggered = true;
+                boss.eyesChanged = true;
+                bossTauntText = "SECRAT ATTACK ACTIVATED!";
+                bossTauntTimer = 120;
+                shakeTimer = 25; shakeAmt = 8;
+                if (window.audio) {
+                    if (typeof audio.playSecretAttack === 'function') audio.playSecretAttack();
+                    else audio.playGlitch();
+                }
+                for (let i = 0; i < 25; i++) {
+                    addParticle(boss.x + Math.random() * boss.w, boss.y + Math.random() * boss.h, ['#00FFFF', '#FF00FF', '#9D00FF'][Math.floor(Math.random() * 3)], 4 + Math.random() * 3, 6);
+                }
+            }
+
             if (boss.phase === 'idle') {
                 boss.vx = 0;
                 if (boss.phaseTimer <= 0) {
-                    if (boss.bossPhase === 1) {
+                    if (boss.ratOverlord) {
+                        let attacks = [];
+                        if (!boss.secretAttackTriggered) {
+                            attacks = ['ultiment_charge', 'arrow_of_doom'];
+                        } else {
+                            attacks = ['doom_hit', 'anticatite', 'ultiment_charge', 'arrow_of_doom'];
+                        }
+                        const attackChoice = attacks[boss.currentAttack % attacks.length];
+                        boss.currentAttack++;
+
+                        if (attackChoice === 'ultiment_charge') {
+                            boss.phase = 'ultiment_charge';
+                            boss.phaseTimer = 150;
+                            boss.chargeTimer = 0;
+                            bossTauntText = 'ULTIMENT CHARGE ATTAACKK!!!';
+                            bossTauntTimer = 90;
+                        } else if (attackChoice === 'arrow_of_doom') {
+                            boss.phase = 'arrow_of_doom';
+                            boss.phaseTimer = 70;
+                            bossTauntText = 'BEHOLD... THE ARROW OF DOOM!!!';
+                            bossTauntTimer = 90;
+                        } else if (attackChoice === 'doom_hit') {
+                            boss.phase = 'doom_hit';
+                            boss.phaseTimer = 80;
+                            bossTauntText = 'DOOM HIT! 5 GHOSTY FISTS!';
+                            bossTauntTimer = 90;
+                        } else if (attackChoice === 'anticatite') {
+                            boss.phase = 'anticatite';
+                            boss.phaseTimer = 80;
+                            bossTauntText = 'ANTICATITE ARROW! REMOVES 2 LIVES!';
+                            bossTauntTimer = 90;
+                        }
+                    } else if (boss.bossPhase === 1) {
                         // Phase 1: Cycle through 3 attacks
                         const attack = boss.currentAttack % 3;
                         if (attack === 0) {
@@ -3311,6 +3389,94 @@
                             bossCross = { state: 'warning', warningTimer: 120, fireTimer: 0 };
                         }
                     }
+                }
+            } else if (boss.phase === 'ultiment_charge') {
+                boss.chargeTimer++;
+                if (boss.chargeTimer < 60) {
+                    boss.vx = 0;
+                    boss.x += (Math.random() - 0.5) * 4;
+                    if (frameCount % 2 === 0) {
+                        addParticle(boss.x + Math.random() * boss.w, boss.y + boss.h, '#9D00FF', 2, 4);
+                        addParticle(boss.x + Math.random() * boss.w, boss.y + boss.h, '#FF00FF', 2, 4);
+                    }
+                } else if (boss.chargeTimer < 90) {
+                    boss.vx = boss.dir * 14;
+                    if (frameCount % 2 === 0) {
+                        addParticle(boss.x + (boss.dir === 1 ? 0 : boss.w), boss.y + boss.h / 2, '#FF0000', 3, 3);
+                    }
+                } else {
+                    boss.vx = 0;
+                    shakeTimer = 15; shakeAmt = 8;
+                    if (window.audio) audio.playStomp();
+                    for (let i = 0; i < 20; i++) {
+                        addParticle(boss.x + boss.w / 2, boss.y + boss.h / 2, ['#FFD700', '#888', '#FFF', '#9D00FF'][Math.floor(Math.random() * 4)], 4, 6);
+                    }
+                    bossTauntText = 'OWWW! I MISSED SO BADLY!';
+                    bossTauntTimer = 120;
+                    boss.phase = 'tired';
+                    boss.phaseTimer = 180;
+                }
+            } else if (boss.phase === 'arrow_of_doom') {
+                boss.vx = 0;
+                if (boss.phaseTimer === 40) {
+                    const bx = boss.x + (boss.dir === 1 ? boss.w : 0);
+                    const by = boss.y + 24;
+                    const dx = (cat.x + cat.w / 2) - bx, dy = (cat.y + cat.h / 2) - by;
+                    const len = Math.sqrt(dx * dx + dy * dy) || 1;
+                    const speed = 5;
+                    bossDoomArrows.push({
+                        x: bx, y: by, w: 20, h: 8,
+                        vx: (dx / len) * speed, vy: (dy / len) * speed,
+                        life: 300, angle: Math.atan2(dy, dx)
+                    });
+                    if (window.audio) audio.playFireball();
+                }
+                if (boss.phaseTimer <= 0) {
+                    if (Math.random() < 0.5) { boss.phase = 'tired'; boss.phaseTimer = 120; }
+                    else { boss.phase = 'idle'; boss.phaseTimer = 30; }
+                }
+            } else if (boss.phase === 'doom_hit') {
+                boss.vx = 0;
+                if (boss.phaseTimer === 50) {
+                    const bx = boss.x + boss.w / 2;
+                    const by = boss.y + 20;
+                    const baseAngle = Math.atan2((cat.y + cat.h / 2) - by, (cat.x + cat.w / 2) - bx);
+                    const offsets = [-0.4, -0.2, 0, 0.2, 0.4];
+                    for (let i = 0; i < 5; i++) {
+                        const angle = baseAngle + offsets[i];
+                        const speed = 4;
+                        bossGhostFists.push({
+                            x: bx - 8, y: by - 8, w: 16, h: 16,
+                            vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed,
+                            life: 240, pulse: 0, angle: angle
+                        });
+                    }
+                    if (window.audio) audio.playGlitch();
+                    addParticle(bx, by, '#9D00FF', 15, 6);
+                }
+                if (boss.phaseTimer <= 0) {
+                    if (Math.random() < 0.5) { boss.phase = 'tired'; boss.phaseTimer = 120; }
+                    else { boss.phase = 'idle'; boss.phaseTimer = 30; }
+                }
+            } else if (boss.phase === 'anticatite') {
+                boss.vx = 0;
+                if (boss.phaseTimer === 50) {
+                    const bx = boss.x + (boss.dir === 1 ? boss.w : 0);
+                    const by = boss.y + 24;
+                    const dx = (cat.x + cat.w / 2) - bx, dy = (cat.y + cat.h / 2) - by;
+                    const len = Math.sqrt(dx * dx + dy * dy) || 1;
+                    const speed = 5.5;
+                    bossAnticatArrows.push({
+                        x: bx, y: by, w: 22, h: 8,
+                        vx: (dx / len) * speed, vy: (dy / len) * speed,
+                        life: 300, angle: Math.atan2(dy, dx)
+                    });
+                    if (window.audio) audio.playGlitch();
+                    addParticle(bx, by, '#00FFFF', 12, 5);
+                }
+                if (boss.phaseTimer <= 0) {
+                    if (Math.random() < 0.5) { boss.phase = 'tired'; boss.phaseTimer = 120; }
+                    else { boss.phase = 'idle'; boss.phaseTimer = 30; }
                 }
             } else if (boss.phase === 'spears') {
                 boss.vx = 0;
@@ -3718,6 +3884,39 @@
             }
         }
 
+        // Rat Overlord overlay accessories
+        if (boss.ratOverlord) {
+            // Overlord Royal Purple Cloak & Gold Trim
+            bpx(4, 16, 56, 40, '#2D164B');
+            bpx(8, 20, 48, 32, '#4E2484');
+            bpx(4, 52, 56, 5, '#FFD700');
+            // Overlord Crown with Amethyst Gem
+            bpx(32, -10, 30, 14, '#FFD700');
+            bpx(34, -14, 6, 10, '#FFD700');
+            bpx(44, -16, 6, 12, '#FFD700');
+            bpx(54, -14, 6, 10, '#FFD700');
+            bpx(45, -10, 4, 5, '#9D00FF'); // Amethyst gem
+            // EYES CHANGE during Secret Attack!
+            if (boss.eyesChanged) {
+                // Flashing Cyan/White Glowing Eyes
+                const eyeCol = (frameCount % 4 < 2) ? '#00FFFF' : '#FFFFFF';
+                bpx(38, 12, 6, 6, eyeCol);
+                bpx(50, 12, 6, 6, eyeCol);
+                bpx(40, 14, 3, 3, '#1a1a2e');
+                bpx(52, 14, 3, 3, '#1a1a2e');
+                // Eye glow particles
+                if (frameCount % 2 === 0) {
+                    addParticle(bx + (d === 1 ? 52 : 12), by + 14, '#00FFFF', 1, 2);
+                }
+            } else {
+                // Normal Red Eyes
+                bpx(38, 12, 6, 6, '#FF0044');
+                bpx(50, 12, 6, 6, '#FF0044');
+                bpx(40, 14, 3, 3, '#1a1a2e');
+                bpx(52, 14, 3, 3, '#1a1a2e');
+            }
+        }
+
         // Pirate boss overlay accessories
         if (boss.pirate) {
             // Tricorn hat (replaces crown)
@@ -3799,7 +3998,7 @@
         // Label
         ctx.fillStyle = '#FFF';
         ctx.font = '8px "Press Start 2P", monospace';
-        ctx.fillText(boss.glitched ? 'THE GLITCHED CORE' : boss.miner ? 'MINE FOREMAN' : boss.pirate ? 'PIRATE CAPTAIN' : 'RAT KING', barX, barY - 5);
+        ctx.fillText(boss.ratOverlord ? 'THE RAT OVERLORD (MINI-BOSS)' : boss.glitched ? 'THE GLITCHED CORE' : boss.miner ? 'MINE FOREMAN' : boss.pirate ? 'PIRATE CAPTAIN' : 'RAT KING', barX, barY - 5);
     }
 
     // BOSS DIALOGUE — typewriter text with speech bubble
@@ -4220,6 +4419,194 @@
             if (frameCount % 3 === 0) {
                 addParticle(fb.x + fb.w / 2, fb.y + fb.h / 2, '#FF4500', 1, 2);
             }
+        }
+    }
+
+    // === RAT OVERLORD PROJECTILES & POPUPS ===
+    function updateBossDoomArrows() {
+        for (let i = bossDoomArrows.length - 1; i >= 0; i--) {
+            const a = bossDoomArrows[i];
+            a.x += a.vx; a.y += a.vy; a.life--;
+            if (a.life <= 0) { bossDoomArrows.splice(i, 1); continue; }
+
+            // Heart particles
+            if (frameCount % 4 === 0) addParticle(a.x + a.w / 2, a.y + a.h / 2, '#FF69B4', 1, 2);
+
+            // Collision with players -> HEALS +1 LIFE!
+            let hitTarget = null;
+            if (!cat.dead && cat.x + 4 < a.x + a.w && cat.x + cat.w - 4 > a.x && cat.y + 4 < a.y + a.h && cat.y + cat.h - 4 > a.y) {
+                hitTarget = cat;
+                lives = Math.min(99, lives + 1);
+                if (coopMode) p1HP = Math.min(10, p1HP + 1);
+            } else if (coopMode && !cat2.dead && cat2.x + 4 < a.x + a.w && cat2.x + cat2.w - 4 > a.x && cat2.y + 4 < a.y + a.h && cat2.y + cat2.h - 4 > a.y) {
+                hitTarget = cat2;
+                p2HP = Math.min(10, p2HP + 1);
+                lives = Math.min(99, lives + 1);
+            }
+
+            if (hitTarget) {
+                addFloatingText(hitTarget.x + hitTarget.w / 2, hitTarget.y - 15, "+1 LIFE!", "#00FF66");
+                for (let k = 0; k < 15; k++) {
+                    addParticle(hitTarget.x + hitTarget.w / 2, hitTarget.y + hitTarget.h / 2, '#00FF66', 2, 5);
+                    addParticle(hitTarget.x + hitTarget.w / 2, hitTarget.y + hitTarget.h / 2, '#FF69B4', 2, 4);
+                }
+                if (window.audio) audio.playPowerUp();
+                if (boss && boss.ratOverlord) {
+                    bossTauntText = "Wait... that gave you a life?! WRONG ARROW!";
+                    bossTauntTimer = 100;
+                }
+                bossDoomArrows.splice(i, 1);
+            }
+        }
+    }
+
+    function drawBossDoomArrows() {
+        for (const a of bossDoomArrows) {
+            const dx = Math.round(a.x - cam.x), dy = Math.round(a.y);
+            ctx.save();
+            ctx.translate(dx + a.w / 2, dy + a.h / 2);
+            ctx.rotate(a.angle);
+            // Arrow shaft (purple velvet)
+            ctx.fillStyle = '#9D00FF'; ctx.fillRect(-10, -2, 16, 4);
+            // Heart tip (+1 life indicator)
+            ctx.fillStyle = '#00FF66';
+            ctx.beginPath();
+            ctx.arc(6, 0, 5, 0, Math.PI * 2);
+            ctx.fill();
+            // Green glow
+            ctx.fillStyle = 'rgba(0, 255, 102, 0.4)';
+            ctx.beginPath();
+            ctx.arc(6, 0, 8, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+        }
+    }
+
+    function updateBossGhostFists() {
+        for (let i = bossGhostFists.length - 1; i >= 0; i--) {
+            const f = bossGhostFists[i];
+            f.x += f.vx; f.y += f.vy; f.life--; f.pulse = (f.pulse || 0) + 0.15;
+            if (f.life <= 0) { bossGhostFists.splice(i, 1); continue; }
+
+            // Ghostly purple trail
+            if (frameCount % 3 === 0) addParticle(f.x + f.w / 2, f.y + f.h / 2, '#9D00FF', 1, 2);
+
+            // Hit player
+            if (!cat.dead && invincibleTimer <= 0 && starPowerTimer <= 0) {
+                if (cat.x + 4 < f.x + f.w && cat.x + cat.w - 4 > f.x && cat.y + 4 < f.y + f.h && cat.y + cat.h - 4 > f.y) {
+                    killCat();
+                    bossGhostFists.splice(i, 1);
+                    continue;
+                }
+            }
+            if (coopMode && !cat2.dead && invincibleTimer2 <= 0) {
+                if (cat2.x + 4 < f.x + f.w && cat2.x + cat2.w - 4 > f.x && cat2.y + 4 < f.y + f.h && cat2.y + cat2.h - 4 > f.y) {
+                    killCat2();
+                    bossGhostFists.splice(i, 1);
+                    continue;
+                }
+            }
+        }
+    }
+
+    function drawBossGhostFists() {
+        for (const f of bossGhostFists) {
+            const dx = Math.round(f.x - cam.x), dy = Math.round(f.y);
+            ctx.save();
+            ctx.translate(dx + f.w / 2, dy + f.h / 2);
+            ctx.rotate(f.angle);
+            const a = 0.75 + Math.sin(f.pulse) * 0.25;
+            ctx.globalAlpha = a;
+            // Ghostly fist body
+            ctx.fillStyle = '#9D00FF';
+            ctx.fillRect(-7, -7, 14, 14);
+            ctx.fillStyle = '#00FFFF';
+            ctx.fillRect(-5, -5, 10, 10);
+            // Knuckle details
+            ctx.fillStyle = '#FFFFFF';
+            ctx.fillRect(4, -6, 4, 3);
+            ctx.fillRect(4, -2, 4, 3);
+            ctx.fillRect(4, 2, 4, 3);
+            ctx.restore();
+        }
+    }
+
+    function updateBossAnticatArrows() {
+        for (let i = bossAnticatArrows.length - 1; i >= 0; i--) {
+            const a = bossAnticatArrows[i];
+            a.x += a.vx; a.y += a.vy; a.life--;
+            if (a.life <= 0) { bossAnticatArrows.splice(i, 1); continue; }
+
+            // Anti-matter spark trail
+            if (frameCount % 2 === 0) addParticle(a.x + a.w / 2, a.y + a.h / 2, '#00FFFF', 1, 3);
+
+            // Hit player -> REMOVES 2 LIVES!
+            let hitTarget = null;
+            if (!cat.dead && invincibleTimer <= 0 && starPowerTimer <= 0) {
+                hitTarget = cat;
+            } else if (coopMode && !cat2.dead && invincibleTimer2 <= 0) {
+                hitTarget = cat2;
+            }
+
+            if (hitTarget && hitTarget.x + 4 < a.x + a.w && hitTarget.x + hitTarget.w - 4 > a.x && hitTarget.y + 4 < a.y + a.h && hitTarget.y + cat.h - 4 > a.y) {
+                lives = Math.max(0, lives - 2);
+                if (coopMode) {
+                    if (hitTarget === cat) p1HP = Math.max(0, p1HP - 2);
+                    else p2HP = Math.max(0, p2HP - 2);
+                }
+                addFloatingText(hitTarget.x + hitTarget.w / 2, hitTarget.y - 15, "-2 LIVES!", "#FF0055");
+                shakeTimer = 25; shakeAmt = 10;
+                if (window.audio) audio.playHurt();
+                for (let k = 0; k < 25; k++) {
+                    addParticle(hitTarget.x + hitTarget.w / 2, hitTarget.y + hitTarget.h / 2, ['#9D00FF', '#00FFFF', '#FF0055'][Math.floor(Math.random() * 3)], 4, 6);
+                }
+                if (lives <= 0 || (coopMode && ((hitTarget === cat && p1HP <= 0) || (hitTarget === cat2 && p2HP <= 0)))) {
+                    if (hitTarget === cat) killCat(); else killCat2();
+                } else {
+                    invincibleTimer = 60; // invincibility window
+                }
+                bossAnticatArrows.splice(i, 1);
+            }
+        }
+    }
+
+    function drawBossAnticatArrows() {
+        for (const a of bossAnticatArrows) {
+            const dx = Math.round(a.x - cam.x), dy = Math.round(a.y);
+            ctx.save();
+            ctx.translate(dx + a.w / 2, dy + a.h / 2);
+            ctx.rotate(a.angle);
+            // Anticat Arrow shaft
+            ctx.fillStyle = '#110022'; ctx.fillRect(-11, -3, 18, 6);
+            ctx.strokeStyle = '#9D00FF'; ctx.lineWidth = 1; ctx.strokeRect(-11, -3, 18, 6);
+            // Anti-cat energy head
+            ctx.fillStyle = '#00FFFF';
+            ctx.beginPath();
+            ctx.moveTo(11, 0); ctx.lineTo(4, -6); ctx.lineTo(4, 6);
+            ctx.closePath(); ctx.fill();
+            ctx.restore();
+        }
+    }
+
+    function updateAndDrawFloatingTexts() {
+        for (let i = floatingTexts.length - 1; i >= 0; i--) {
+            const ft = floatingTexts[i];
+            ft.y += ft.vy;
+            ft.life--;
+            if (ft.life <= 0) { floatingTexts.splice(i, 1); continue; }
+            const alpha = Math.min(1, ft.life / 20);
+            ctx.save();
+            ctx.globalAlpha = alpha;
+            ctx.fillStyle = ft.color;
+            ctx.font = 'bold 12px "Press Start 2P", monospace';
+            ctx.textAlign = 'center';
+            ctx.strokeStyle = '#000';
+            ctx.lineWidth = 3;
+            const sx = Math.round(ft.x - cam.x);
+            const sy = Math.round(ft.y);
+            ctx.strokeText(ft.text, sx, sy);
+            ctx.fillText(ft.text, sx, sy);
+            ctx.restore();
         }
     }
 
@@ -7083,13 +7470,15 @@
         }
         // Boss
         if (data.boss) {
-            if (!boss) boss = createBoss(data.boss.x, data.boss.y, data.boss.pirate, data.boss.miner, data.boss.glitched);
+            if (!boss) boss = createBoss(data.boss.x, data.boss.y, data.boss.pirate, data.boss.miner, data.boss.glitched, data.boss.ratOverlord);
             boss.x = data.boss.x; boss.y = data.boss.y;
             boss.hp = data.boss.hp; boss.alive = data.boss.alive;
             boss.dir = data.boss.dir; boss.phase = data.boss.phase;
             boss.pirate = data.boss.pirate || false;
             boss.miner = data.boss.miner || false;
             boss.glitched = data.boss.glitched || false;
+            boss.ratOverlord = data.boss.ratOverlord || false;
+            boss.eyesChanged = data.boss.eyesChanged || false;
         } else { boss = null; }
         // Grid changes (question blocks hit)
         if (data.gridChanges && level) {
@@ -7146,7 +7535,7 @@
                 p1HP: p1HP, p2HP: p2HP,
                 hasFire: hasFire,
                 enemies: enemyData, coins: coinData, fireballs: fbData,
-                boss: boss ? { x: Math.round(boss.x), y: Math.round(boss.y), hp: boss.hp, alive: boss.alive, dir: boss.dir, phase: boss.phase, pirate: boss.pirate, miner: boss.miner, glitched: boss.glitched } : null,
+                boss: boss ? { x: Math.round(boss.x), y: Math.round(boss.y), hp: boss.hp, alive: boss.alive, dir: boss.dir, phase: boss.phase, pirate: boss.pirate, miner: boss.miner, glitched: boss.glitched, ratOverlord: boss.ratOverlord, eyesChanged: boss.eyesChanged } : null,
                 shakeTimer: shakeTimer, shakeAmt: shakeAmt,
                 gridChanges: netGridChanges.length > 0 ? netGridChanges.slice() : undefined,
                 frameCount: frameCount,
@@ -7834,6 +8223,9 @@
             drawBossSpears();
             drawBossDaggers();
             drawBossFireballs2();
+            drawBossDoomArrows();
+            drawBossGhostFists();
+            drawBossAnticatArrows();
             // Phase 2 projectiles
             drawColorWalls();
             drawBarrier();
@@ -7874,8 +8266,9 @@
                     }
                 }
             }
-            // Particles
+            // Particles & Floating Text Popups
             drawParticles();
+            updateAndDrawFloatingTexts();
             // Screen Glitch Overlay effect
             if (glitchScreenTimer > 0) {
                 glitchScreenTimer--;

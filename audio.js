@@ -160,6 +160,25 @@ class AudioEngine {
         osc.start(now);
         osc.stop(now + 0.15);
     }
+
+    playSecretAttack() {
+        this.ensureContext();
+        if (!this.ctx) return;
+        const now = this.ctx.currentTime;
+        const notes = [880, 440, 880, 440, 1174, 587];
+        notes.forEach((freq, i) => {
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(freq, now + i * 0.06);
+            gain.gain.setValueAtTime(this.masterVolume * 0.35, now + i * 0.06);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.06 + 0.12);
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.start(now + i * 0.06);
+            osc.stop(now + i * 0.06 + 0.12);
+        });
+    }
 }
 
 window.AudioEngine = AudioEngine;
