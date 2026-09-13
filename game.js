@@ -3979,8 +3979,8 @@
 
     function drawBossHP() {
         if (!boss || !boss.alive) return;
-        const barW = 200, barH = 14;
-        const barX = (W - barW) / 2, barY = 10;
+        const barW = 220, barH = 14;
+        const barX = (W - barW) / 2, barY = 22;
         // Background
         ctx.fillStyle = 'rgba(0,0,0,0.7)';
         ctx.fillRect(barX - 2, barY - 2, barW + 4, barH + 4);
@@ -3995,10 +3995,17 @@
         ctx.strokeStyle = '#FFD700';
         ctx.lineWidth = 2;
         ctx.strokeRect(barX - 1, barY - 1, barW + 2, barH + 2);
-        // Label
+        // Label BELOW the boss bar, centered with sharp outline
+        const labelText = boss.ratOverlord ? 'THE RAT OVERLORD (MINI-BOSS)' : boss.glitched ? 'THE GLITCHED CORE' : boss.miner ? 'MINE FOREMAN' : boss.pirate ? 'PIRATE CAPTAIN' : 'RAT KING';
+        ctx.save();
+        ctx.font = 'bold 8px "Press Start 2P", monospace';
+        ctx.textAlign = 'center';
+        ctx.strokeStyle = '#000';
+        ctx.lineWidth = 3;
+        ctx.strokeText(labelText, barX + barW / 2, barY + barH + 12);
         ctx.fillStyle = '#FFF';
-        ctx.font = '8px "Press Start 2P", monospace';
-        ctx.fillText(boss.ratOverlord ? 'THE RAT OVERLORD (MINI-BOSS)' : boss.glitched ? 'THE GLITCHED CORE' : boss.miner ? 'MINE FOREMAN' : boss.pirate ? 'PIRATE CAPTAIN' : 'RAT KING', barX, barY - 5);
+        ctx.fillText(labelText, barX + barW / 2, barY + barH + 12);
+        ctx.restore();
     }
 
     // BOSS DIALOGUE — typewriter text with speech bubble
