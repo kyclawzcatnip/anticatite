@@ -3686,8 +3686,19 @@
         addParticle(boss.x + boss.w / 2, boss.y + boss.h / 2, '#FF0000', 15, 7);
         score += 100;
         if (boss.hp <= 0) {
-            // Phase transitions (both Rat King and Pirate Captain)
-            if (boss.bossPhase === 1) {
+            if (boss.ratOverlord) {
+                // Minibosses do NOT have 2nd or 3rd phases — defeated immediately!
+                boss.alive = false;
+                boss.deathTimer = 120;
+                bossesDefeated++;
+                addParticle(boss.x + boss.w / 2, boss.y + boss.h / 2, '#FFD700', 30, 10);
+                addParticle(boss.x + boss.w / 2, boss.y + boss.h / 2, '#FF4500', 20, 8);
+                score += 3000;
+                bossSpears = []; bossDaggers = []; bossFireballs2 = [];
+                bossColorWalls = []; bossBarrier = null; bossDarkCats = [];
+                bossRaygun = null; bossYarnBalls = []; bossCross = null;
+                bossDoomArrows = []; bossGhostFists = []; bossAnticatArrows = [];
+            } else if (boss.bossPhase === 1) {
                 // Enter Phase 2!
                 boss.bossPhase = 2;
                 boss.hp = boss.miner ? 28 : boss.pirate ? 24 : 20;
@@ -8396,7 +8407,7 @@
             ctx.fillStyle = 'rgba(255, 255, 255, 0.65)';
             ctx.font = '8px "Press Start 2P", monospace';
             ctx.textAlign = 'left';
-            ctx.fillText('v1.5.5', 10, H - 10);
+            ctx.fillText('v1.5.6', 10, H - 10);
             ctx.restore();
 
             // Online mode indicator
