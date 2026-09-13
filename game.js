@@ -57,8 +57,8 @@
             "                        UUUUUUU                C                      UUUUU             C   C                                           ",
             "            CC                        C C   Q              C                     L                       CCC                            ",
             "          QUUUUQ        W     R    UUUUUUUUU         R          R  UUU    UUZ       UUUUUUU                                            ",
-            "                           GGGGG              GGGGG      GGGGG              GG           R      Q  UUUUUU                             ",
-            "  S        R    V   A  GG  V    GG  H R    V AGG     V GG    V         GGGGG  A  V  GGGGG       GG      A   GGGG  A                   ",
+            "                           GGGGG              GGGGG      GGGGG              GG     []    R      Q  UUUUUU                             ",
+            "  S        R    V   A  GG  V    GG  H R    V AGG     V GG    V         GGGGG  A  V {}GGGGG       GG      A   GGGG  A                   ",
             "GGGGG   GGGGG   GG  GGGG        GGGGGGGG  GGGGG          GGG    GGGG         GGG          GGG       GGGGG       GGGG<>GGGGGGGGGGGGG",
             "GGGGG   GGGGG   GGGGGGGG        GGGGGGGG  GGGGG          GGG    GGGG         GGG          GGG       GGGGG       GGGG()GGGGGGGGGGGGG",
             "GGGGG   GGGGG   GGGGGGGG        GGGGGGGG  GGGGG          GGG    GGGG         GGG          GGG       GGGGG       GGGG()GGGGGGGGGGGGG",
@@ -555,7 +555,23 @@
             "K S                                              K",
             "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
             "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
-            "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
+        ],
+        // Level 31 — LEVEL 2 SECRET PIPE VAULT
+        [
+            "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
+            "K                                      K",
+            "K                                      K",
+            "K      C   C   C   C   C   C   C       K",
+            "K     UUUUUUUUUUUUUUUUUUUUUUUUUU       K",
+            "K                                      K",
+            "K   W              E               L   K",
+            "K  UUUU                          UUUU  K",
+            "K S                                  <>K",
+            "K                                    ()K",
+            "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
+            "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
+            "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
+            "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
         ]
     ];
 
@@ -630,6 +646,7 @@
     let state = 'start', currentLevel = 0, score = 0, lives = 3, coinCount = 0, frameCount = 0, sessionLevelsCompleted = 0;
     let bossesDefeated = 0, gameStartTime = Date.now(), gameDifficulty = 'Easy';
     let glitchScreenTimer = 0;
+    let secretReturnLevel = 1, secretReturnX = 0, secretReturnY = 0;
     let level = null, cam = { x: 0 }, shakeTimer = 0, shakeAmt = 0;
     let invincibleTimer = 0, deathTimer = 0, winTimer = 0;
     let questionHits = [];// tracks which question blocks have been hit
@@ -671,7 +688,8 @@
         { id: 6, level: 13, title: 'VI. Crystal Depths', text: 'Beneath the roots of the world lies a network of ancient caves, glowing with giant luminous crystals and flowing rivers of boiling magma. Feline miners once gathered rare gems here, but the heat grew too intense as volcanic fissures opened. The texts warn that the deep caverns are completely impassable without magical protection. Only a hero wearing the Fire Protector aura can walk through the ash storms, withstand the magma hazards, and survive the scorching subterranean beasts.' },
         { id: 7, level: 22, title: 'VII. The Miner\'s Greed', text: 'Blinded by a thirst for riches, Miner Boss Rattock commanded his workers to dig deeper into the mountain than anyone had ever dared. They breached the ancient volcanic core, triggers earthquakes and mine collapses. Rather than retreating, Rattock weaponized the chaos. He designed high-speed minecarts filled with unstable TNT explosives and rigged the cavern arches to drop crushing boulders on intruders. His greed consumed him, transforming him into a paranoid warden of the dark mines.' },
         { id: 8, level: 26, title: 'VIII. The Glitched Realm', text: 'At the edge of reality, hidden behind the secret silver pipes, lies a fractured dimension known as the Glitched Lands. In this bizarre realm, the laws of physics break down entirely. Platforms flicker in and out of existence, gravity flips upside down at a moment\'s notice, and reality itself appears corrupted by digital anomalies. The elder cats warned that this frontier is a one-way trip, as the unstable fabric of the realm tears apart any traveler who lacks absolute focus.' },
-        { id: 9, level: 30, title: 'IX. The Glitched Core', text: 'Deep inside the glitched dimension floats the source of all instability: the Glitched Core. It is a sentient, pulsing heart made of corrupted source code and chaotic energy. The Core seeks to rewrite the entire universe in its own image, threatening to dissolve the Nine Feline Realms into static. The ancient prophets wrote that only a hero brave enough to navigate the shifting gravity fields and destroy the Core\'s firewall can permanently stabilize the code, saving reality.' }
+        { id: 9, level: 30, title: 'IX. The Glitched Core', text: 'Deep inside the glitched dimension floats the source of all instability: the Glitched Core. It is a sentient, pulsing heart made of corrupted source code and chaotic energy. The Core seeks to rewrite the entire universe in its own image, threatening to dissolve the Nine Feline Realms into static. The ancient prophets wrote that only a hero brave enough to navigate the shifting gravity fields and destroy the Core\'s firewall can permanently stabilize the code, saving reality.' },
+        { id: 10, level: 31, secret: true, title: 'X. Forgotten Pipe Vault', text: 'Deep inside the green pipes of Level 2 lies an ancient feline vault. The elder cats stored extra gold, power-ups, and legendary scrolls here for brave adventurers seeking to save the Nine Feline Realms.' }
     ];
     let unlockedLore = JSON.parse(localStorage.getItem('scw_unlocked_lore') || '[]');
     let loreNotification = null; // { title, text, timer }
@@ -5313,6 +5331,41 @@
             return false;
         }
 
+        function onGreenPipe(c, k) {
+            if (c.dead || !c.grounded) return false;
+            const pressingDown = k.glide;
+            if (!pressingDown) return false;
+            const feetRow = Math.floor((c.y + c.h) / T);
+            const c1 = Math.floor((c.x + 4) / T), c2 = Math.floor((c.x + c.w - 4) / T);
+            for (let cc = c1; cc <= c2; cc++) {
+                if (feetRow >= 0 && feetRow < level.rows && cc >= 0 && cc < level.cols) {
+                    const t = level.grid[feetRow][cc];
+                    if (t === 4 || t === 5) return true; // standing on green pipe top
+                }
+            }
+            return false;
+        }
+
+        // Green Pipe Secret Room Entry (Level 2)
+        if (currentLevel === 1 && (onGreenPipe(cat, keys) || (coopMode && onGreenPipe(cat2, keys2)))) {
+            if (window.audio) audio.playPowerUp();
+            secretReturnLevel = 1;
+            secretReturnX = cat.x + 60;
+            secretReturnY = cat.y;
+            loadLevel(31); // Load Level 2 Secret Room!
+            return;
+        }
+
+        // Secret Room Exit Pipe Warp back to Level 2
+        if (currentLevel === 31 && (onSilverPipe(cat, keys) || (coopMode && onSilverPipe(cat2, keys2)))) {
+            if (window.audio) audio.playPowerUp();
+            loadLevel(secretReturnLevel || 1);
+            cat.x = secretReturnX || 2200;
+            cat.y = secretReturnY || 300;
+            cam.x = Math.max(0, cat.x - W / 3);
+            return;
+        }
+
         if (onSilverPipe(cat, keys) || (coopMode && onSilverPipe(cat2, keys2))) {
             if (currentLevel === 5 && rescuedKittensCount < 10) {
                 showOverlay('🐱 RESCUE ALL KITTENS!', 'YOU MUST FIND AND FREE ALL 10 CAPTURED KITTENS BEFORE ESCAPING THE DUNGEON!\n\nKITTENS RESCUED: ' + rescuedKittensCount + ' / 10');
@@ -8407,7 +8460,7 @@
             ctx.fillStyle = 'rgba(255, 255, 255, 0.65)';
             ctx.font = '8px "Press Start 2P", monospace';
             ctx.textAlign = 'left';
-            ctx.fillText('v1.5.6', 10, H - 10);
+            ctx.fillText('v1.5.7', 10, H - 10);
             ctx.restore();
 
             // Online mode indicator
