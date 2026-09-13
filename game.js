@@ -7047,11 +7047,10 @@
                 isBig4 = false; cat4.h = 32; heldShell4 = null;
             }
         }
-        const numericIdx = Number(idx);
-        console.log("Loading level index:", numericIdx, "type:", typeof numericIdx);
-        // Spawn boss on boss arena (index 4), pirate boss (index 11), miner boss (index 26), or glitched core boss (index 30)
-        if (numericIdx === 4 || numericIdx === 11 || numericIdx === 26 || numericIdx === 30) {
+        // Spawn boss on Rat Overlord arena (index 3), boss arena (index 4), pirate boss (index 11), miner boss (index 26), or glitched core boss (index 30)
+        if (numericIdx === 3 || numericIdx === 4 || numericIdx === 11 || numericIdx === 26 || numericIdx === 30) {
             console.log("This is a boss level! Spawning boss...");
+            const isRatOverlord = numericIdx === 3;
             const isPirate = numericIdx === 11;
             const isMiner = numericIdx === 26;
             const isGlitched = numericIdx === 30;
@@ -7060,7 +7059,7 @@
             for (let r = 0; r < raw.length; r++) {
                 for (let c = 0; c < raw[r].length; c++) {
                     if (raw[r][c] === 'X') { 
-                        boss = createBoss(c * T - 16, r * T - 64 + T, isPirate, isMiner, isGlitched); 
+                        boss = createBoss(c * T - 16, r * T - 64 + T, isPirate, isMiner, isGlitched, isRatOverlord); 
                         foundX = true;
                         console.log("Boss spawned successfully:", boss);
                     }
@@ -8307,7 +8306,7 @@
             ctx.fillStyle = 'rgba(255, 255, 255, 0.65)';
             ctx.font = '8px "Press Start 2P", monospace';
             ctx.textAlign = 'left';
-            ctx.fillText('v1.5.0', 10, H - 10);
+            ctx.fillText('v1.5.1', 10, H - 10);
             ctx.restore();
 
             // Online mode indicator
