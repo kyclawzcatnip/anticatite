@@ -7,14 +7,14 @@
   <title>Super Cat World</title>
   <meta name="description"
     content="A retro 2D platformer starring a brave cat on an adventure through worlds, castles, and sky islands!">
-  <link rel="stylesheet" href="style.css?v=1.5.0">
+  <link rel="stylesheet" href="style.css?v=1.5.2">
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 </head>
 
 <body>
   <div id="game-container">
     <canvas id="gameCanvas" width="800" height="448"></canvas>
-    <div id="version-tag">v1.5.1</div>
+    <div id="version-tag">v1.5.2</div>
     <div id="hud">
       <span id="lives-display">🐱 × 3</span>
       <span id="coin-display">🪙 × 0</span>
@@ -22,7 +22,7 @@
       <span id="score-display">SCORE: 0</span>
       <span id="level-display">WORLD 1</span>
     </div>
-    <div id="overlay" class="visible">
+    <div id="overlay" class="visible" onclick="window._startGame()">
       <div id="overlay-title">SUPER CAT WORLD</div>
       <div id="overlay-sub">PRESS SPACE OR TAP TO START<br>PRESS 2 FOR CO-OP</div>
       <div id="news-banner">📢 NEWS: Join our Discord to apply for direct playtesting access keys!</div>
@@ -61,72 +61,68 @@
             </div>
             <div id="room-mode-desc">Code required, auto-join</div>
 
-            <button id="btn-host" class="lobby-btn" onclick="window._lobbyHost()">
-              <span class="lobby-btn-icon">📡</span>
-              HOST GAME
+            <div style="margin:8px 0; border-top:1px solid #444; width:100%;"></div>
+
+            <!-- Host Button -->
+            <button id="btn-host-game" class="lobby-btn" onclick="window._hostGame()">
+              📡 HOST GAME
             </button>
-            <div id="lobby-divider">— OR —</div>
-            <div id="join-section">
-              <input id="join-code-input" type="text" maxlength="4" placeholder="ROOM CODE"
-                spellcheck="false" autocomplete="off">
-              <button id="btn-join" class="lobby-btn lobby-btn-join" onclick="window._lobbyJoin()">
-                <span class="lobby-btn-icon">🔗</span>
-                JOIN GAME
+
+            <div style="margin: 8px 0; color: #888; font-size: 9px;">— OR —</div>
+
+            <!-- Join Input & Button -->
+            <div style="display: flex; gap: 4px; justify-content: center; width: 100%;">
+              <input type="text" id="join-code-input" placeholder="ROOM CODE" maxlength="4">
+              <button id="btn-join-game" class="lobby-btn" onclick="window._joinGame()">
+                🔗 JOIN GAME
               </button>
             </div>
+
           </div>
 
+          <!-- Waiting for Guests View -->
           <div id="lobby-waiting" class="hidden">
-            <div id="lobby-room-code-display">
-              <div id="lobby-room-label">ROOM CODE</div>
-              <div id="lobby-room-code">----</div>
-              <div id="lobby-room-hint">Share this code with your friend</div>
-            </div>
-            <div id="lobby-room-mode-badge"></div>
-            <div id="lobby-connection-status">
-              <span id="lobby-dot" class="pulse-dot"></span>
-              <span id="lobby-connection-text">Waiting for player...</span>
-            </div>
-            <button id="btn-host-start" class="lobby-btn hidden" onclick="window._hostStartEarly()" style="margin-top:8px;border-color:#00FF88;color:#00FF88;">
+            <div style="font-size: 8px; color: #aaa; margin-bottom: 4px;">ROOM CODE</div>
+            <div id="lobby-room-code">----</div>
+            <div style="font-size: 7px; color: #888; margin-top: 4px;">Share this code with your friend</div>
+            <div id="lobby-wait-msg" style="font-size: 8px; color: #FFD700; margin: 8px 0;">Waiting for player...</div>
+            <button id="btn-start-online" class="lobby-btn hidden" onclick="window._startOnlineGame()">
               ▶ START GAME
             </button>
           </div>
 
-          <!-- Join request approval (public rooms) -->
-          <div id="lobby-approval" class="hidden">
-            <div id="approval-title">⚡ JOIN REQUEST</div>
-            <div id="approval-text">A player wants to join!</div>
-            <div id="approval-buttons">
-              <button class="lobby-btn lobby-btn-approve" onclick="window._approveJoin()">
-                ✅ ACCEPT
-              </button>
-              <button class="lobby-btn lobby-btn-deny" onclick="window._denyJoin()">
-                ❌ DENY
-              </button>
+          <!-- Guest Approval View (Host only) -->
+          <div id="lobby-approval" class="hidden" style="margin-top:8px; background:rgba(255,215,0,0.15); border:1px solid #FFD700; padding:8px; border-radius:4px">
+            <div style="font-size:8px; color:#FFD700; margin-bottom:4px">⚡ JOIN REQUEST</div>
+            <div id="lobby-guest-name" style="font-size:7px; color:#FFF; margin-bottom:6px">A player wants to join!</div>
+            <div style="display:flex; gap:6px; justify-content:center">
+              <button class="mode-btn mode-btn-active" onclick="window._approveGuest(true)" style="background:#00AA00; border-color:#00FF00">✅ ACCEPT</button>
+              <button class="mode-btn" onclick="window._approveGuest(false)" style="background:#AA0000; border-color:#FF0000">❌ DENY</button>
             </div>
           </div>
 
-          <button id="btn-lobby-back" class="lobby-btn lobby-btn-back" onclick="window._lobbyBack()">
+          <button id="btn-lobby-back" class="lobby-btn-back" onclick="window._closeLobby()">
             ◀ BACK
           </button>
         </div>
 
-        <!-- RIGHT: Public room browser -->
-        <div id="room-browser">
-          <div id="browser-header">
+        <!-- RIGHT: Public Rooms Browser -->
+        <div id="lobby-public-panel">
+          <div id="lobby-public-title">
             <span>🌍 PUBLIC ROOMS</span>
-            <button id="btn-refresh" class="lobby-btn lobby-btn-refresh" onclick="window._refreshRooms()">
-              🔄
-            </button>
+            <button id="btn-refresh-rooms" onclick="window._refreshPublicRooms()">🔄</button>
           </div>
-          <div id="room-list">
-            <div id="room-list-empty">No public rooms found.<br>Click 🔄 to refresh.</div>
+          <div id="lobby-public-list">
+            <div style="font-size:7px; color:#666; text-align:center; padding-top:20px;">
+              No public rooms found.<br>Click 🔄 to refresh.
+            </div>
           </div>
         </div>
 
       </div>
     </div>
 
+    <!-- TOUCH / MOBILE CONTROLS -->
     <div id="mobile-controls">
       <div id="mobile-dpad">
         <button id="btn-left" aria-label="Move Left">◀</button>
@@ -140,9 +136,9 @@
     </div>
   </div>
   <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
-  <script src="audio.js?v=1.5.1"></script>
-  <script src="network.js?v=1.5.1"></script>
-  <script src="game.js?v=1.5.1"></script>
+  <script src="audio.js?v=1.5.2"></script>
+  <script src="network.js?v=1.5.2"></script>
+  <script src="game.js?v=1.5.2"></script>
 </body>
 
 </html>

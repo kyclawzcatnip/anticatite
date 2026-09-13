@@ -687,7 +687,7 @@
         } else {
             codexPrevState = state;
             state = 'codex';
-            if (overlay) overlay.classList.remove('visible');
+            if (overlay) hideOverlay();
         }
     };
 
@@ -952,12 +952,28 @@
             if (e.code === 'Escape') { window._openCodex(); return; }
             return;
         }
-        if (state === 'start' || state === 'over' || state === 'win') {
-            if (e.code === 'Space' || e.code === 'Digit1') { coopMode = false; startGame(); return; }
-            if (e.code === 'Digit2') { coopMode = true; startGame(); return; }
-            if (e.code === 'Digit3') { openLobby(); return; }
-            if (e.code === 'KeyL') { showLeaderboard(); return; }
-            if (e.code === 'KeyH') { tutorialPrevState = state; state = 'tutorial'; overlay.classList.remove('visible'); return; }
+        const overlayVisible = overlay && (overlay.classList.contains('visible') || overlay.style.display !== 'none');
+        if (state === 'start' || state === 'over' || state === 'win' || overlayVisible) {
+            const isSpaceKey = e.code === 'Space' || e.key === ' ' || e.key === 'Spacebar' || e.keyCode === 32;
+            const isEnterKey = e.code === 'Enter' || e.key === 'Enter' || e.keyCode === 13;
+            const isOneKey = e.code === 'Digit1' || e.key === '1' || e.keyCode === 49;
+            if (isSpaceKey || isEnterKey || isOneKey) {
+                if (state === 'start' || state === 'over' || state === 'win' || state === 'title') {
+                    coopMode = false;
+                    startGame();
+                    return;
+                } else if (state === 'levelcomplete') {
+                    openShop();
+                    return;
+                } else {
+                    hideOverlay();
+                    return;
+                }
+            }
+            if (e.code === 'Digit2' || e.key === '2' || e.keyCode === 50) { coopMode = true; startGame(); return; }
+            if (e.code === 'Digit3' || e.key === '3' || e.keyCode === 51) { openLobby(); return; }
+            if (e.code === 'KeyL' || e.key === 'l' || e.key === 'L') { showLeaderboard(); return; }
+            if (e.code === 'KeyH' || e.key === 'h' || e.key === 'H') { tutorialPrevState = state; state = 'tutorial'; hideOverlay(); return; }
         }
         if (state === 'tutorial') {
             if (e.code === 'KeyH' || e.code === 'Escape') {
@@ -1177,9 +1193,13 @@
             overlayEl.addEventListener('touchstart', e => {
                 e.preventDefault();
                 e.stopPropagation();
-                if (state === 'title') {
-                    state = 'playing'; lives = 3; score = 0; coinCount = 0; currentLevel = 0;
-                    loadLevel(0); overlayEl.classList.remove('visible');
+                if (state === 'title' || state === 'start' || state === 'over' || state === 'win') {
+                    coopMode = false;
+                    startGame();
+                } else if (state === 'levelcomplete') {
+                    openShop();
+                } else {
+                    hideOverlay();
                 }
             }, { passive: false });
         }
@@ -1247,7 +1267,7 @@
         currentLevel = 27;
         loadLevel(27);
         state = 'playing';
-        if (overlay) overlay.classList.remove('visible');
+        if (overlay) hideOverlay();
         shakeTimer = 45; shakeAmt = 8;
         addParticle(cat.x + cat.w / 2, cat.y + cat.h / 2, '#FF00FF', 30, 8);
         addParticle(cat.x + cat.w / 2, cat.y + cat.h / 2, '#00FFFF', 30, 8);
@@ -1274,11 +1294,11 @@
         if (rescuedKittensCount < 10) {
             score += 200;
             showOverlay('KITTEN RESCUED! 🐱', 'YOU FREED A CAPTURED KITTEN FROM THE DUNGEON!\n\nRESCUED: ' + rescuedKittensCount + ' / 10\n\nSCORE +200');
-            setTimeout(() => { if (state === 'playing') overlay.classList.remove('visible'); }, 1200);
+            setTimeout(() => { if (state === 'playing') hideOverlay(); }, 1200);
         } else {
             score += 1000;
             showOverlay('🐱 ALL KITTENS FREED! 🎉', 'ALL 10 CAPTURED KITTENS HAVE BEEN RESCUED!\nTHE ESCAPE ROUTE IS NOW OPEN!\n\nBONUS +1000 SCORE');
-            setTimeout(() => { if (state === 'playing') overlay.classList.remove('visible'); }, 3000);
+            setTimeout(() => { if (state === 'playing') hideOverlay(); }, 3000);
         }
     }
 
@@ -3159,7 +3179,7 @@
                     const sub = 'A SILVER PIPE HAS APPEARED!\nENTER IT TO CONTINUE...\n\nSCORE: ' + score;
                     showOverlay(title, sub);
                     // Auto-dismiss the overlay after 3 seconds so the player can move
-                    setTimeout(() => { overlay.classList.remove('visible'); }, 3000);
+                    setTimeout(() => { hideOverlay(); }, 3000);
                 }
             }
             return;
@@ -5249,7 +5269,7 @@
         if (onSilverPipe(cat, keys) || (coopMode && onSilverPipe(cat2, keys2))) {
             if (currentLevel === 5 && rescuedKittensCount < 10) {
                 showOverlay('🐱 RESCUE ALL KITTENS!', 'YOU MUST FIND AND FREE ALL 10 CAPTURED KITTENS BEFORE ESCAPING THE DUNGEON!\n\nKITTENS RESCUED: ' + rescuedKittensCount + ' / 10');
-                setTimeout(() => { if (state === 'playing') overlay.classList.remove('visible'); }, 2000);
+                setTimeout(() => { if (state === 'playing') hideOverlay(); }, 2000);
                 return;
             }
             if (currentLevel === 26) {
@@ -7072,6 +7092,19 @@
         rollBlockLoot(); // pre-roll loot for all question blocks
     }
 
+    window._startGame = function() {
+        if (state === 'start' || state === 'over' || state === 'win' || state === 'title' || (overlay && (overlay.classList.contains('visible') || overlay.style.display !== 'none'))) {
+            if (state === 'levelcomplete') {
+                openShop();
+            } else if (state === 'playing') {
+                hideOverlay();
+            } else {
+                coopMode = false;
+                startGame();
+            }
+        }
+    };
+
     function startGame() {
         state = 'playing'; score = 0; lives = 3; coinCount = 0; currentLevel = 0; hasFire = false; fireCooldown = 0; fireballs = []; activeCheckpoint = null; speedBoost = 0; shieldHits = 0;
         bossesDefeated = 0; gameStartTime = Date.now();
@@ -7079,7 +7112,19 @@
         inventory = [];
         cat2SelectedSkin = selectedSkin === 1 ? 0 : 1; // P2 uses different skin
         p1HP = 3; p2HP = 3;
-        loadLevel(0); overlay.classList.remove('visible');
+        loadLevel(0);
+        hideOverlay();
+    }
+
+    if (overlay) {
+        overlay.addEventListener('click', (e) => {
+            if (e.target && e.target.tagName === 'BUTTON') return;
+            window._startGame();
+        });
+        overlay.addEventListener('touchstart', (e) => {
+            if (e.target && e.target.tagName === 'BUTTON') return;
+            window._startGame();
+        }, { passive: true });
     }
 
     // ONLINE MULTIPLAYER — Lobby & Networking
@@ -7128,7 +7173,7 @@
 
     function openLobby() {
         state = 'lobby';
-        overlay.classList.remove('visible');
+        hideOverlay();
         lobbyOverlay.classList.remove('hidden');
         lobbyMenu.style.display = '';
         lobbyWaiting.classList.add('hidden');
@@ -7165,7 +7210,7 @@
         hasFire = false; fireCooldown = 0; fireballs = []; activeCheckpoint = null;
         hasPickaxe = false; pickaxes = []; pickaxeCooldown = 0; pickaxeAmmo = 5; pickaxeReloading = false; pickaxeReloadTimer = 0;
         speedBoost = 0; shieldHits = 0; inventory = [];
-        loadLevel(0); overlay.classList.remove('visible');
+        loadLevel(0); hideOverlay();
     }
 
     // Approval callbacks (public rooms)
@@ -7591,14 +7636,14 @@
         }
 
         if (currentLevel >= LEVEL_DATA.length) { state = 'win'; return; }
-        loadLevel(currentLevel); state = 'playing'; overlay.classList.remove('visible');
+        loadLevel(currentLevel); state = 'playing'; hideOverlay();
     }
 
     function openShop() {
         // Skip shop on final level win or boss arena
         if (currentLevel >= LEVEL_DATA.length - 1) { nextLevel(); return; }
         state = 'shop'; shopSelection = 0;
-        overlay.classList.remove('visible');
+        hideOverlay();
     }
 
     function tryBuyItem(idx) {
@@ -7902,8 +7947,16 @@
         }
     }
 
+    function hideOverlay() {
+        if (!overlay) return;
+        overlay.classList.remove('visible');
+        overlay.style.display = 'none';
+    }
+
     function showOverlay(title, sub) {
+        if (!overlay) return;
         overlayTitle.textContent = title; overlaySub.textContent = sub;
+        overlay.style.display = 'flex';
         overlay.classList.add('visible');
         const newsEl = document.getElementById('news-banner');
         if (newsEl) newsEl.style.display = (title === 'SUPER CAT WORLD') ? 'block' : 'none';
