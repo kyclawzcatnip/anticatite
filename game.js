@@ -7129,6 +7129,7 @@
     // GAME FLOW
     function loadLevel(idx) {
         const numericIdx = parseInt(idx, 10);
+        currentLevel = numericIdx;
         boss = null;
         rescuedKittensCount = 0;
         level = parseLevel(numericIdx);
@@ -8460,7 +8461,7 @@
             ctx.fillStyle = 'rgba(255, 255, 255, 0.65)';
             ctx.font = '8px "Press Start 2P", monospace';
             ctx.textAlign = 'left';
-            ctx.fillText('v1.6.1', 10, H - 10);
+            ctx.fillText('v1.6.2', 10, H - 10);
             ctx.restore();
 
             // Online mode indicator
