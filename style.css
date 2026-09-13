@@ -57,6 +57,18 @@ canvas {
   text-shadow: 2px 2px 0 #000;
 }
 
+#version-tag {
+  position: absolute;
+  bottom: 8px;
+  left: 10px;
+  color: rgba(255, 255, 255, 0.65);
+  font-size: 8px;
+  font-family: 'Press Start 2P', monospace;
+  text-shadow: 1px 1px 0 #000;
+  z-index: 15;
+  pointer-events: none;
+}
+
 /* Overlay */
 #overlay {
   position: absolute;
