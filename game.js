@@ -7028,9 +7028,10 @@
 
     // GAME FLOW
     function loadLevel(idx) {
+        const numericIdx = parseInt(idx, 10);
         boss = null;
         rescuedKittensCount = 0;
-        level = parseLevel(idx);
+        level = parseLevel(numericIdx);
         cat.x = level.spawnX * T; cat.y = level.spawnY * T - cat.h;
         cat.vx = 0; cat.vy = 0; cat.grounded = false; cat.dead = false;
         cam.x = Math.max(0, cat.x - W / 3);
@@ -8359,7 +8360,7 @@
             ctx.fillStyle = 'rgba(255, 255, 255, 0.65)';
             ctx.font = '8px "Press Start 2P", monospace';
             ctx.textAlign = 'left';
-            ctx.fillText('v1.5.1', 10, H - 10);
+            ctx.fillText('v1.5.3', 10, H - 10);
             ctx.restore();
 
             // Online mode indicator
