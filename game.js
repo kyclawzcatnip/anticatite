@@ -6865,7 +6865,7 @@
         if (currentLevel >= 23) { drawMineshaftBackground(); return; }
         if (currentLevel >= 12) { drawCaveBackground(); return; }
         if (currentLevel >= 6) { drawSkyIslandBackground(); return; }
-        if (currentLevel >= 3 && currentLevel <= 5) { drawCastleBackground(); return; }
+        if ((currentLevel >= 3 && currentLevel <= 5) || currentLevel === 31) { drawCastleBackground(); return; }
         // Sky
         const grad = ctx.createLinearGradient(0, 0, 0, H);
         grad.addColorStop(0, '#4A90D9'); grad.addColorStop(0.6, '#87CEEB'); grad.addColorStop(1, '#B8E6B8');
@@ -8460,7 +8460,7 @@
             ctx.fillStyle = 'rgba(255, 255, 255, 0.65)';
             ctx.font = '8px "Press Start 2P", monospace';
             ctx.textAlign = 'left';
-            ctx.fillText('v1.6.0', 10, H - 10);
+            ctx.fillText('v1.6.1', 10, H - 10);
             ctx.restore();
 
             // Online mode indicator
