@@ -3611,6 +3611,16 @@
                             killCat();
                         }
                     }
+                } else if (boss.phase === 'ultiment_charge') {
+                    // Ultiment charge is meant to MISS the cat!
+                    if (cat.vy > 0 && cat.y + cat.h - 10 < boss.y + 20) {
+                        damageBoss(1);
+                        cat.vy = JUMP * 0.7; if(window.audio) audio.playStomp();
+                    } else {
+                        // Safe bounce/miss - does NOT kill cat!
+                        cat.vy = -4;
+                        invincibleTimer = 30;
+                    }
                 } else if (invincibleTimer <= 0 && starPowerTimer <= 0) {
                     // Boss is NOT tired — can't damage, touching = death
                     killCat();
@@ -3620,6 +3630,32 @@
                     invincibleTimer = 30;
                     addParticle(boss.x + boss.w / 2, boss.y + boss.h / 2, '#888', 8, 4);
                     bossTauntText = 'Nice try!'; bossTauntTimer = 60;
+                }
+            }
+        }
+
+        if (coopMode && !cat2.dead) {
+            let ox2 = cat2.x + 4, oy2 = cat2.y + 2, ow2 = cat2.w - 8, oh2 = cat2.h - 4;
+            if (ox2 < boss.x + boss.w && ox2 + ow2 > boss.x && oy2 < boss.y + boss.h && oy2 + oh2 > boss.y) {
+                if (boss.phase === 'tired') {
+                    if (invincibleTimer2 <= 0) {
+                        if (cat2.vy > 0 && cat2.y + cat2.h - 10 < boss.y + 20) {
+                            damageBoss(1);
+                            cat2.vy = JUMP * 0.7; if(window.audio) audio.playStomp();
+                        } else {
+                            killCat2();
+                        }
+                    }
+                } else if (boss.phase === 'ultiment_charge') {
+                    if (cat2.vy > 0 && cat2.y + cat2.h - 10 < boss.y + 20) {
+                        damageBoss(1);
+                        cat2.vy = JUMP * 0.7; if(window.audio) audio.playStomp();
+                    } else {
+                        cat2.vy = -4;
+                        invincibleTimer2 = 30;
+                    }
+                } else if (invincibleTimer2 <= 0) {
+                    killCat2();
                 }
             }
         }
@@ -8360,7 +8396,7 @@
             ctx.fillStyle = 'rgba(255, 255, 255, 0.65)';
             ctx.font = '8px "Press Start 2P", monospace';
             ctx.textAlign = 'left';
-            ctx.fillText('v1.5.4', 10, H - 10);
+            ctx.fillText('v1.5.5', 10, H - 10);
             ctx.restore();
 
             // Online mode indicator
