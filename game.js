@@ -556,18 +556,18 @@
             "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
             "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
         ],
-        // Level 31 — LEVEL 2 SECRET PIPE VAULT
+        // Level 31 — LEVEL 2 SECRET PIPE VAULT & FORGOTTEN VAULT
         [
             "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
-            "K                                      K",
             "K                                      K",
             "K      C   C   C   C   C   C   C       K",
             "K     UUUUUUUUUUUUUUUUUUUUUUUUUU       K",
             "K                                      K",
-            "K   W              E               L   K",
-            "K  UUUU                          UUUU  K",
-            "K S                                  <>K",
-            "K                                    ()K",
+            "K   W         UUUUUUUUU            L   K",
+            "K  UUUU       U   v   U          UUUU  K",
+            "K S           U       U              <>K",
+            "K             M=======M              ()K",
+            "KKKKKKKKKKKKKKMMMMMMMMMKKKKKKKKKKKKKKKKK",
             "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
             "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
             "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
@@ -626,6 +626,7 @@
             });
         }
         const loreBooks = [];
+        const vaultDoors = [];
         const levelBook = LORE_BOOKS.find(b => b.level === idx);
         if (levelBook) {
             let bookCol = Math.floor(cols * 0.4);
@@ -639,7 +640,25 @@
                 collected: false, bob: Math.random() * Math.PI * 2
             });
         }
-        return { grid, rows, cols, enemies, coins, oneUps, fireFlowers, checkpoints, loreBooks, spawnX, spawnY, flagX, flagY };
+        for (let r = 0; r < rows; r++) {
+            for (let c = 0; c < cols; c++) {
+                if (raw[r][c] === 'v') {
+                    grid[r][c] = 0;
+                    const savedStage = parseInt(localStorage.getItem('scw_vault_stage') || '0', 10);
+                    vaultDoors.push({
+                        x: c * T, y: r * T, w: T * 3, h: T * 3,
+                        col: c, row: r,
+                        wheelAngle: 0,
+                        slideY: savedStage >= 3 ? -96 : 0,
+                        state: savedStage,
+                        inspectCooldown: 0,
+                        activationTimer: 0,
+                        openProgress: savedStage >= 3 ? 1 : 0
+                    });
+                }
+            }
+        }
+        return { grid, rows, cols, enemies, coins, oneUps, fireFlowers, checkpoints, loreBooks, vaultDoors, spawnX, spawnY, flagX, flagY };
     }
 
     // GAME STATE
@@ -2435,6 +2454,60 @@
                     if (window.audio) audio.playPowerUp();
                     addParticle(bk.x + bk.w / 2, bk.y + bk.h / 2, '#FFD700', 15, 6);
                     loreNotification = { title: bk.title, text: bk.text, timer: 180 };
+                }
+            }
+        });
+    }
+
+    function updateVaultDoors() {
+        if (!level || !level.vaultDoors) return;
+        level.vaultDoors.forEach(v => {
+            if (v.inspectCooldown > 0) v.inspectCooldown--;
+            if (v.state === 2) {
+                v.activationTimer++;
+                v.wheelAngle += 0.12;
+                if (frameCount % 4 === 0) {
+                    addParticle(v.x + 16 + Math.random() * 64, v.y + 16 + Math.random() * 64, '#AA8844', 2, 4);
+                    addParticle(v.x + 16 + Math.random() * 64, v.y + 16 + Math.random() * 64, '#D0C0A0', 1, 3);
+                }
+                if (v.activationTimer > 120) {
+                    v.state = 3;
+                    localStorage.setItem('scw_vault_stage', '3');
+                    if (window.audio) audio.playVaultOpen();
+                    shakeTimer = 35; shakeAmt = 8;
+                    loreNotification = { title: '⚙️ FORGOTTEN VAULT OPENED!', text: 'The ancient heavy iron door slides into the ceiling, revealing the forgotten chamber!', timer: 240 };
+                }
+            } else if (v.state === 3) {
+                if (v.openProgress < 1) {
+                    v.openProgress = Math.min(1, v.openProgress + 0.015);
+                    v.slideY = -96 * v.openProgress;
+                    if (frameCount % 3 === 0) {
+                        addParticle(v.x + Math.random() * 96, v.y + 96, '#B0A080', 2, 4);
+                    }
+                }
+            }
+
+            if (!cat.dead && v.state < 3) {
+                let dist = Math.abs((cat.x + cat.w / 2) - (v.x + v.w / 2));
+                let distY = Math.abs((cat.y + cat.h / 2) - (v.y + v.h / 2));
+                if (dist < 64 && distY < 64) {
+                    const pressingInteract = keys.glide || keys.scratch || (keys.up);
+                    if (v.state === 0 && pressingInteract && v.inspectCooldown <= 0) {
+                        v.state = 1;
+                        v.inspectCooldown = 90;
+                        if (window.audio) audio.playVaultClunk();
+                        shakeTimer = 8; shakeAmt = 3;
+                        for (let i = 0; i < 15; i++) {
+                            addParticle(v.x + Math.random() * 96, v.y + Math.random() * 32, '#A09080', 1 + Math.random() * 2, 4);
+                        }
+                        loreNotification = { title: '⚙️ ANCIENT VAULT DOOR', text: 'Heavy iron gears clunk inside... It still works, but needs activation!', timer: 200 };
+                    } else if (v.state === 1 && unlockedLore.includes(10) && v.inspectCooldown <= 0) {
+                        v.state = 2;
+                        v.activationTimer = 0;
+                        if (window.audio) audio.playVaultGears();
+                        shakeTimer = 25; shakeAmt = 6;
+                        loreNotification = { title: '⚙️ VAULT MECHANISM AWAKENED!', text: 'The Secret Lore Scroll aligns the ancient locking gears! The mechanism is unlatching!', timer: 220 };
+                    }
                 }
             }
         });
@@ -8160,6 +8233,8 @@
         }
         updateStars();
         updatePowerUps();
+        updateLoreBooks();
+        updateVaultDoors();
         if (starPowerTimer > 0) starPowerTimer--;
         if (fireProtectTimer > 0) fireProtectTimer--;
         // Void
@@ -8367,6 +8442,7 @@
             level.oneUps.forEach(drawOneUp);
             level.fireFlowers.forEach(drawFireFlower);
             if (level.loreBooks) level.loreBooks.forEach(drawLoreBook);
+            if (level.vaultDoors) level.vaultDoors.forEach(drawVaultDoor);
             // Checkpoints
             drawCheckpoints();
             // Ship decorations on sky levels
@@ -8461,7 +8537,7 @@
             ctx.fillStyle = 'rgba(255, 255, 255, 0.65)';
             ctx.font = '8px "Press Start 2P", monospace';
             ctx.textAlign = 'left';
-            ctx.fillText('v1.6.3', 10, H - 10);
+            ctx.fillText('v1.7.0', 10, H - 10);
             ctx.restore();
 
             // Online mode indicator
@@ -8503,6 +8579,92 @@
         ctx.fillStyle = '#FFD700';
         ctx.font = '10px monospace';
         ctx.fillText('📖', bx + 2, by + 13);
+    }
+
+    function drawVaultDoor(v) {
+        const vx = Math.round(v.x - cam.x), vy = Math.round(v.y);
+        if (vx < -120 || vx > W + 120) return;
+
+        ctx.save();
+        ctx.fillStyle = '#0B0B12';
+        ctx.fillRect(vx, vy, v.w, v.h);
+
+        ctx.fillStyle = 'rgba(255, 215, 0, 0.4)';
+        ctx.font = '10px monospace';
+        ctx.fillText('ᚱ ᛟ ᚢ ᚾ', vx + 12, vy + 40);
+        ctx.fillText('ᚴ ᚨ ᛏ ᛏ', vx + 54, vy + 65);
+
+        const doorY = vy + (v.slideY || 0);
+        if ((v.slideY || 0) > -v.h) {
+            ctx.save();
+            ctx.beginPath();
+            ctx.rect(vx, vy - v.h, v.w, v.h * 2);
+            ctx.clip();
+
+            ctx.fillStyle = '#3E342B';
+            ctx.fillRect(vx + 4, doorY + 4, v.w - 8, v.h - 8);
+
+            ctx.fillStyle = '#5A4A3E';
+            ctx.fillRect(vx + 8, doorY + 8, v.w - 16, 12);
+            ctx.fillRect(vx + 8, doorY + v.h - 20, v.w - 16, 12);
+
+            ctx.fillStyle = '#7A3B1E';
+            ctx.fillRect(vx + 14, doorY + 24, 18, 4);
+            ctx.fillRect(vx + 54, doorY + 60, 24, 5);
+
+            ctx.fillStyle = '#2A201A';
+            ctx.fillRect(vx + 2, doorY + 16, 8, 20);
+            ctx.fillRect(vx + 2, doorY + 60, 8, 20);
+            ctx.fillRect(vx + v.w - 10, doorY + 16, 8, 20);
+            ctx.fillRect(vx + v.w - 10, doorY + 60, 8, 20);
+
+            const cx = vx + v.w / 2, cy = doorY + v.h / 2;
+            ctx.save();
+            ctx.translate(cx, cy);
+            ctx.rotate(v.wheelAngle || 0);
+
+            ctx.fillStyle = '#8B6B23';
+            ctx.beginPath(); ctx.arc(0, 0, 22, 0, Math.PI * 2); ctx.fill();
+            ctx.fillStyle = '#DAA520';
+            ctx.beginPath(); ctx.arc(0, 0, 18, 0, Math.PI * 2); ctx.fill();
+            ctx.fillStyle = '#3A2E1E';
+            ctx.beginPath(); ctx.arc(0, 0, 14, 0, Math.PI * 2); ctx.fill();
+
+            ctx.strokeStyle = '#DAA520';
+            ctx.lineWidth = 3;
+            for (let a = 0; a < Math.PI * 2; a += Math.PI / 4) {
+                ctx.beginPath();
+                ctx.moveTo(0, 0);
+                ctx.lineTo(Math.cos(a) * 20, Math.sin(a) * 20);
+                ctx.stroke();
+            }
+
+            ctx.fillStyle = '#FFD700';
+            ctx.beginPath(); ctx.arc(0, 0, 5, 0, Math.PI * 2); ctx.fill();
+            ctx.restore();
+
+            ctx.restore();
+        }
+
+        ctx.fillStyle = '#2A221B';
+        ctx.fillRect(vx - 4, vy - 4, v.w + 8, 6);
+        ctx.fillRect(vx - 4, vy - 4, 6, v.h + 8);
+        ctx.fillRect(vx + v.w - 2, vy - 4, 6, v.h + 8);
+
+        ctx.fillStyle = '#5A5046';
+        ctx.fillRect(vx, vy - 4, 28, 4);
+        ctx.fillRect(vx + 34, vy - 6, 28, 6);
+        ctx.fillRect(vx + 68, vy - 4, 28, 4);
+
+        if (v.state < 3 && Math.abs((cat.x + cat.w / 2) - (v.x + v.w / 2)) < 64) {
+            ctx.fillStyle = '#FFD700';
+            ctx.font = 'bold 9px monospace';
+            ctx.textAlign = 'center';
+            ctx.fillText(v.state === 0 ? 'Press UP to Inspect' : 'Inspect Ancient Vault', vx + v.w / 2, vy - 12);
+            ctx.textAlign = 'left';
+        }
+
+        ctx.restore();
     }
 
     function drawLoreNotification() {
