@@ -8537,7 +8537,7 @@
             ctx.fillStyle = 'rgba(255, 255, 255, 0.65)';
             ctx.font = '8px "Press Start 2P", monospace';
             ctx.textAlign = 'left';
-            ctx.fillText('v1.7.1', 10, H - 10);
+            ctx.fillText('v1.7.2', 10, H - 10);
             ctx.restore();
 
             // Online mode indicator
@@ -9042,6 +9042,7 @@
     }
 
     // INIT
-    showOverlay('SUPER CAT WORLD', 'PRESS SPACE TO START\nPRESS 2 FOR CO-OP\nPRESS 3 FOR ONLINE\nPRESS H FOR HOW TO PLAY');
+    level = parseLevel(0);
+    showOverlay('SUPER CAT WORLD', 'PRESS SPACE OR TAP TO START\nPRESS 2 FOR CO-OP\nPRESS 3 FOR ONLINE\nPRESS H FOR HOW TO PLAY');
     loop();
 })();
