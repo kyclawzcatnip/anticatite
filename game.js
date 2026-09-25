@@ -560,15 +560,15 @@
         [
             "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
             "K                                      K",
-            "K      C   C   C   C   C   C   C       K",
+            "K                                      K",
+            "K      C   C   C   E   C   C   C       K",
             "K     UUUUUUUUUUUUUUUUUUUUUUUUUU       K",
             "K                                      K",
             "K   W         UUUUUUUUU            L   K",
             "K  UUUU       U   v   U          UUUU  K",
-            "K S           U       U              <>K",
-            "K             M=======M              ()K",
-            "KKKKKKKKKKKKKKMMMMMMMMMKKKKKKKKKKKKKKKKK",
-            "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
+            "K             U       U                K",
+            "K S  9999     M=======M     9999     <>K",
+            "K UUUUUUUUUUUUMMMMMMMMMUUUUUUUUUUUUUU()K",
             "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
             "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
             "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
@@ -8537,7 +8537,7 @@
             ctx.fillStyle = 'rgba(255, 255, 255, 0.65)';
             ctx.font = '8px "Press Start 2P", monospace';
             ctx.textAlign = 'left';
-            ctx.fillText('v1.7.0', 10, H - 10);
+            ctx.fillText('v1.7.1', 10, H - 10);
             ctx.restore();
 
             // Online mode indicator
