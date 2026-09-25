@@ -618,7 +618,7 @@
                 else grid[r][c] = 0;
             }
         }
-        if (idx >= 27) {
+        if (idx >= 27 && idx <= 30) {
             enemies.forEach((e, i) => {
                 if (i % 2 === 0) {
                     e.isGlitchedEnemy = true;
@@ -1259,7 +1259,7 @@
 
     // TILE COLLISION
     function isTileGlitchedOut(r, c) {
-        if (!level || state !== 'playing' || currentLevel < 27) return false;
+        if (!level || state !== 'playing' || currentLevel < 27 || currentLevel > 30) return false;
         if (c <= 6) return false; // safe start
         if (c >= level.cols - 4) return false; // safe end pipe
         const colSection = Math.floor(c / 3);
@@ -5426,7 +5426,7 @@
         }
 
         // Corrupted block check
-        if (currentLevel >= 27 && (r * 7 + c * 3) % 5 === 0) {
+        if (currentLevel >= 27 && currentLevel <= 30 && (r * 7 + c * 3) % 5 === 0) {
             ctx.fillStyle = '#000';
             ctx.fillRect(x, y, T, T);
             const bands = 4;
@@ -6861,7 +6861,7 @@
     }
 
     function drawBackground() {
-        if (currentLevel >= 27) { drawGlitchedBackground(); return; }
+        if (currentLevel >= 27 && currentLevel <= 30) { drawGlitchedBackground(); return; }
         if (currentLevel >= 23) { drawMineshaftBackground(); return; }
         if (currentLevel >= 12) { drawCaveBackground(); return; }
         if (currentLevel >= 6) { drawSkyIslandBackground(); return; }
@@ -8108,7 +8108,7 @@
             const gSecs = String(elapsedGuest % 60).padStart(2, '0');
             if (timerEl) timerEl.textContent = '⏱️ ' + gMins + ':' + gSecs;
             scoreEl.textContent = 'SCORE: ' + score;
-            levelEl.textContent = currentLevel >= 27 ? 'ERR: GLITCH ' + (currentLevel - 26) : (boss ? (boss.pirate ? 'SKY BOSS' : 'BOSS') : (currentLevel >= 23 ? 'MINE ' + (currentLevel - 22) : currentLevel >= 12 ? 'CAVE ' + (currentLevel - 11) : currentLevel >= 6 ? 'SKY ' + (currentLevel - 5) : 'WORLD ' + (currentLevel + 1)));
+            levelEl.textContent = currentLevel === 31 ? 'WORLD 2B' : (currentLevel >= 27 && currentLevel <= 30 ? 'ERR: GLITCH ' + (currentLevel - 26) : (boss ? (boss.pirate ? 'SKY BOSS' : 'BOSS') : (currentLevel >= 23 ? 'MINE ' + (currentLevel - 22) : currentLevel >= 12 ? 'CAVE ' + (currentLevel - 11) : currentLevel >= 6 ? 'SKY ' + (currentLevel - 5) : 'WORLD ' + (currentLevel + 1))));
             if (state === 'over') { showOverlay('GAME OVER', 'SCORE: ' + score + '\n\nPRESS SPACE TO RETRY'); }
             if (state === 'levelcomplete') { showOverlay('LEVEL COMPLETE!', 'SCORE: ' + score + '\n\nWAITING FOR HOST...'); }
             if (state === 'win') { showOverlay('YOU WIN! 🎉', 'FINAL SCORE: ' + score); }
@@ -8188,7 +8188,7 @@
         const secs = String(elapsedSec % 60).padStart(2, '0');
         if (timerEl) timerEl.textContent = '⏱️ ' + mins + ':' + secs;
         scoreEl.textContent = 'SCORE: ' + score;
-        levelEl.textContent = currentLevel >= 27 ? 'ERR: GLITCH ' + (currentLevel - 26) : (boss ? (boss.pirate ? 'SKY BOSS' : 'BOSS') : (currentLevel >= 23 ? 'MINE ' + (currentLevel - 22) : currentLevel >= 12 ? 'CAVE ' + (currentLevel - 11) : currentLevel >= 6 ? 'SKY ' + (currentLevel - 5) : 'WORLD ' + (currentLevel + 1)));
+        levelEl.textContent = currentLevel === 31 ? 'WORLD 2B' : (currentLevel >= 27 && currentLevel <= 30 ? 'ERR: GLITCH ' + (currentLevel - 26) : (boss ? (boss.pirate ? 'SKY BOSS' : 'BOSS') : (currentLevel >= 23 ? 'MINE ' + (currentLevel - 22) : currentLevel >= 12 ? 'CAVE ' + (currentLevel - 11) : currentLevel >= 6 ? 'SKY ' + (currentLevel - 5) : 'WORLD ' + (currentLevel + 1))));
         // Check game over
         if (state === 'over') { showOverlay('GAME OVER', 'SCORE: ' + score + '\n\nPRESS SPACE TO RETRY\nPRESS 2 FOR CO-OP'); }
         if (state === 'levelcomplete') { showOverlay('LEVEL COMPLETE!', 'SCORE: ' + score + '\n\nPRESS SPACE TO CONTINUE'); }
@@ -8461,7 +8461,7 @@
             ctx.fillStyle = 'rgba(255, 255, 255, 0.65)';
             ctx.font = '8px "Press Start 2P", monospace';
             ctx.textAlign = 'left';
-            ctx.fillText('v1.6.2', 10, H - 10);
+            ctx.fillText('v1.6.3', 10, H - 10);
             ctx.restore();
 
             // Online mode indicator
