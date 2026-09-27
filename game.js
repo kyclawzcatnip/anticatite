@@ -640,6 +640,23 @@
             "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
             "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
             "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
+        ],
+        // Level 36 — THE INTERIOR OF THE FORGOTTEN VAULT (THE INNER TREASURE CHAMBER)
+        [
+            "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
+            "K                                      K",
+            "K    CCCCCC      CCCC      CCCCCC      K",
+            "K   UUUUUUUU    UUUUUU    UUUUUUUU     K",
+            "K                                      K",
+            "K  W  C   C   L   C   W   C   C   L    K",
+            "K UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU  K",
+            "K                                      K",
+            "K S   Q   Z   Z   Z   Z   Z   Q      <>K",
+            "K UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU()K",
+            "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
+            "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
+            "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
+            "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
         ]
     ];
 
@@ -751,7 +768,7 @@
     let isBig = false; // big mushroom power-up (2 blocks tall, break bricks)
     let isMini = false; // mini mushroom power-up (half size, higher jump, fits 1-block gaps)
     // Dev mode — activated by Konami code: ↑↑↓↓←→←→BA
-    let devMode = false;
+    let devMode = JSON.parse(localStorage.getItem('scw_dev_mode') || 'false');
     const devCode = ['ArrowUp','ArrowUp','ArrowDown','ArrowDown','ArrowLeft','ArrowRight','ArrowLeft','ArrowRight','KeyB','KeyA'];
     let devInput = [];
     let stars = []; // spawned star items in the level
@@ -1046,6 +1063,7 @@
         if (devInput.length > devCode.length) devInput.shift();
         if (devInput.length === devCode.length && devInput.every((k, i) => k === devCode[i])) {
             devMode = !devMode; devInput = [];
+            localStorage.setItem('scw_dev_mode', JSON.stringify(devMode));
         }
         if (e.code === 'KeyB') {
             window._openCodex();
@@ -2607,15 +2625,18 @@
                         if (window.audio) audio.playVaultGears();
                         shakeTimer = 25; shakeAmt = 6;
                         loreNotification = { title: '⚙️ VAULT MECHANISM AWAKENED!', text: 'The Secret Lore Scroll aligns the ancient locking gears! The mechanism is unlatching!', timer: 240 };
-                    } else if (v.state === 1 && !unlockedLore.includes(10) && pressingDown && v.inspectCooldown <= 0) {
-                        v.inspectCooldown = 60;
-                        if (window.audio) audio.playVaultClunk();
-                        loreNotification = { title: '⚙️ VAULT IS LOCKED', text: 'The vault wheel is jammed by the Rat King\'s lock! Collect Secret Lore Book X above to align the gears!', timer: 200 };
+            // ENTER VAULT INTERIOR WHEN STANDING IN OPENED VAULT DOOR THRESHOLD
+            if (!cat.dead && v.state === 3 && v.openProgress >= 0.8) {
+                let dist = Math.abs((cat.x + cat.w / 2) - (v.x + v.w / 2));
+                let distY = Math.abs((cat.y + cat.h / 2) - (v.y + v.h / 2));
+                if (dist < 40 && distY < 48) {
+                    if (currentLevel === 35 && (keys.glide || Math.abs(cat.vx) > 0.1)) {
+                        loadLevel(36); // Enter Level 36: The Vault Interior Chamber!
+                        if (window.audio) audio.playPowerUp();
+                        loreNotification = { title: '👑 THE INTERIOR OF THE FORGOTTEN VAULT', text: 'You step through the open iron doorway into the inner sanctuary of ancient golden treasures and secret scrolls!', timer: 280 };
                     }
                 }
             }
-        });
-    }
 
     function spawnCoinExplosion(bx, by, count) {
         const numCoins = count || (Math.floor(Math.random() * 5) + 5);
@@ -5727,6 +5748,17 @@
             return;
         }
 
+        // Vault Interior (Level 36) Exit Pipe -> Warps back to Level 2
+        if (currentLevel === 36 && (onSilverPipe(cat, keys) || (coopMode && onSilverPipe(cat2, keys2)))) {
+            if (window.audio) audio.playPowerUp();
+            loadLevel(secretReturnLevel || 1);
+            cat.x = secretReturnX || 2200;
+            cat.y = secretReturnY || 300;
+            cam.x = Math.max(0, cat.x - W / 3);
+            loreNotification = { title: '👑 ESCAPED THE VAULT INTERIOR', text: 'You have safely returned to Level 2 with all the ancient feline treasures!', timer: 260 };
+            return;
+        }
+
         if (onSilverPipe(cat, keys) || (coopMode && onSilverPipe(cat2, keys2))) {
             if (currentLevel === 5 && rescuedKittensCount < 10) {
                 showOverlay('🐱 RESCUE ALL KITTENS!', 'YOU MUST FIND AND FREE ALL 10 CAPTURED KITTENS BEFORE ESCAPING THE DUNGEON!\n\nKITTENS RESCUED: ' + rescuedKittensCount + ' / 10');
@@ -8827,7 +8859,7 @@
             ctx.fillStyle = 'rgba(255, 255, 255, 0.65)';
             ctx.font = '8px "Press Start 2P", monospace';
             ctx.textAlign = 'left';
-            ctx.fillText('v2.1.0', 10, H - 10);
+            ctx.fillText('v2.2.0', 10, H - 10);
             ctx.restore();
 
             // Online mode indicator
@@ -8980,6 +9012,12 @@
             ctx.font = 'bold 9px monospace';
             ctx.textAlign = 'center';
             ctx.fillText(v.state === 0 ? 'Press DOWN to Inspect' : (v.state === 1 ? (unlockedLore.includes(10) ? 'Press DOWN to Unlock' : 'Locked (Needs Lore Book X)') : '⚙️ Gears Turning...'), vx + v.w / 2, vy - 12);
+            ctx.textAlign = 'left';
+        } else if (v.state === 3 && v.openProgress >= 0.8 && Math.abs((cat.x + cat.w / 2) - (v.x + v.w / 2)) < 64) {
+            ctx.fillStyle = '#00FF88';
+            ctx.font = 'bold 9px monospace';
+            ctx.textAlign = 'center';
+            ctx.fillText('Press DOWN to Enter Vault Interior', vx + v.w / 2, vy - 12);
             ctx.textAlign = 'left';
         }
 
