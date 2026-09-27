@@ -556,7 +556,58 @@
             "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
             "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
         ],
-        // Level 31 — LEVEL 2 SECRET PIPE VAULT & FORGOTTEN VAULT
+        // Level 31 — THE ANCIENT VAULT'S TRIALS — TRIAL 1 / 4: THE TRIAL OF AGILITY
+        [
+            "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
+            "K                                      K",
+            "K                                      K",
+            "K      C   C   C       C   C   C       K",
+            "K     UUUUUUUUUU     UUUUUUUUUUU       K",
+            "K                                      K",
+            "K   W                                  K",
+            "K  UUUU       9999         9999  UUUU  K",
+            "K                                      K",
+            "K S  9999           9999             <>K",
+            "K UUUUUUUU        UUUUUU        UUUUU()K",
+            "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
+            "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
+            "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
+        ],
+        // Level 32 — THE ANCIENT VAULT'S TRIALS — TRIAL 2 / 4: THE TRIAL OF SHADOWS
+        [
+            "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
+            "K                                      K",
+            "K                                      K",
+            "K      C   C   C       C   C   C       K",
+            "K     UUUUUUUUU  V  UUUUUUUUUUUU       K",
+            "K                                      K",
+            "K   W         UUUUUUUUU            L   K",
+            "K  UUUU       UUUUUUUUU          UUUU  K",
+            "K                                      K",
+            "K S  9999  R  M=======M  R  9999     <>K",
+            "K UUUUUUUUUUUUMMMMMMMMMUUUUUUUUUUUUUU()K",
+            "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
+            "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
+            "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
+        ],
+        // Level 33 — THE ANCIENT VAULT'S TRIALS — TRIAL 3 / 4: THE TRIAL OF PRECISION
+        [
+            "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
+            "K                                      K",
+            "K                                      K",
+            "K  A   C   C   Y       Y   C   C   A   K",
+            "K UUUUUUUUUUUU       UUUUUUUUUUUUUUUU  K",
+            "K                                      K",
+            "K   W                               L  K",
+            "K  UUUU       UUUUUUUUU          UUUU  K",
+            "K                                      K",
+            "K S  9999  Y  M=======M  Y  9999     <>K",
+            "K UUUUUUUUUUUUMMMMMMMMMUUUUUUUUUUUUUU()K",
+            "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
+            "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
+            "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
+        ],
+        // Level 34 — THE ANCIENT VAULT'S TRIALS — TRIAL 4 / 4: THE TRIAL OF VALOR & FORGOTTEN VAULT
         [
             "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
             "K                                      K",
@@ -5547,23 +5598,49 @@
             return false;
         }
 
-        // Green Pipe Secret Room Entry (Level 2)
+        // Green Pipe Secret Room Entry (Level 2) -> Warps to Trial 1 (Level 31)
         if (currentLevel === 1 && (onGreenPipe(cat, keys) || (coopMode && onGreenPipe(cat2, keys2)))) {
             if (window.audio) audio.playPowerUp();
             secretReturnLevel = 1;
             secretReturnX = cat.x + 60;
             secretReturnY = cat.y;
-            loadLevel(31); // Load Level 2 Secret Room!
+            loadLevel(31); // Load Trial 1: Trial of Agility!
+            loreNotification = { title: '🏛️ THE ANCIENT VAULT\'S TRIALS', text: 'TRIAL 1 / 4: THE TRIAL OF AGILITY — Master the precision jumps across the subterranean void!', timer: 260 };
             return;
         }
 
-        // Secret Room Exit Pipe Warp back to Level 2
+        // Trial 1 (Level 31) Exit Pipe -> Warps to Trial 2 (Level 32)
         if (currentLevel === 31 && (onSilverPipe(cat, keys) || (coopMode && onSilverPipe(cat2, keys2)))) {
+            if (window.audio) audio.playPowerUp();
+            loadLevel(32); // Load Trial 2: Trial of Shadows!
+            loreNotification = { title: '✨ TRIAL 1 COMPLETED! [ 1 / 4 ]', text: 'TRIAL 2 / 4: THE TRIAL OF SHADOWS — Navigate past the subterranean rat guardians patrolling the ruins!', timer: 260 };
+            return;
+        }
+
+        // Trial 2 (Level 32) Exit Pipe -> Warps to Trial 3 (Level 33)
+        if (currentLevel === 32 && (onSilverPipe(cat, keys) || (coopMode && onSilverPipe(cat2, keys2)))) {
+            if (window.audio) audio.playPowerUp();
+            loadLevel(33); // Load Trial 3: Trial of Precision!
+            loreNotification = { title: '✨ TRIAL 2 COMPLETED! [ 2 / 4 ]', text: 'TRIAL 3 / 4: THE TRIAL OF PRECISION — Avoid the airborne flying ratters and archer rat projectiles!', timer: 260 };
+            return;
+        }
+
+        // Trial 3 (Level 33) Exit Pipe -> Warps to Trial 4 (Level 34)
+        if (currentLevel === 33 && (onSilverPipe(cat, keys) || (coopMode && onSilverPipe(cat2, keys2)))) {
+            if (window.audio) audio.playPowerUp();
+            loadLevel(34); // Load Trial 4: Trial of Valor & Forgotten Vault!
+            loreNotification = { title: '✨ TRIAL 3 COMPLETED! [ 3 / 4 ]', text: 'TRIAL 4 / 4: THE TRIAL OF VALOR — Claim Secret Lore Book X and unlock the Forgotten Vault!', timer: 260 };
+            return;
+        }
+
+        // Trial 4 (Level 34) Exit Pipe -> Warps back to Level 2
+        if (currentLevel === 34 && (onSilverPipe(cat, keys) || (coopMode && onSilverPipe(cat2, keys2)))) {
             if (window.audio) audio.playPowerUp();
             loadLevel(secretReturnLevel || 1);
             cat.x = secretReturnX || 2200;
             cat.y = secretReturnY || 300;
             cam.x = Math.max(0, cat.x - W / 3);
+            loreNotification = { title: '🏆 ALL 4 TRIALS COMPLETED!', text: 'You have conquered The Ancient Vault\'s Trials and escaped back to Level 2!', timer: 260 };
             return;
         }
 
@@ -8667,7 +8744,7 @@
             ctx.fillStyle = 'rgba(255, 255, 255, 0.65)';
             ctx.font = '8px "Press Start 2P", monospace';
             ctx.textAlign = 'left';
-            ctx.fillText('v1.9.1', 10, H - 10);
+            ctx.fillText('v2.0.0', 10, H - 10);
             ctx.restore();
 
             // Online mode indicator
