@@ -708,7 +708,7 @@
         { id: 7, level: 22, title: 'VII. The Miner\'s Greed', text: 'Blinded by a thirst for riches, Miner Boss Rattock commanded his workers to dig deeper into the mountain than anyone had ever dared. They breached the ancient volcanic core, triggers earthquakes and mine collapses. Rather than retreating, Rattock weaponized the chaos. He designed high-speed minecarts filled with unstable TNT explosives and rigged the cavern arches to drop crushing boulders on intruders. His greed consumed him, transforming him into a paranoid warden of the dark mines.' },
         { id: 8, level: 26, title: 'VIII. The Glitched Realm', text: 'At the edge of reality, hidden behind the secret silver pipes, lies a fractured dimension known as the Glitched Lands. In this bizarre realm, the laws of physics break down entirely. Platforms flicker in and out of existence, gravity flips upside down at a moment\'s notice, and reality itself appears corrupted by digital anomalies. The elder cats warned that this frontier is a one-way trip, as the unstable fabric of the realm tears apart any traveler who lacks absolute focus.' },
         { id: 9, level: 30, title: 'IX. The Glitched Core', text: 'Deep inside the glitched dimension floats the source of all instability: the Glitched Core. It is a sentient, pulsing heart made of corrupted source code and chaotic energy. The Core seeks to rewrite the entire universe in its own image, threatening to dissolve the Nine Feline Realms into static. The ancient prophets wrote that only a hero brave enough to navigate the shifting gravity fields and destroy the Core\'s firewall can permanently stabilize the code, saving reality.' },
-        { id: 10, level: 31, secret: true, title: 'X. Forgotten Pipe Vault', text: 'Deep inside the green pipes of Level 2 lies an ancient feline vault. The elder cats stored extra gold, power-ups, and legendary scrolls here for brave adventurers seeking to save the Nine Feline Realms.' }
+        { id: 10, level: 31, secret: true, title: 'X. The Forgotten Vault', text: 'Deep inside the secret green pipe vault lies an ancient feline sanctuary. The Rat King discovered this lost vault and placed it on total lockdown so no feline could ever harness the powerful artifacts lurking inside.' }
     ];
     let unlockedLore = JSON.parse(localStorage.getItem('scw_unlocked_lore') || '[]');
     let loreNotification = null; // { title, text, timer }
@@ -2462,22 +2462,25 @@
         if (!level || !level.vaultDoors) return;
         level.vaultDoors.forEach(v => {
             if (v.inspectCooldown > 0) v.inspectCooldown--;
+
+            // STAGE 2: Mechanical Gears Turning Phase
             if (v.state === 2) {
                 v.activationTimer++;
-                v.wheelAngle += 0.12;
-                if (frameCount % 4 === 0) {
-                    addParticle(v.x + 16 + Math.random() * 64, v.y + 16 + Math.random() * 64, '#AA8844', 2, 4);
-                    addParticle(v.x + 16 + Math.random() * 64, v.y + 16 + Math.random() * 64, '#D0C0A0', 1, 3);
+                v.wheelAngle += 0.18; // Gear turning animation
+                if (frameCount % 3 === 0) {
+                    addParticle(v.x + 16 + Math.random() * 64, v.y + 16 + Math.random() * 64, '#FFD700', 2, 4);
+                    addParticle(v.x + 16 + Math.random() * 64, v.y + 16 + Math.random() * 64, '#B0A080', 1, 3);
                 }
-                if (v.activationTimer > 120) {
-                    v.state = 3;
+                if (v.activationTimer > 140) {
+                    v.state = 3; // Phase 3: Sliding Door Opening
                     if (window.audio) audio.playVaultOpen();
                     shakeTimer = 35; shakeAmt = 8;
-                    loreNotification = { title: '⚙️ FORGOTTEN VAULT OPENED!', text: 'The ancient heavy iron door slides into the ceiling, revealing the forgotten chamber!', timer: 240 };
+                    loreNotification = { title: '⚙️ FORGOTTEN VAULT UNLOCKED!', text: 'The mechanical gears finished unlatching! The heavy iron vault slides into the ceiling!', timer: 240 };
                 }
             } else if (v.state === 3) {
+                // STAGE 3: Smooth Vertical Door Panel Slide
                 if (v.openProgress < 1) {
-                    v.openProgress = Math.min(1, v.openProgress + 0.015);
+                    v.openProgress = Math.min(1, v.openProgress + 0.012);
                     v.slideY = -96 * v.openProgress;
                     if (frameCount % 3 === 0) {
                         addParticle(v.x + Math.random() * 96, v.y + 96, '#B0A080', 2, 4);
@@ -2485,26 +2488,32 @@
                 }
             }
 
+            // PLAYER INTERACTION CHECK (PRESS DOWN = keys.glide)
             if (!cat.dead && v.state < 3) {
                 let dist = Math.abs((cat.x + cat.w / 2) - (v.x + v.w / 2));
                 let distY = Math.abs((cat.y + cat.h / 2) - (v.y + v.h / 2));
                 if (dist < 64 && distY < 64) {
-                    const pressingInteract = keys.glide || keys.scratch || (keys.up);
-                    if (v.state === 0 && pressingInteract && v.inspectCooldown <= 0) {
+                    const pressingDown = keys.glide; // DOWN arrow / S key
+                    if (v.state === 0 && pressingDown && v.inspectCooldown <= 0) {
                         v.state = 1;
                         v.inspectCooldown = 90;
+                        v.wheelAngle += 0.8;
                         if (window.audio) audio.playVaultClunk();
-                        shakeTimer = 8; shakeAmt = 3;
+                        shakeTimer = 10; shakeAmt = 4;
                         for (let i = 0; i < 15; i++) {
                             addParticle(v.x + Math.random() * 96, v.y + Math.random() * 32, '#A09080', 1 + Math.random() * 2, 4);
                         }
-                        loreNotification = { title: '⚙️ ANCIENT VAULT DOOR', text: 'Heavy iron gears clunk inside... It still works, but needs activation!', timer: 200 };
-                    } else if (v.state === 1 && unlockedLore.includes(10) && v.inspectCooldown <= 0) {
+                        loreNotification = { title: '⚙️ ANCIENT VAULT DOOR', text: 'Heavy iron gears clunk inside... The Rat King placed this vault on lockdown! Find Secret Lore Book X to unlock!', timer: 240 };
+                    } else if (v.state === 1 && unlockedLore.includes(10) && pressingDown && v.inspectCooldown <= 0) {
                         v.state = 2;
                         v.activationTimer = 0;
                         if (window.audio) audio.playVaultGears();
                         shakeTimer = 25; shakeAmt = 6;
-                        loreNotification = { title: '⚙️ VAULT MECHANISM AWAKENED!', text: 'The Secret Lore Scroll aligns the ancient locking gears! The mechanism is unlatching!', timer: 220 };
+                        loreNotification = { title: '⚙️ VAULT MECHANISM AWAKENED!', text: 'The Secret Lore Scroll aligns the ancient locking gears! The mechanism is unlatching!', timer: 240 };
+                    } else if (v.state === 1 && !unlockedLore.includes(10) && pressingDown && v.inspectCooldown <= 0) {
+                        v.inspectCooldown = 60;
+                        if (window.audio) audio.playVaultClunk();
+                        loreNotification = { title: '⚙️ VAULT IS LOCKED', text: 'The vault wheel is jammed by the Rat King\'s lock! Collect Secret Lore Book X above to align the gears!', timer: 200 };
                     }
                 }
             }
@@ -8658,7 +8667,7 @@
             ctx.fillStyle = 'rgba(255, 255, 255, 0.65)';
             ctx.font = '8px "Press Start 2P", monospace';
             ctx.textAlign = 'left';
-            ctx.fillText('v1.9.0', 10, H - 10);
+            ctx.fillText('v1.9.1', 10, H - 10);
             ctx.restore();
 
             // Online mode indicator
@@ -8748,6 +8757,14 @@
             ctx.beginPath(); ctx.arc(0, 0, 22, 0, Math.PI * 2); ctx.fill();
             ctx.fillStyle = '#DAA520';
             ctx.beginPath(); ctx.arc(0, 0, 18, 0, Math.PI * 2); ctx.fill();
+
+            // Gear Teeth Rim
+            ctx.fillStyle = '#B8860B';
+            for (let t = 0; t < 12; t++) {
+                const tang = (t / 12) * Math.PI * 2;
+                ctx.fillRect(Math.cos(tang) * 18 - 2, Math.sin(tang) * 18 - 2, 5, 5);
+            }
+
             ctx.fillStyle = '#3A2E1E';
             ctx.beginPath(); ctx.arc(0, 0, 14, 0, Math.PI * 2); ctx.fill();
 
@@ -8763,6 +8780,27 @@
             ctx.fillStyle = '#FFD700';
             ctx.beginPath(); ctx.arc(0, 0, 5, 0, Math.PI * 2); ctx.fill();
             ctx.restore();
+
+            // Interlocking Side Cogs
+            const cogs = [
+                { ox: -32, oy: -28, r: 10, speed: -1.5 },
+                { ox: 32, oy: -28, r: 10, speed: -1.5 },
+                { ox: -32, oy: 28, r: 10, speed: -1.5 },
+                { ox: 32, oy: 28, r: 10, speed: -1.5 }
+            ];
+            cogs.forEach(cog => {
+                ctx.save();
+                ctx.translate(cx + cog.ox, cy + cog.oy);
+                ctx.rotate((v.wheelAngle || 0) * cog.speed);
+                ctx.fillStyle = '#5A4A3E';
+                ctx.beginPath(); ctx.arc(0, 0, cog.r, 0, Math.PI * 2); ctx.fill();
+                ctx.fillStyle = '#8B7355';
+                for (let ct = 0; ct < 6; ct++) {
+                    const ctang = (ct / 6) * Math.PI * 2;
+                    ctx.fillRect(Math.cos(ctang) * (cog.r - 2) - 2, Math.sin(ctang) * (cog.r - 2) - 2, 4, 4);
+                }
+                ctx.restore();
+            });
 
             ctx.restore();
         }
@@ -8781,7 +8819,7 @@
             ctx.fillStyle = '#FFD700';
             ctx.font = 'bold 9px monospace';
             ctx.textAlign = 'center';
-            ctx.fillText(v.state === 0 ? 'Press UP to Inspect' : 'Inspect Ancient Vault', vx + v.w / 2, vy - 12);
+            ctx.fillText(v.state === 0 ? 'Press DOWN to Inspect' : (v.state === 1 ? (unlockedLore.includes(10) ? 'Press DOWN to Unlock' : 'Locked (Needs Lore Book X)') : '⚙️ Gears Turning...'), vx + v.w / 2, vy - 12);
             ctx.textAlign = 'left';
         }
 
