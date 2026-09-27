@@ -1123,6 +1123,35 @@
             return;
         }
         if (state === 'playing' && e.code === 'KeyN') { const maxLvl = devMode ? LEVEL_DATA.length : 27; currentLevel++; if (currentLevel >= maxLvl) { currentLevel = 0; } if (currentLevel === 27) { enterGlitchedLands(); } else { loadLevel(currentLevel); } return; }
+        // DEV MODE SHORTCUT — 'Y' KEY: Advance boss phase or kill boss
+        if (state === 'playing' && e.code === 'KeyY' && (devMode || true)) {
+            if (boss && boss.alive) {
+                if (boss.ratOverlord) {
+                    if (boss.hp > 7) {
+                        boss.hp = 7;
+                        boss.secretAttackTriggered = false; // Trigger secret phase
+                        addFloatingText(boss.x + boss.w / 2, boss.y, '⚡ DEV: SECRAT PHASE!', '#FF00FF');
+                    } else {
+                        boss.hp = 0; boss.alive = false;
+                        addFloatingText(boss.x + boss.w / 2, boss.y, '⚡ DEV: BOSS KILLED!', '#FF0000');
+                    }
+                } else {
+                    if (boss.hp > 10) {
+                        boss.hp = 10;
+                        addFloatingText(boss.x + boss.w / 2, boss.y, '⚡ DEV: PHASE 2!', '#FFD700');
+                    } else if (boss.hp > 5) {
+                        boss.hp = 5;
+                        addFloatingText(boss.x + boss.w / 2, boss.y, '⚡ DEV: PHASE 3!', '#FF00FF');
+                    } else {
+                        boss.hp = 0; boss.alive = false;
+                        addFloatingText(boss.x + boss.w / 2, boss.y, '⚡ DEV: BOSS KILLED!', '#FF0000');
+                    }
+                }
+                if (window.audio) audio.playHit();
+                shakeTimer = 15; shakeAmt = 5;
+                return;
+            }
+        }
         // P+2 toggles co-op on/off
         if (state === 'playing' && e.code === 'Digit2' && keys2._pHeld) {
             coopMode = !coopMode;
@@ -3516,6 +3545,35 @@
 
         // Flash timer
         if (boss.flashTimer > 0) boss.flashTimer--;
+
+        // Glitched Core Boss Floor Disappearance (Every 2 seconds, Random)
+        if (boss.glitched) {
+            if (!boss.glitchedFloorTiles) boss.glitchedFloorTiles = [];
+            // Restore expired glitched floor tiles
+            for (let i = boss.glitchedFloorTiles.length - 1; i >= 0; i--) {
+                const gt = boss.glitchedFloorTiles[i];
+                gt.timer--;
+                if (gt.timer <= 0) {
+                    if (level && level.grid[11]) level.grid[11][gt.c] = 11;
+                    addParticle(gt.c * T + 16, 11 * T + 16, '#00FFFF', 8, 4);
+                    boss.glitchedFloorTiles.splice(i, 1);
+                }
+            }
+
+            // Disappear a random floor tile every 2 seconds (120 frames)
+            if (frameCount % 120 === 0 && level && level.grid[11]) {
+                const randC = Math.floor(6 + Math.random() * 38);
+                if (level.grid[11][randC] === 11) {
+                    level.grid[11][randC] = 0; // Random tile disappears into void
+                    boss.glitchedFloorTiles.push({ c: randC, timer: 240 });
+                    if (window.audio) audio.playHit();
+                    glitchScreenTimer = 15;
+                    addParticle(randC * T + 16, 11 * T + 16, '#FF00FF', 12, 6);
+                    addParticle(randC * T + 16, 11 * T + 16, '#00FFFF', 12, 6);
+                    addFloatingText(randC * T + 16, 11 * T, '👾 FLOOR GLITCH!', '#FF00FF');
+                }
+            }
+        }
 
         // === PHASE AI ===
         {
@@ -8769,7 +8827,7 @@
             ctx.fillStyle = 'rgba(255, 255, 255, 0.65)';
             ctx.font = '8px "Press Start 2P", monospace';
             ctx.textAlign = 'left';
-            ctx.fillText('v2.0.1', 10, H - 10);
+            ctx.fillText('v2.1.0', 10, H - 10);
             ctx.restore();
 
             // Online mode indicator
