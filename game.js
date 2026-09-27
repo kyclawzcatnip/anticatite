@@ -562,12 +562,12 @@
             "K                                      K",
             "K                                      K",
             "K      C   C   C   E   C   C   C       K",
-            "K     UUUUUUUUUUUUUUUUUUUUUUUUUU       K",
+            "K     UUUUUUUUU  V  UUUUUUUUUUUU       K",
             "K                                      K",
             "K   W         UUUUUUUUU            L   K",
             "K  UUUU           v              UUUU  K",
             "K                                      K",
-            "K S  9999     M=======M     9999     <>K",
+            "K S  9999     M=======M  R  9999     <>K",
             "K UUUUUUUUUUUUMMMMMMMMMUUUUUUUUUUUUUU()K",
             "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
             "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
@@ -8593,7 +8593,7 @@
             ctx.fillStyle = 'rgba(255, 255, 255, 0.65)';
             ctx.font = '8px "Press Start 2P", monospace';
             ctx.textAlign = 'left';
-            ctx.fillText('v1.8.3', 10, H - 10);
+            ctx.fillText('v1.8.4', 10, H - 10);
             ctx.restore();
 
             // Online mode indicator
