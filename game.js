@@ -2628,6 +2628,14 @@
                         if (window.audio) audio.playVaultGears();
                         shakeTimer = 25; shakeAmt = 6;
                         loreNotification = { title: '⚙️ VAULT MECHANISM AWAKENED!', text: 'The Secret Lore Scroll aligns the ancient locking gears! The mechanism is unlatching!', timer: 240 };
+                    } else if (v.state === 1 && !unlockedLore.includes(10) && pressingDown && v.inspectCooldown <= 0) {
+                        v.inspectCooldown = 60;
+                        if (window.audio) audio.playVaultClunk();
+                        loreNotification = { title: '⚙️ VAULT IS LOCKED', text: 'The vault wheel is jammed by the Rat King\'s lock! Collect Secret Lore Book X above to align the gears!', timer: 200 };
+                    }
+                }
+            }
+
             // ENTER VAULT INTERIOR WHEN STANDING IN OPENED VAULT DOOR THRESHOLD
             if (!cat.dead && v.state === 3 && v.openProgress >= 0.8) {
                 let dist = Math.abs((cat.x + cat.w / 2) - (v.x + v.w / 2));
@@ -2640,6 +2648,8 @@
                     }
                 }
             }
+        });
+    }
 
     function spawnCoinExplosion(bx, by, count) {
         const numCoins = count || (Math.floor(Math.random() * 5) + 5);
@@ -8934,7 +8944,7 @@
             ctx.fillStyle = 'rgba(255, 255, 255, 0.65)';
             ctx.font = '8px "Press Start 2P", monospace';
             ctx.textAlign = 'left';
-            ctx.fillText('v2.3.0', 10, H - 10);
+            ctx.fillText('v2.3.1', 10, H - 10);
             ctx.restore();
 
             // Online mode indicator
