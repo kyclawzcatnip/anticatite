@@ -648,7 +648,7 @@
             "K    CCCCCC      CCCC      CCCCCC      K",
             "K   UUUUUUUU    UUUUUU    UUUUUUUU     K",
             "K                                      K",
-            "K  W  C   C   L   C   W   C   C   L    K",
+            "K  W  C   C   5   C   W   C   C   L    K",
             "K UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU  K",
             "K                                      K",
             "K S   Q   Z   Z   Z   Z   Z   Q      <>K",
@@ -664,7 +664,7 @@
     function parseLevel(idx) {
         const raw = LEVEL_DATA[idx];
         const rows = raw.length, cols = raw[0].length;
-        const grid = []; const enemies = []; const coins = []; const oneUps = []; const fireFlowers = []; const checkpoints = []; let spawnX = 2, spawnY = 10; let flagX = 0, flagY = 0;
+        const grid = []; const enemies = []; const coins = []; const oneUps = []; const fiveUps = []; const fireFlowers = []; const checkpoints = []; let spawnX = 2, spawnY = 10; let flagX = 0, flagY = 0;
         for (let r = 0; r < rows; r++) {
             grid[r] = [];
             for (let c = 0; c < cols; c++) {
@@ -681,6 +681,7 @@
                 else if (ch === 'Y') { grid[r][c] = 0; enemies.push({ x: c * T, y: r * T - 8, w: T, h: 40, vx: ENEMY_SPEED * 0.5, type: 'flyratter', alive: true, frame: 0, shell: false, shellVx: 0, baseY: r * T - 8, flyAmp: 40 + Math.random() * 20 }); }
                 else if (ch === 'C') { grid[r][c] = 0; coins.push({ x: c * T + 8, y: r * T + 4, w: 16, h: 24, collected: false, anim: Math.random() * Math.PI * 2 }); }
                 else if (ch === 'L') { grid[r][c] = 0; oneUps.push({ x: c * T + 4, y: r * T + 4, w: 24, h: 24, collected: false, bob: Math.random() * Math.PI * 2 }); }
+                else if (ch === '5') { grid[r][c] = 0; fiveUps.push({ x: c * T + 4, y: r * T + 4, w: 24, h: 24, collected: false, bob: Math.random() * Math.PI * 2 }); }
                 else if (ch === 'W') { grid[r][c] = 0; fireFlowers.push({ x: c * T + 4, y: r * T + 2, w: 24, h: 28, collected: false, anim: Math.random() * Math.PI * 2 }); }
                 else if (ch === 'H') { grid[r][c] = 0; checkpoints.push({ x: c * T, y: r * T, col: c, row: r, active: false }); }
                 else if (ch === 'K') grid[r][c] = 11;
@@ -742,7 +743,7 @@
                 }
             }
         }
-        return { grid, rows, cols, enemies, coins, oneUps, fireFlowers, checkpoints, loreBooks, vaultDoors, spawnX, spawnY, flagX, flagY };
+        return { grid, rows, cols, enemies, coins, oneUps, fiveUps, fireFlowers, checkpoints, loreBooks, vaultDoors, spawnX, spawnY, flagX, flagY };
     }
 
     // GAME STATE
@@ -855,11 +856,13 @@
         { name: 'Mini Mushroom', icon: '🔹', desc: 'Tiny! Higher jump, fit gaps', cost: 7, action: () => { isBig = false; isMini = true; cat.h = 16; cat.w = 12; } },
         { name: 'Cat Revive', icon: '💖', desc: 'Revive partner +3HP', cost: 10, coopOnly: true, action: () => { p1HP = 3; p2HP = 3; cat.dead = false; cat2.dead = false; } },
         { name: 'Fire Protector', icon: '🔶', desc: 'Fire immunity 3 min', cost: 15, action: () => { fireProtectTimer = 10800; if(window.audio) audio.playPowerUp(); } },
+        { name: '5-Up Mushroom', icon: '🍄✨', desc: '+5 Extra Lives!', cost: 20, vaultUnlocked: true, action: () => { lives += 5; p1HP += 5; if(window.audio) audio.playPowerUp(); addFloatingText(cat.x + cat.w / 2, cat.y, '+5 LIVES!', '#FFD700'); } },
     ];
     function getVisibleShopItems() {
         const isSky = currentLevel >= 6;
         const isCave = currentLevel >= 12;
-        return SHOP_ITEMS.filter(item => (!item.skyOnly || isSky) && (!item.caveOnly || isCave) && (!item.coopOnly || coopMode));
+        const vaultUnlocked = JSON.parse(localStorage.getItem('scw_vault_unlocked_shop') || 'false');
+        return SHOP_ITEMS.filter(item => (!item.skyOnly || isSky) && (!item.caveOnly || isCave) && (!item.coopOnly || coopMode) && (!item.vaultUnlocked || vaultUnlocked));
     }
 
     // BOSS
@@ -2820,6 +2823,35 @@
                 });
             }
         });
+
+        // 5-UPS (Special Vault 5-Up Mushroom)
+        if (level.fiveUps) {
+            level.fiveUps.forEach(f => {
+                if (f.collected) return;
+                f.bob += 0.05;
+                let ox = cat.x + 4, oy = cat.y + 2, ow = cat.w - 8, oh = cat.h - 2;
+                if (!cat.dead && ox < f.x + f.w && ox + ow > f.x && oy < f.y + f.h && oy + oh > f.y) {
+                    f.collected = true; score += 2500; lives += 5; p1HP += 5;
+                    localStorage.setItem('scw_vault_unlocked_shop', 'true');
+                    if (window.audio) audio.playPowerUp();
+                    addParticle(f.x + f.w / 2, f.y + f.h / 2, '#FFD700', 25, 10);
+                    addParticle(f.x + f.w / 2, f.y + f.h / 2, '#FFFFFF', 15, 6);
+                    addFloatingText(f.x + f.w / 2, f.y, '+5 LIVES!', '#FFD700');
+                    loreNotification = { title: '🍄✨ SPECIAL 5-UP MUSHROOM!', text: 'You collected the Vault 5-Up Mushroom! +5 Extra Lives! (Unlocked in Shop for 20 Coins)', timer: 260 };
+                }
+                if (coopMode && !cat2.dead && !f.collected) {
+                    let ox2 = cat2.x + 4, oy2 = cat2.y + 2, ow2 = cat2.w - 8, oh2 = cat2.h - 2;
+                    if (ox2 < f.x + f.w && ox2 + ow2 > f.x && oy2 < f.y + f.h && oy2 + oh2 > f.y) {
+                        f.collected = true; score += 2500; lives += 5; p2HP += 5;
+                        localStorage.setItem('scw_vault_unlocked_shop', 'true');
+                        if (window.audio) audio.playPowerUp();
+                        addParticle(f.x + f.w / 2, f.y + f.h / 2, '#FFD700', 25, 10);
+                        addFloatingText(f.x + f.w / 2, f.y, '+5 LIVES!', '#FFD700');
+                        loreNotification = { title: '🍄✨ SPECIAL 5-UP MUSHROOM!', text: 'You collected the Vault 5-Up Mushroom! +5 Extra Lives! (Unlocked in Shop for 20 Coins)', timer: 260 };
+                    }
+                }
+            });
+        }
     }
 
     function drawOneUp(u) {
@@ -2860,6 +2892,47 @@
         ctx.arc(sx + u.w / 2, sy + u.h / 2, 18, 0, Math.PI * 2);
         ctx.fill();
         ctx.globalAlpha = 1;
+    }
+
+    function drawFiveUp(f) {
+        if (f.collected) return;
+        const sx = Math.round(f.x - cam.x), bobY = Math.sin(f.bob) * 4;
+        const sy = Math.round(f.y + bobY);
+        if (sx < -T || sx > W + T) return;
+
+        // Glowing Golden Mushroom Cap
+        ctx.save();
+        ctx.fillStyle = '#FFD700';
+        ctx.beginPath();
+        ctx.ellipse(sx + f.w / 2, sy + 8, 13, 11, 0, Math.PI, 0);
+        ctx.fill();
+
+        // Shimmering spots
+        ctx.fillStyle = '#FFFFFF';
+        ctx.beginPath(); ctx.ellipse(sx + f.w / 2 - 4, sy + 4, 4, 5, -0.2, Math.PI, 0); ctx.fill();
+        ctx.beginPath(); ctx.ellipse(sx + f.w / 2 + 4, sy + 4, 4, 5, 0.2, Math.PI, 0); ctx.fill();
+
+        // Stem
+        ctx.fillStyle = '#FFF5E0';
+        ctx.fillRect(sx + 6, sy + 8, 12, 10);
+        // Cat face on mushroom
+        ctx.fillStyle = '#1a1a2e';
+        ctx.fillRect(sx + 8, sy + 11, 2, 2);
+        ctx.fillRect(sx + 14, sy + 11, 2, 2);
+        ctx.fillStyle = '#FFD700';
+        ctx.fillRect(sx + 11, sy + 14, 2, 1);
+
+        // "5UP" Golden Label
+        ctx.fillStyle = '#FFD700';
+        ctx.font = 'bold 8px monospace';
+        ctx.fillText('5UP✨', sx + 1, sy - 3);
+
+        ctx.globalAlpha = 0.2 + Math.sin(f.bob * 2) * 0.1;
+        ctx.fillStyle = '#FFD700';
+        ctx.beginPath();
+        ctx.arc(sx + f.w / 2, sy + f.h / 2, 20, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
     }
 
     // FIRE FLOWERS
@@ -5751,11 +5824,12 @@
         // Vault Interior (Level 36) Exit Pipe -> Warps back to Level 2
         if (currentLevel === 36 && (onSilverPipe(cat, keys) || (coopMode && onSilverPipe(cat2, keys2)))) {
             if (window.audio) audio.playPowerUp();
+            localStorage.setItem('scw_vault_unlocked_shop', 'true'); // Unlock 5-Up Mushroom in Shop!
             loadLevel(secretReturnLevel || 1);
             cat.x = secretReturnX || 2200;
             cat.y = secretReturnY || 300;
             cam.x = Math.max(0, cat.x - W / 3);
-            loreNotification = { title: '👑 ESCAPED THE VAULT INTERIOR', text: 'You have safely returned to Level 2 with all the ancient feline treasures!', timer: 260 };
+            loreNotification = { title: '👑 ESCAPED THE VAULT INTERIOR', text: 'You returned with the 5-Up Mushroom! (Now unlocked in the Shop for 20 Coins!)', timer: 280 };
             return;
         }
 
@@ -8761,6 +8835,7 @@
             stars.forEach(drawStar);
             powerUps.forEach(drawPowerUp);
             level.oneUps.forEach(drawOneUp);
+            if (level.fiveUps) level.fiveUps.forEach(drawFiveUp);
             level.fireFlowers.forEach(drawFireFlower);
             drawExplodingCoins();
             if (level.loreBooks) level.loreBooks.forEach(drawLoreBook);
@@ -8859,7 +8934,7 @@
             ctx.fillStyle = 'rgba(255, 255, 255, 0.65)';
             ctx.font = '8px "Press Start 2P", monospace';
             ctx.textAlign = 'left';
-            ctx.fillText('v2.2.0', 10, H - 10);
+            ctx.fillText('v2.3.0', 10, H - 10);
             ctx.restore();
 
             // Online mode indicator
