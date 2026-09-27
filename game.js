@@ -607,19 +607,36 @@
             "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
             "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
         ],
-        // Level 34 — THE ANCIENT VAULT'S TRIALS — TRIAL 4 / 4: THE TRIAL OF VALOR & FORGOTTEN VAULT
+        // Level 34 — THE ANCIENT VAULT'S TRIALS — TRIAL 4 / 4: THE TRIAL OF VALOR
         [
             "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
-            "K                                      K",
             "K                                      K",
             "K      C   C   C   E   C   C   C       K",
             "K     UUUUUUUUU  V  UUUUUUUUUUUU       K",
             "K                                      K",
             "K   W         UUUUUUUUU            L   K",
+            "K  UUUU       UUUUUUUUU          UUUU  K",
+            "K                                      K",
+            "K S  9999  R  M=======M  R  9999     <>K",
+            "K UUUUUUUUUUUUMMMMMMMMMUUUUUUUUUUUUUU()K",
+            "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
+            "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
+            "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
+            "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
+        ],
+        // Level 35 — THE FORGOTTEN VAULT SANCTUARY (THE VAULT ROOM)
+        [
+            "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
+            "K                                      K",
+            "K      C   C   C   C   C   C   C       K",
+            "K     UUUUUUUUUUUUUUUUUUUUUUUUUU       K",
+            "K                                      K",
+            "K   W         UUUUUUUUU            L   K",
             "K  UUUU           v              UUUU  K",
             "K                                      K",
-            "K S  9999     M=======M  R  9999     <>K",
+            "K S  9999     M=======M  C  9999     <>K",
             "K UUUUUUUUUUUUMMMMMMMMMUUUUUUUUUUUUUU()K",
+            "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
             "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
             "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
             "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
@@ -5628,19 +5645,27 @@
         // Trial 3 (Level 33) Exit Pipe -> Warps to Trial 4 (Level 34)
         if (currentLevel === 33 && (onSilverPipe(cat, keys) || (coopMode && onSilverPipe(cat2, keys2)))) {
             if (window.audio) audio.playPowerUp();
-            loadLevel(34); // Load Trial 4: Trial of Valor & Forgotten Vault!
-            loreNotification = { title: '✨ TRIAL 3 COMPLETED! [ 3 / 4 ]', text: 'TRIAL 4 / 4: THE TRIAL OF VALOR — Claim Secret Lore Book X and unlock the Forgotten Vault!', timer: 260 };
+            loadLevel(34); // Load Trial 4: Trial of Valor!
+            loreNotification = { title: '✨ TRIAL 3 COMPLETED! [ 3 / 4 ]', text: 'TRIAL 4 / 4: THE TRIAL OF VALOR — Claim Secret Lore Book X to unlock the Forgotten Vault entrance!', timer: 260 };
             return;
         }
 
-        // Trial 4 (Level 34) Exit Pipe -> Warps back to Level 2
+        // Trial 4 (Level 34) Exit Pipe -> Warps to THE VAULT ROOM (Level 35)
         if (currentLevel === 34 && (onSilverPipe(cat, keys) || (coopMode && onSilverPipe(cat2, keys2)))) {
+            if (window.audio) audio.playPowerUp();
+            loadLevel(35); // Load Level 35: The Forgotten Vault Room!
+            loreNotification = { title: '🏆 ALL 4 TRIALS CONQUERED!', text: 'You completed all 4 Trials of The Ancient Vault! Welcome to The Forgotten Vault Sanctuary!', timer: 280 };
+            return;
+        }
+
+        // Vault Room (Level 35) Exit Pipe -> Warps back to Level 2
+        if (currentLevel === 35 && (onSilverPipe(cat, keys) || (coopMode && onSilverPipe(cat2, keys2)))) {
             if (window.audio) audio.playPowerUp();
             loadLevel(secretReturnLevel || 1);
             cat.x = secretReturnX || 2200;
             cat.y = secretReturnY || 300;
             cam.x = Math.max(0, cat.x - W / 3);
-            loreNotification = { title: '🏆 ALL 4 TRIALS COMPLETED!', text: 'You have conquered The Ancient Vault\'s Trials and escaped back to Level 2!', timer: 260 };
+            loreNotification = { title: '✨ ESCAPED THE VAULT SANCTUARY', text: 'You have safely returned to Level 2 with the ancient vault treasures!', timer: 260 };
             return;
         }
 
@@ -8744,7 +8769,7 @@
             ctx.fillStyle = 'rgba(255, 255, 255, 0.65)';
             ctx.font = '8px "Press Start 2P", monospace';
             ctx.textAlign = 'left';
-            ctx.fillText('v2.0.0', 10, H - 10);
+            ctx.fillText('v2.0.1', 10, H - 10);
             ctx.restore();
 
             // Online mode indicator
