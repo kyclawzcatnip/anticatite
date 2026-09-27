@@ -644,16 +644,15 @@
             for (let c = 0; c < cols; c++) {
                 if (raw[r][c] === 'v') {
                     grid[r][c] = 0;
-                    const savedStage = parseInt(localStorage.getItem('scw_vault_stage') || '0', 10);
                     vaultDoors.push({
                         x: c * T, y: r * T, w: T * 3, h: T * 3,
                         col: c, row: r,
                         wheelAngle: 0,
-                        slideY: savedStage >= 3 ? -96 : 0,
-                        state: savedStage,
+                        slideY: 0,
+                        state: 0,
                         inspectCooldown: 0,
                         activationTimer: 0,
-                        openProgress: savedStage >= 3 ? 1 : 0
+                        openProgress: 0
                     });
                 }
             }
@@ -689,6 +688,7 @@
     let devInput = [];
     let stars = []; // spawned star items in the level
     let powerUps = []; // spawned power-up items from question blocks
+    let explodingCoins = []; // coins exploding into the air from hit blocks
     let blockLoot = {}; // pre-rolled loot for question blocks, keyed by 'r,c'
     let bossPipeSpawned = false; // true after boss dies and silver pipe appears
     let heldShell = null; // reference to shell enemy being carried
@@ -1532,11 +1532,10 @@
             addParticle(c * T + T / 2, r * T - 20, '#FFD700', 20, 8);
             addParticle(c * T + T / 2, r * T - 16, '#FFFFFF', 15, 6);
         }
-        // Coins (always drop some)
-        const numCoins = loot.count || (Math.floor(Math.random() * 5) + 1);
-        coinCount += numCoins;
-        score += numCoins * 100;
-        for (let i = 0; i < numCoins; i++) {
+        // EXPLODING COINS ARC
+        const count = loot.count || (isRare ? 10 : 5);
+        spawnCoinExplosion(c * T + T / 2, r * T, count);
+        for (let i = 0; i < count; i++) {
             addParticle(c * T + T / 2 + (Math.random() - 0.5) * 16, r * T - 8 - i * 6, '#FFD700', 6, 4);
         }
         if (loot.type === 'rat') {
@@ -2472,7 +2471,6 @@
                 }
                 if (v.activationTimer > 120) {
                     v.state = 3;
-                    localStorage.setItem('scw_vault_stage', '3');
                     if (window.audio) audio.playVaultOpen();
                     shakeTimer = 35; shakeAmt = 8;
                     loreNotification = { title: '⚙️ FORGOTTEN VAULT OPENED!', text: 'The ancient heavy iron door slides into the ceiling, revealing the forgotten chamber!', timer: 240 };
@@ -2511,6 +2509,61 @@
                 }
             }
         });
+    }
+
+    function spawnCoinExplosion(bx, by, count) {
+        const numCoins = count || (Math.floor(Math.random() * 5) + 5);
+        if (window.audio) {
+            audio.playCoin();
+            setTimeout(() => { if(window.audio) audio.playCoin(); }, 60);
+            setTimeout(() => { if(window.audio) audio.playCoin(); }, 120);
+        }
+        shakeTimer = Math.max(shakeTimer, 5); shakeAmt = Math.max(shakeAmt, 3);
+        for (let i = 0; i < numCoins; i++) {
+            const spread = (i - (numCoins - 1) / 2) * 1.6 + (Math.random() - 0.5) * 1.2;
+            explodingCoins.push({
+                x: bx - 8,
+                y: by - 16,
+                w: 16,
+                h: 20,
+                vx: spread,
+                vy: -6.5 - Math.random() * 3.5,
+                gravity: 0.35,
+                spin: Math.random() * Math.PI * 2,
+                spinSpeed: 0.25 + Math.random() * 0.1,
+                life: 90,
+                collected: false
+            });
+        }
+    }
+
+    function updateExplodingCoins() {
+        for (let i = explodingCoins.length - 1; i >= 0; i--) {
+            const coin = explodingCoins[i];
+            coin.x += coin.vx;
+            coin.y += coin.vy;
+            coin.vy += coin.gravity;
+            coin.spin += coin.spinSpeed;
+            coin.life--;
+
+            if (frameCount % 2 === 0) {
+                addParticle(coin.x + 8, coin.y + 10, '#FFD700', 1.5, 3);
+            }
+
+            let catOx = cat.x + 4, catOy = cat.y + 2, catOw = cat.w - 8, catOh = cat.h - 2;
+            let touchedCat = (catOx < coin.x + coin.w && catOx + catOw > coin.x && catOy < coin.y + coin.h && catOy + catOh > coin.y);
+            let touchedP2 = coopMode && !cat2.dead && (cat2.x < coin.x + coin.w && cat2.x + cat2.w > coin.x && cat2.y < coin.y + coin.h && cat2.y + cat2.h > coin.y);
+
+            if (touchedCat || touchedP2 || coin.life <= 0) {
+                coinCount++;
+                score += 100;
+                addParticle(coin.x + 8, coin.y + 8, '#FFD700', 8, 4);
+                addParticle(coin.x + 8, coin.y + 8, '#FFFFFF', 5, 2);
+                addFloatingText(coin.x + 8, coin.y, '+100', '#FFD700');
+                if (window.audio && frameCount % 3 === 0) audio.playCoin();
+                explodingCoins.splice(i, 1);
+            }
+        }
     }
 
     // 1-UPS
@@ -2990,6 +3043,7 @@
                             level.grid[r][c] = 0;
                             if (onlineMode && isOnlineHost) netGridChanges.push({ r, c, v: 0 });
                             shakeTimer = 3; shakeAmt = 3;
+                            spawnCoinExplosion(c * T + T / 2, r * T, 3);
                             addParticle(c * T + T / 2, r * T + T / 2, '#8B7355', 10, 5);
                             addParticle(c * T + T / 2, r * T + T / 2, '#DAA520', 8, 4);
                         }
@@ -7209,7 +7263,7 @@
         cat.x = level.spawnX * T; cat.y = level.spawnY * T - cat.h;
         cat.vx = 0; cat.vy = 0; cat.grounded = false; cat.dead = false;
         cam.x = Math.max(0, cat.x - W / 3);
-        particles = []; questionHits = []; invincibleTimer = 0; fireballs = []; arrows = []; activeCheckpoint = null; stars = []; powerUps = []; heldShell = null; bossPipeSpawned = false;
+        particles = []; questionHits = []; invincibleTimer = 0; fireballs = []; arrows = []; activeCheckpoint = null; stars = []; powerUps = []; explodingCoins = []; heldShell = null; bossPipeSpawned = false;
         // Clear ALL boss projectiles (Phase 1 + Phase 2 + Phase 3)
         bossSpears = []; bossDaggers = []; bossFireballs2 = [];
         bossColorWalls = []; bossBarrier = null; bossDarkCats = [];
@@ -8233,6 +8287,7 @@
         }
         updateStars();
         updatePowerUps();
+        updateExplodingCoins();
         updateLoreBooks();
         updateVaultDoors();
         if (starPowerTimer > 0) starPowerTimer--;
@@ -8441,6 +8496,7 @@
             powerUps.forEach(drawPowerUp);
             level.oneUps.forEach(drawOneUp);
             level.fireFlowers.forEach(drawFireFlower);
+            drawExplodingCoins();
             if (level.loreBooks) level.loreBooks.forEach(drawLoreBook);
             if (level.vaultDoors) level.vaultDoors.forEach(drawVaultDoor);
             // Checkpoints
@@ -8537,7 +8593,7 @@
             ctx.fillStyle = 'rgba(255, 255, 255, 0.65)';
             ctx.font = '8px "Press Start 2P", monospace';
             ctx.textAlign = 'left';
-            ctx.fillText('v1.7.3', 10, H - 10);
+            ctx.fillText('v1.8.1', 10, H - 10);
             ctx.restore();
 
             // Online mode indicator
@@ -9042,6 +9098,7 @@
     }
 
     // INIT
+    localStorage.removeItem('scw_vault_stage');
     level = parseLevel(0);
     showOverlay('SUPER CAT WORLD', 'PRESS SPACE OR TAP TO START\nPRESS 2 FOR CO-OP\nPRESS 3 FOR ONLINE\nPRESS H FOR HOW TO PLAY');
     loop();
