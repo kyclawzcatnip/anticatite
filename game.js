@@ -2520,7 +2520,7 @@
         }
         shakeTimer = Math.max(shakeTimer, 5); shakeAmt = Math.max(shakeAmt, 3);
         for (let i = 0; i < numCoins; i++) {
-            const spread = (i - (numCoins - 1) / 2) * 1.6 + (Math.random() - 0.5) * 1.2;
+            const spread = (i - (numCoins - 1) / 2) * 2.2 + (Math.random() - 0.5) * 1.5;
             explodingCoins.push({
                 x: bx - 8,
                 y: by - 16,
@@ -2531,8 +2531,9 @@
                 gravity: 0.35,
                 spin: Math.random() * Math.PI * 2,
                 spinSpeed: 0.25 + Math.random() * 0.1,
-                life: 90,
-                collected: false
+                life: 600,
+                grounded: false,
+                bounced: false
             });
         }
     }
@@ -2540,27 +2541,67 @@
     function updateExplodingCoins() {
         for (let i = explodingCoins.length - 1; i >= 0; i--) {
             const coin = explodingCoins[i];
-            coin.x += coin.vx;
-            coin.y += coin.vy;
-            coin.vy += coin.gravity;
-            coin.spin += coin.spinSpeed;
             coin.life--;
 
-            if (frameCount % 2 === 0) {
-                addParticle(coin.x + 8, coin.y + 10, '#FFD700', 1.5, 3);
+            if (!coin.grounded) {
+                coin.x += coin.vx;
+                coin.y += coin.vy;
+                coin.vy += coin.gravity;
+                coin.vx *= 0.98;
+                coin.spin += coin.spinSpeed;
+
+                if (frameCount % 2 === 0) {
+                    addParticle(coin.x + 8, coin.y + 10, '#FFD700', 1.5, 3);
+                }
+
+                // Void check — dies if falls into void gap
+                if (coin.y > (level ? level.rows : 14) * T + 40) {
+                    addParticle(coin.x + 8, coin.y, '#8800FF', 4, 3);
+                    explodingCoins.splice(i, 1);
+                    continue;
+                }
+
+                // Ground tile collision check — bounce and land as physical coin
+                if (coin.vy > 0 && level) {
+                    let footR = Math.floor((coin.y + coin.h) / T);
+                    let footC = Math.floor((coin.x + coin.w / 2) / T);
+                    if (footR >= 0 && footR < level.rows && footC >= 0 && footC < level.cols && solid(footR, footC)) {
+                        if (!coin.bounced) {
+                            coin.vy = -coin.vy * 0.4;
+                            coin.bounced = true;
+                            coin.vx *= 0.5;
+                        } else {
+                            coin.y = footR * T - coin.h;
+                            coin.vy = 0;
+                            coin.vx = 0;
+                            coin.grounded = true;
+                        }
+                    }
+                }
+            } else {
+                // Grounded coin gently bobs/spins
+                coin.spin += 0.08;
             }
 
+            // Despawn if lifetime expires
+            if (coin.life <= 0) {
+                addParticle(coin.x + 8, coin.y + 8, '#DAA520', 6, 3);
+                explodingCoins.splice(i, 1);
+                continue;
+            }
+
+            // Player collection check (cat, cat2, cat3, cat4)
             let catOx = cat.x + 4, catOy = cat.y + 2, catOw = cat.w - 8, catOh = cat.h - 2;
-            let touchedCat = (catOx < coin.x + coin.w && catOx + catOw > coin.x && catOy < coin.y + coin.h && catOy + catOh > coin.y);
+            let touchedCat = !cat.dead && (catOx < coin.x + coin.w && catOx + catOw > coin.x && catOy < coin.y + coin.h && catOy + catOh > coin.y);
             let touchedP2 = coopMode && !cat2.dead && (cat2.x < coin.x + coin.w && cat2.x + cat2.w > coin.x && cat2.y < coin.y + coin.h && cat2.y + cat2.h > coin.y);
 
-            if (touchedCat || touchedP2 || coin.life <= 0) {
+            if (touchedCat || touchedP2) {
                 coinCount++;
                 score += 100;
-                addParticle(coin.x + 8, coin.y + 8, '#FFD700', 8, 4);
-                addParticle(coin.x + 8, coin.y + 8, '#FFFFFF', 5, 2);
+                addParticle(coin.x + 8, coin.y + 8, '#FFD700', 10, 5);
+                addParticle(coin.x + 8, coin.y + 8, '#FFFFFF', 6, 3);
                 addFloatingText(coin.x + 8, coin.y, '+100', '#FFD700');
-                if (window.audio && frameCount % 3 === 0) audio.playCoin();
+                if (window.audio) audio.playCoin();
                 explodingCoins.splice(i, 1);
             }
         }
@@ -8617,7 +8658,7 @@
             ctx.fillStyle = 'rgba(255, 255, 255, 0.65)';
             ctx.font = '8px "Press Start 2P", monospace';
             ctx.textAlign = 'left';
-            ctx.fillText('v1.8.5', 10, H - 10);
+            ctx.fillText('v1.9.0', 10, H - 10);
             ctx.restore();
 
             // Online mode indicator
