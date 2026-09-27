@@ -2566,6 +2566,30 @@
         }
     }
 
+    function drawExplodingCoins() {
+        if (!explodingCoins) return;
+        explodingCoins.forEach(coin => {
+            const cx = Math.round(coin.x - cam.x), cy = Math.round(coin.y);
+            if (cx < -30 || cx > W + 30) return;
+
+            ctx.save();
+            const scaleX = Math.abs(Math.cos(coin.spin));
+            ctx.translate(cx + 8, cy + 10);
+            ctx.scale(scaleX, 1);
+
+            ctx.fillStyle = '#FFD700';
+            ctx.beginPath(); ctx.ellipse(0, 0, 8, 10, 0, 0, Math.PI * 2); ctx.fill();
+
+            ctx.fillStyle = '#DAA520';
+            ctx.beginPath(); ctx.ellipse(0, 0, 6, 8, 0, 0, Math.PI * 2); ctx.fill();
+
+            ctx.fillStyle = '#FFFFFF';
+            ctx.beginPath(); ctx.ellipse(-2, -3, 3, 4, 0, 0, Math.PI * 2); ctx.fill();
+
+            ctx.restore();
+        });
+    }
+
     // 1-UPS
     function updateOneUps() {
         if (!level) return;
@@ -8593,7 +8617,7 @@
             ctx.fillStyle = 'rgba(255, 255, 255, 0.65)';
             ctx.font = '8px "Press Start 2P", monospace';
             ctx.textAlign = 'left';
-            ctx.fillText('v1.8.4', 10, H - 10);
+            ctx.fillText('v1.8.5', 10, H - 10);
             ctx.restore();
 
             // Online mode indicator
