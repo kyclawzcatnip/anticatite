@@ -1155,18 +1155,28 @@
                         boss.secretAttackTriggered = false; // Trigger secret phase
                         addFloatingText(boss.x + boss.w / 2, boss.y, '⚡ DEV: SECRAT PHASE!', '#FF00FF');
                     } else {
-                        boss.hp = 0; boss.alive = false;
+                        boss.hp = 0;
+                        boss.alive = false;
+                        boss.deathTimer = 30; // Triggers silver pipe spawn in updateBoss!
+                        bossesDefeated++;
                         addFloatingText(boss.x + boss.w / 2, boss.y, '⚡ DEV: BOSS KILLED!', '#FF0000');
                     }
                 } else {
-                    if (boss.hp > 10) {
-                        boss.hp = 10;
+                    if (boss.bossPhase === 1) {
+                        boss.bossPhase = 2;
+                        boss.hp = boss.miner ? 28 : boss.pirate ? 24 : 20;
+                        boss.maxHp = boss.hp;
                         addFloatingText(boss.x + boss.w / 2, boss.y, '⚡ DEV: PHASE 2!', '#FFD700');
-                    } else if (boss.hp > 5) {
-                        boss.hp = 5;
+                    } else if (boss.bossPhase === 2) {
+                        boss.bossPhase = 3;
+                        boss.hp = boss.miner ? 14 : boss.pirate ? 12 : 10;
+                        boss.maxHp = boss.hp;
                         addFloatingText(boss.x + boss.w / 2, boss.y, '⚡ DEV: PHASE 3!', '#FF00FF');
                     } else {
-                        boss.hp = 0; boss.alive = false;
+                        boss.hp = 0;
+                        boss.alive = false;
+                        boss.deathTimer = 30; // Triggers silver pipe spawn in updateBoss!
+                        bossesDefeated++;
                         addFloatingText(boss.x + boss.w / 2, boss.y, '⚡ DEV: BOSS KILLED!', '#FF0000');
                     }
                 }
@@ -8982,7 +8992,7 @@
             ctx.fillStyle = 'rgba(255, 255, 255, 0.65)';
             ctx.font = '8px "Press Start 2P", monospace';
             ctx.textAlign = 'left';
-            ctx.fillText('v2.4.0', 10, H - 10);
+            ctx.fillText('v2.4.1', 10, H - 10);
             ctx.restore();
 
             // Online mode indicator
