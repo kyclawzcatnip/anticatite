@@ -8992,7 +8992,7 @@
             ctx.fillStyle = 'rgba(255, 255, 255, 0.65)';
             ctx.font = '8px "Press Start 2P", monospace';
             ctx.textAlign = 'left';
-            ctx.fillText('v2.4.2', 10, H - 10);
+            ctx.fillText('v2.5.0', 10, H - 10);
             ctx.restore();
 
             // Online mode indicator
