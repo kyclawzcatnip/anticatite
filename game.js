@@ -766,6 +766,7 @@
     let pickaxeAmmo = 5, pickaxeReloading = false, pickaxeReloadTimer = 0; // ammo: 5 throws then 3s reload
     let starPowerTimer = 0; // super star invincibility timer (frames)
     let fireProtectTimer = 0; // fire protector immunity timer (frames)
+    let hasMagnet = false, magnetTimer = 0; // coin magnet power-up (attracts coins)
     let isBig = false; // big mushroom power-up (2 blocks tall, break bricks)
     let isMini = false; // mini mushroom power-up (half size, higher jump, fits 1-block gaps)
     // Dev mode — activated by Konami code: ↑↑↓↓←→←→BA
@@ -856,6 +857,7 @@
         { name: 'Mini Mushroom', icon: '🔹', desc: 'Tiny! Higher jump, fit gaps', cost: 7, action: () => { isBig = false; isMini = true; cat.h = 16; cat.w = 12; } },
         { name: 'Cat Revive', icon: '💖', desc: 'Revive partner +3HP', cost: 10, coopOnly: true, action: () => { p1HP = 3; p2HP = 3; cat.dead = false; cat2.dead = false; } },
         { name: 'Fire Protector', icon: '🔶', desc: 'Fire immunity 3 min', cost: 15, action: () => { fireProtectTimer = 10800; if(window.audio) audio.playPowerUp(); } },
+        { name: 'Coin Magnet', icon: '🧲', desc: 'Attract coins automatically', cost: 12, action: () => { hasMagnet = true; magnetTimer = 10800; if(window.audio) audio.playPowerUp(); addFloatingText(cat.x + cat.w / 2, cat.y, '🧲 COIN MAGNET ACTIVATED!', '#00CCFF'); } },
         { name: '5-Up Mushroom', icon: '🍄✨', desc: '+5 Extra Lives!', cost: 20, vaultUnlocked: true, action: () => { lives += 5; p1HP += 5; if(window.audio) audio.playPowerUp(); addFloatingText(cat.x + cat.w / 2, cat.y, '+5 LIVES!', '#FFD700'); } },
     ];
     function getVisibleShopItems() {
@@ -1667,6 +1669,7 @@
             else if (puType === 'big') puApply = () => { isBig = true; if(window.audio) audio.playPowerUp(); cat.y -= 32; cat.h = 64; };
             else if (puType === 'shield') puApply = () => { shieldHits = Math.min(shieldHits + 1, 5); };
             else if (puType === 'fireprotect') puApply = () => { fireProtectTimer = 10800; if(window.audio) audio.playPowerUp(); }; // 3 min at 60fps
+            else if (puType === 'magnet') puApply = () => { hasMagnet = true; magnetTimer = 10800; if(window.audio) audio.playPowerUp(); addFloatingText(cat.x + cat.w / 2, cat.y, '🧲 COIN MAGNET ACTIVATED!', '#00CCFF'); };
             powerUps.push({
                 x: c * T + 4, y: r * T - T, w: 24, h: 24,
                 vx: (Math.random() > 0.5 ? 1 : -1) * 1.5, vy: -5,
@@ -2455,6 +2458,11 @@
             // Center star
             ctx.fillStyle = '#FFF';
             ctx.beginPath(); ctx.arc(sx + 8, sy + 10, 2, 0, Math.PI * 2); ctx.fill();
+        } else if (p.type === 'magnet') {
+            const sx = px + 4, sy = py + 2 + bob;
+            ctx.fillStyle = '#00CCFF';
+            ctx.font = 'bold 16px monospace';
+            ctx.fillText('🧲', sx, sy + 16);
         }
     }
 
@@ -2512,9 +2520,27 @@
     }
     function updateCoins() {
         if (!level) return;
+        const magnetActive = hasMagnet || magnetTimer > 0;
         level.coins.forEach(cn => {
             if (cn.collected) return;
             cn.anim += COIN_ANIM;
+
+            // Coin Magnet Attraction (Pulls coins automatically at a steady, natural pace)
+            if (magnetActive) {
+                const dx = (cat.x + cat.w / 2) - (cn.x + cn.w / 2);
+                const dy = (cat.y + cat.h / 2) - (cn.y + cn.h / 2);
+                const dist = Math.hypot(dx, dy);
+                if (dist < 240) {
+                    const angle = Math.atan2(dy, dx);
+                    const speed = 3.2; // Smooth, natural pace
+                    cn.x += Math.cos(angle) * speed;
+                    cn.y += Math.sin(angle) * speed;
+                    if (frameCount % 4 === 0) {
+                        addParticle(cn.x + 8, cn.y + 10, '#00CCFF', 1, 2);
+                    }
+                }
+            }
+
             let ox = cat.x + 4, oy = cat.y + 2, ow = cat.w - 8, oh = cat.h - 2;
             if (ox < cn.x + cn.w && ox + ow > cn.x && oy < cn.y + cn.h && oy + oh > cn.y) {
                 cn.collected = true; score += 100; coinCount++; if(window.audio) audio.playCoin();
@@ -2679,6 +2705,7 @@
     }
 
     function updateExplodingCoins() {
+        const magnetActive = hasMagnet || magnetTimer > 0;
         for (let i = explodingCoins.length - 1; i >= 0; i--) {
             const coin = explodingCoins[i];
             coin.life--;
@@ -2690,8 +2717,18 @@
                 coin.vx *= 0.98;
                 coin.spin += coin.spinSpeed;
 
+                if (magnetActive) {
+                    const dx = (cat.x + cat.w / 2) - (coin.x + coin.w / 2);
+                    const dy = (cat.y + cat.h / 2) - (coin.y + coin.h / 2);
+                    const dist = Math.hypot(dx, dy);
+                    if (dist < 260) {
+                        coin.vx += (dx / dist) * 0.4;
+                        coin.vy += (dy / dist) * 0.4;
+                    }
+                }
+
                 if (frameCount % 2 === 0) {
-                    addParticle(coin.x + 8, coin.y + 10, '#FFD700', 1.5, 3);
+                    addParticle(coin.x + 8, coin.y + 10, magnetActive ? '#00CCFF' : '#FFD700', 1.5, 3);
                 }
 
                 // Void check — dies if falls into void gap
@@ -8642,6 +8679,7 @@
         updateVaultDoors();
         if (starPowerTimer > 0) starPowerTimer--;
         if (fireProtectTimer > 0) fireProtectTimer--;
+        if (magnetTimer > 0) magnetTimer--;
         // Void
         if (frameCount % 2 === 0) spawnVoidParticles();
         updateVoidParticles();
@@ -8660,7 +8698,7 @@
             }
             livesEl.textContent = p1Str + p2Str + extraStr + (hasFire ? ' 🔥' : '') + (onlineMode ? ' 🌐' : '');
         } else {
-            livesEl.textContent = '🐱 × ' + (devMode ? '∞' : Math.max(0, lives)) + (hasFire ? ' 🔥' : '');
+            livesEl.textContent = '🐱 × ' + (devMode ? '∞' : Math.max(0, lives)) + (hasFire ? ' 🔥' : '') + (hasMagnet || magnetTimer > 0 ? ' 🧲' : '');
         }
         coinEl.textContent = '🪙 × ' + coinCount;
         const elapsedSec = Math.floor((Date.now() - gameStartTime) / 1000);
@@ -8944,7 +8982,7 @@
             ctx.fillStyle = 'rgba(255, 255, 255, 0.65)';
             ctx.font = '8px "Press Start 2P", monospace';
             ctx.textAlign = 'left';
-            ctx.fillText('v2.3.1', 10, H - 10);
+            ctx.fillText('v2.4.0', 10, H - 10);
             ctx.restore();
 
             // Online mode indicator
