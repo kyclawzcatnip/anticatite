@@ -1180,7 +1180,7 @@
                         addFloatingText(boss.x + boss.w / 2, boss.y, '⚡ DEV: BOSS KILLED!', '#FF0000');
                     }
                 }
-                if (window.audio) audio.playHit();
+                if (window.audio && typeof audio.playHurt === 'function') audio.playHurt();
                 shakeTimer = 15; shakeAmt = 5;
                 return;
             }
@@ -3717,7 +3717,7 @@
                 if (level.grid[11][randC] === 11) {
                     level.grid[11][randC] = 0; // Random tile disappears into void
                     boss.glitchedFloorTiles.push({ c: randC, timer: 240 });
-                    if (window.audio) audio.playHit();
+                    if (window.audio && typeof audio.playGlitch === 'function') audio.playGlitch();
                     glitchScreenTimer = 15;
                     addParticle(randC * T + 16, 11 * T + 16, '#FF00FF', 12, 6);
                     addParticle(randC * T + 16, 11 * T + 16, '#00FFFF', 12, 6);
@@ -8992,7 +8992,7 @@
             ctx.fillStyle = 'rgba(255, 255, 255, 0.65)';
             ctx.font = '8px "Press Start 2P", monospace';
             ctx.textAlign = 'left';
-            ctx.fillText('v2.4.1', 10, H - 10);
+            ctx.fillText('v2.4.2', 10, H - 10);
             ctx.restore();
 
             // Online mode indicator

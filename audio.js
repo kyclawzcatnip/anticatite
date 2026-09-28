@@ -107,6 +107,10 @@ class AudioEngine {
         osc.stop(now + 0.2);
     }
 
+    playHit() {
+        this.playHurt();
+    }
+
     playDeath() {
         this.ensureContext();
         if (!this.ctx) return;
