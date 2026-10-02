@@ -651,29 +651,12 @@
             "K  W  C   C   5   C   W   C   C   L    K",
             "K UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU  K",
             "K                                      K",
-            "K S   Q   Z   Z   Z   Z   Q   []    <> K",
-            "K UUUUUUUUUUUUUUUUUUUUUUUUUUUU{}UUUU() K",
+            "K S   Q   Z   Z   Z   Z   Z   Q      <>K",
+            "K UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU()K",
             "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
             "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
             "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
             "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
-        ],
-        // Level 37 — THE CATSTONE MONSTROSITY ARENA (32x14 FULL ARENA)
-        [
-            "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
-            "K                              K",
-            "K                              K",
-            "K   UUUU                UUUU   K",
-            "K                              K",
-            "K         UUUUUUUUUUUU         K",
-            "K                              K",
-            "K                              K",
-            "K  UUUU                    UUUUK",
-            "K                              K",
-            "K                              K",
-            "K S                          X K",
-            "K UUUUUUUUUUUUUUUUUUUUUUUUUUUUUK",
-            "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
         ]
     ];
 
@@ -6221,14 +6204,6 @@
             return;
         }
 
-        // Vault Interior (Level 36) Green Pipe -> Warps to Catstone Monstrosity Arena (Level 37)
-        if (currentLevel === 36 && (onGreenPipe(cat, keys) || (coopMode && onGreenPipe(cat2, keys2)))) {
-            if (window.audio) audio.playPowerUp();
-            loadLevel(37); // Load Level 37: The Catstone Monstrosity Boss Arena!
-            loreNotification = { title: '🗿 ANCIENT CATSTONE ARENA', text: 'You have entered the secret boss chamber embedded inside the Forgotten Vault wall!', timer: 280 };
-            return;
-        }
-
         // Vault Interior (Level 36) Exit Pipe -> Warps back to Level 2
         if (currentLevel === 36 && (onSilverPipe(cat, keys) || (coopMode && onSilverPipe(cat2, keys2)))) {
             if (window.audio) audio.playPowerUp();
@@ -6238,17 +6213,6 @@
             cat.y = secretReturnY || 300;
             cam.x = Math.max(0, cat.x - W / 3);
             loreNotification = { title: '👑 ESCAPED THE VAULT INTERIOR', text: 'You returned with the 5-Up Mushroom! (Now unlocked in the Shop for 20 Coins!)', timer: 280 };
-            return;
-        }
-
-        // Catstone Monstrosity Arena (Level 37) Exit Pipe -> Warps back to Level 2 with bonus score
-        if (currentLevel === 37 && (onSilverPipe(cat, keys) || (coopMode && onSilverPipe(cat2, keys2)))) {
-            if (window.audio) audio.playPowerUp();
-            loadLevel(secretReturnLevel || 1);
-            cat.x = secretReturnX || 2200;
-            cat.y = secretReturnY || 300;
-            cam.x = Math.max(0, cat.x - W / 3);
-            loreNotification = { title: '🗿 CATSTONE MONSTROSITY CONQUERED!', text: 'You defeated the ancient background wall monstrosity and claimed 10,000 bonus score!', timer: 300 };
             return;
         }
 
@@ -9375,7 +9339,7 @@
             ctx.fillStyle = 'rgba(255, 255, 255, 0.65)';
             ctx.font = '8px "Press Start 2P", monospace';
             ctx.textAlign = 'left';
-            ctx.fillText('v3.1.0', 10, H - 10);
+            ctx.fillText('v3.1.1', 10, H - 10);
             ctx.restore();
 
             // Online mode indicator
