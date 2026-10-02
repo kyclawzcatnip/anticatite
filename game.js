@@ -4136,8 +4136,8 @@
                     addParticle(bx, by, '#9D00FF', 15, 6);
                 }
                 if (boss.phaseTimer <= 0) {
-                    if (Math.random() < 0.5) { boss.phase = 'tired'; boss.phaseTimer = 120; }
-                    else { boss.phase = 'idle'; boss.phaseTimer = 30; }
+                    if (Math.random() < 0.5) { boss.phase = 'tired'; boss.phaseTimer = 180; }
+                    else { boss.phase = 'idle'; boss.phaseTimer = 90; } // 1.5s attack cooldown
                 }
             } else if (boss.phase === 'anticatite') {
                 boss.vx = 0;
@@ -4156,13 +4156,13 @@
                     addParticle(bx, by, '#00FFFF', 12, 5);
                 }
                 if (boss.phaseTimer <= 0) {
-                    if (Math.random() < 0.5) { boss.phase = 'tired'; boss.phaseTimer = 120; }
-                    else { boss.phase = 'idle'; boss.phaseTimer = 30; }
+                    if (Math.random() < 0.5) { boss.phase = 'tired'; boss.phaseTimer = 180; }
+                    else { boss.phase = 'idle'; boss.phaseTimer = 90; }
                 }
             } else if (boss.phase === 'spears') {
                 boss.vx = 0;
                 if (boss.phaseTimer <= 0) {
-                    if (Math.random() < 0.44) { boss.phase = 'tired'; boss.phaseTimer = 180; } else { boss.phase = 'idle'; boss.phaseTimer = 30; }
+                    if (Math.random() < 0.44) { boss.phase = 'tired'; boss.phaseTimer = 180; } else { boss.phase = 'idle'; boss.phaseTimer = 90; }
                 }
             } else if (boss.phase === 'dagger') {
                 boss.vx = 0;
@@ -4184,7 +4184,7 @@
                     if (window.audio) audio.playStomp();
                 }
                 if (boss.phaseTimer <= 0) {
-                    if (Math.random() < 0.44) { boss.phase = 'tired'; boss.phaseTimer = 180; } else { boss.phase = 'idle'; boss.phaseTimer = 30; }
+                    if (Math.random() < 0.44) { boss.phase = 'tired'; boss.phaseTimer = 180; } else { boss.phase = 'idle'; boss.phaseTimer = 90; }
                 }
             } else if (boss.phase === 'fireballs') {
                 boss.vx = 0;
@@ -4205,39 +4205,39 @@
                     if (window.audio) audio.playStomp();
                 }
                 if (boss.phaseTimer <= 0) {
-                    if (Math.random() < 0.44) { boss.phase = 'tired'; boss.phaseTimer = 180; } else { boss.phase = 'idle'; boss.phaseTimer = 30; }
+                    if (Math.random() < 0.44) { boss.phase = 'tired'; boss.phaseTimer = 180; } else { boss.phase = 'idle'; boss.phaseTimer = 90; }
                 }
             } else if (boss.phase === 'colorwalls') {
                 boss.vx = 0;
                 if (boss.phaseTimer <= 0 || bossColorWalls.length === 0) {
-                    if (Math.random() < 0.44) { boss.phase = 'tired'; boss.phaseTimer = 180; } else { boss.phase = 'idle'; boss.phaseTimer = 30; }
+                    if (Math.random() < 0.44) { boss.phase = 'tired'; boss.phaseTimer = 180; } else { boss.phase = 'idle'; boss.phaseTimer = 90; }
                 }
             } else if (boss.phase === 'barrier') {
                 boss.vx = 0;
                 if (boss.phaseTimer <= 0 || !bossBarrier) {
-                    if (Math.random() < 0.44) { boss.phase = 'tired'; boss.phaseTimer = 180; } else { boss.phase = 'idle'; boss.phaseTimer = 30; }
+                    if (Math.random() < 0.44) { boss.phase = 'tired'; boss.phaseTimer = 180; } else { boss.phase = 'idle'; boss.phaseTimer = 90; }
                     bossBarrier = null;
                 }
             } else if (boss.phase === 'darkcat') {
                 boss.vx = 0;
                 if (boss.phaseTimer <= 0) {
-                    if (Math.random() < 0.44) { boss.phase = 'tired'; boss.phaseTimer = 180; } else { boss.phase = 'idle'; boss.phaseTimer = 30; }
+                    if (Math.random() < 0.44) { boss.phase = 'tired'; boss.phaseTimer = 180; } else { boss.phase = 'idle'; boss.phaseTimer = 90; }
                 }
             } else if (boss.phase === 'raygun') {
                 boss.vx = 0;
                 if (boss.phaseTimer <= 0 || !bossRaygun) {
-                    if (Math.random() < 0.44) { boss.phase = 'tired'; boss.phaseTimer = 180; } else { boss.phase = 'idle'; boss.phaseTimer = 30; }
+                    if (Math.random() < 0.44) { boss.phase = 'tired'; boss.phaseTimer = 180; } else { boss.phase = 'idle'; boss.phaseTimer = 90; }
                     bossRaygun = null;
                 }
             } else if (boss.phase === 'yarnballs') {
                 boss.vx = 0;
                 if (boss.phaseTimer <= 0) {
-                    if (Math.random() < 0.44) { boss.phase = 'tired'; boss.phaseTimer = 180; } else { boss.phase = 'idle'; boss.phaseTimer = 30; }
+                    if (Math.random() < 0.44) { boss.phase = 'tired'; boss.phaseTimer = 180; } else { boss.phase = 'idle'; boss.phaseTimer = 90; }
                 }
             } else if (boss.phase === 'cross') {
                 boss.vx = 0;
                 if (boss.phaseTimer <= 0 || !bossCross) {
-                    if (Math.random() < 0.44) { boss.phase = 'tired'; boss.phaseTimer = 180; } else { boss.phase = 'idle'; boss.phaseTimer = 30; }
+                    if (Math.random() < 0.44) { boss.phase = 'tired'; boss.phaseTimer = 180; } else { boss.phase = 'idle'; boss.phaseTimer = 90; }
                     bossCross = null;
                 }
             } else if (boss.phase === 'tired') {
@@ -4245,7 +4245,7 @@
                 boss.vx = 0;
                 if (boss.phaseTimer <= 0) {
                     boss.phase = 'idle';
-                    boss.phaseTimer = 30; // brief pause then next attack
+                    boss.phaseTimer = 90; // 1.5s cooldown before next attack
                 }
             } else if (boss.phase === 'hurt') {
                 boss.vx = 0;
