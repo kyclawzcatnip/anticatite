@@ -658,12 +658,9 @@
             "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
             "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
         ],
-        // Level 37 — THE CATSTONE MONSTROSITY ARENA (32x32 BLOCKS)
+        // Level 37 — THE CATSTONE MONSTROSITY ARENA (32x14 FULL ARENA)
         [
             "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
-            "K                              K",
-            "K                              K",
-            "K                              K",
             "K                              K",
             "K                              K",
             "K   UUUU                UUUU   K",
@@ -671,26 +668,11 @@
             "K         UUUUUUUUUUUU         K",
             "K                              K",
             "K                              K",
-            "K                              K",
             "K  UUUU                    UUUUK",
-            "K                              K",
-            "K                              K",
-            "K                              K",
-            "K        UUUU        UUUU      K",
-            "K                              K",
-            "K                              K",
-            "K          UUUUUUUUUU          K",
-            "K                              K",
-            "K                              K",
-            "K                              K",
-            "K   UUUU                UUUU   K",
-            "K                              K",
             "K                              K",
             "K                              K",
             "K S                          X K",
             "K UUUUUUUUUUUUUUUUUUUUUUUUUUUUUK",
-            "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
-            "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
             "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
         ]
     ];
@@ -997,8 +979,8 @@
         }
         const bossHP = isCatstone ? 10 : (isRatOverlord ? 14 : (isGlitched ? GLITCHED_BOSS_HP : isMiner ? MINER_BOSS_HP : isPirate ? PIRATE_BOSS_HP : BOSS_MAX_HP));
         return {
-            x: isCatstone ? 256 : x, y: isCatstone ? 128 : y,
-            w: isCatstone ? 512 : 64, h: isCatstone ? 448 : 64,
+            x: isCatstone ? 256 : x, y: isCatstone ? 32 : y,
+            w: isCatstone ? 512 : 64, h: isCatstone ? 320 : 64,
             vx: 0, vy: 0,
             hp: bossHP,
             maxHp: bossHP,
@@ -1028,8 +1010,8 @@
             waterStreams: [],
             catMines: [],
             ratMines: [],
-            laser1: { y: 800, trackingTimer: 180, activeTimer: 0, firing: false, lockedY: 800 },
-            laser2: { y: 480, trackingTimer: 180, activeTimer: 0, firing: false, lockedY: 480 },
+            laser1: { y: 350, trackingTimer: 180, activeTimer: 0, firing: false, lockedY: 350 },
+            laser2: { y: 180, trackingTimer: 180, activeTimer: 0, firing: false, lockedY: 180 },
             mouthOpenTimer: 0
         };
     }
@@ -4342,12 +4324,12 @@
             }
         }
 
-        // 4 Ancient Water Pipes in 32x32 Arena (x, y)
+        // 4 Ancient Water Pipes in 32x14 Arena (x, y)
         const pipes = [
-            { x: 3 * T, y: 6 * T },
-            { x: 26 * T, y: 6 * T },
-            { x: 3 * T, y: 18 * T },
-            { x: 26 * T, y: 18 * T }
+            { x: 3 * T, y: 3 * T },
+            { x: 26 * T, y: 3 * T },
+            { x: 2 * T, y: 8 * T },
+            { x: 27 * T, y: 8 * T }
         ];
         const activePipe = pipes[boss.shakingPipeIndex];
 
@@ -4371,7 +4353,7 @@
                     x: activePipe.x + 16,
                     y: activePipe.y + 16,
                     targetX: boss.x + boss.w / 2,
-                    targetY: boss.y + 140,
+                    targetY: boss.y + 120,
                     progress: 0,
                     speed: 0.05
                 });
@@ -4451,7 +4433,7 @@
             for (let m = 0; m < 15; m++) {
                 boss.catMines.push({
                     x: boss.x + boss.w / 2,
-                    y: boss.y + 140,
+                    y: boss.y + 120,
                     vx: (Math.random() - 0.5) * 10,
                     vy: -3 - Math.random() * 5,
                     timer: 600, // 10s countdown
@@ -4471,7 +4453,7 @@
                 cm.y += cm.vy;
                 cm.vy += 0.25;
                 cm.vx *= 0.98;
-                if (cm.y >= 864) { cm.y = 864; cm.grounded = true; cm.vx = 0; cm.vy = 0; }
+                if (cm.y >= 352) { cm.y = 352; cm.grounded = true; cm.vx = 0; cm.vy = 0; }
             }
             const touchedP1 = !cat.dead && Math.abs(cat.x + cat.w / 2 - cm.x) < 18 && Math.abs(cat.y + cat.h / 2 - cm.y) < 18;
             const touchedP2 = coopMode && !cat2.dead && Math.abs(cat2.x + cat2.w / 2 - cm.x) < 18 && Math.abs(cat2.y + cat2.h / 2 - cm.y) < 18;
@@ -4490,8 +4472,8 @@
         // Attack 3: Rat Mines (Chasing Mines)
         if (frameCount % 240 === 0) {
             boss.ratMines.push({
-                x: (Math.random() > 0.5 ? 96 : 832),
-                y: 736,
+                x: (Math.random() > 0.5 ? 96 : 864),
+                y: 352,
                 vx: 0,
                 timer: 480
             });
@@ -9258,13 +9240,28 @@
         if (shakeTimer > 0) { const sx = (Math.random() - .5) * shakeAmt, sy = (Math.random() - .5) * shakeAmt; ctx.translate(sx, sy); }
         drawBackground();
         if (level) {
+            ctx.save();
+            if (currentLevel === 37) {
+                // FIXED FULL ARENA CAMERA — STAYS STATIONARY FOR THE ENTIRE FIGHT
+                cam.x = 0;
+                cam.y = 0;
+                const scaleS = W / (level.cols * T); // 800 / 1024 = 0.78125
+                ctx.translate(0, (H - level.rows * T * scaleS) / 2);
+                ctx.scale(scaleS, scaleS);
+            }
             // Draw void under gaps first (behind everything)
             drawVoid();
+
+            // DRAW CATSTONE MONSTROSITY IN THE BACKGROUND BEFORE TILES & ENTITIES
+            if (boss && boss.catstone) {
+                drawCatstoneBoss();
+            }
+
             // Tiles
             const startC = Math.max(0, Math.floor(cam.x / T) - 1);
             const endC = Math.min(level.cols, startC + COLS + 2);
             for (let r = 0; r < level.rows; r++) {
-                for (let c = startC; c < endC; c++) {
+                for (let c = 0; c < level.cols; c++) {
                     if (level.grid[r][c] > 0) drawTile(r, c, level.grid[r][c]);
                 }
             }
@@ -9350,6 +9347,11 @@
                 ctx.fillRect(0, 0, W, H);
                 ctx.restore();
             }
+            // Restore full arena camera transform
+            if (currentLevel === 37) {
+                ctx.restore();
+            }
+
             // Hotbar & HUD overlays
             drawHotbar();
             drawLoreNotification();
@@ -9373,7 +9375,7 @@
             ctx.fillStyle = 'rgba(255, 255, 255, 0.65)';
             ctx.font = '8px "Press Start 2P", monospace';
             ctx.textAlign = 'left';
-            ctx.fillText('v3.0.1', 10, H - 10);
+            ctx.fillText('v3.1.0', 10, H - 10);
             ctx.restore();
 
             // Online mode indicator
