@@ -651,7 +651,41 @@
             "K  W  C   C   5   C   W   C   C   L    K",
             "K UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU  K",
             "K                                      K",
-            "K S   Q   Z   Z   Z   Z   Z   Q      <>K",
+            "K S   Q   Z   Z   Z   Z   Q   []    <> K",
+            "K UUUUUUUUUUUUUUUUUUUUUUUUUUUU{}UUUU() K",
+            "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
+            "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
+            "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
+            "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
+        ],
+        // Level 37 — THE CATSTONE MONSTROSITY ARENA (32x14 FULL ARENA)
+        [
+            "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
+            "K                              K",
+            "K                              K",
+            "K   UUUU                UUUU   K",
+            "K                              K",
+            "K         UUUUUUUUUUUU         K",
+            "K                              K",
+            "K                              K",
+            "K  UUUU                    UUUUK",
+            "K                              K",
+            "K                              K",
+            "K S                          X K",
+            "K UUUUUUUUUUUUUUUUUUUUUUUUUUUUUK",
+            "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
+        ],
+        // Level 38 — THE TRUE VAULT (40x14 INNER SANCTUARY)
+        [
+            "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
+            "K                                      K",
+            "K    CCCCCC  CCCCCC  CCCCCC  CCCCCC    K",
+            "K   UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU   K",
+            "K                                      K",
+            "K  W  C   5   C   L   C   5   C   W    K",
+            "K UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU  K",
+            "K                                      K",
+            "K S   Z   Z   Z   Z   Z   Z   Z   Z  <>K",
             "K UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU()K",
             "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
             "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
@@ -960,7 +994,7 @@
             bossDialogueDone = false;
             bossDialogueDismissed = false;
         }
-        const bossHP = isCatstone ? 10 : (isRatOverlord ? 14 : (isGlitched ? GLITCHED_BOSS_HP : isMiner ? MINER_BOSS_HP : isPirate ? PIRATE_BOSS_HP : BOSS_MAX_HP));
+        const bossHP = isCatstone ? 30 : (isRatOverlord ? 14 : (isGlitched ? GLITCHED_BOSS_HP : isMiner ? MINER_BOSS_HP : isPirate ? PIRATE_BOSS_HP : BOSS_MAX_HP));
         return {
             x: isCatstone ? 256 : x, y: isCatstone ? 32 : y,
             w: isCatstone ? 512 : 64, h: isCatstone ? 320 : 64,
@@ -973,6 +1007,8 @@
             glitched: isGlitched || false,
             ratOverlord: isRatOverlord || false,
             catstone: isCatstone || false,
+            catstoneState: 'active',
+            stateTimer: 0,
             phase: 'idle',
             phaseTimer: 90,
             dir: -1,
@@ -993,8 +1029,10 @@
             waterStreams: [],
             catMines: [],
             ratMines: [],
-            laser1: { y: 350, trackingTimer: 180, activeTimer: 0, firing: false, lockedY: 350 },
-            laser2: { y: 180, trackingTimer: 180, activeTimer: 0, firing: false, lockedY: 180 },
+            disk1: { x: 300, y: 140, active: true, deactivateTimer: 0 },
+            disk2: { x: 724, y: 140, active: true, deactivateTimer: 0 },
+            laser1: { targetY: 340, trackingTimer: 180, activeTimer: 0, firing: false, lockedY: 340 },
+            laser2: { targetY: 180, trackingTimer: 180, activeTimer: 0, firing: false, lockedY: 180 },
             mouthOpenTimer: 0
         };
     }
@@ -4298,16 +4336,120 @@
     function updateCatstoneBoss() {
         if (!boss || !boss.catstone) return;
 
-        // Active pipe shaking timer & pipe selection
-        if (boss.alive) {
-            boss.shakingPipeTimer--;
-            if (boss.shakingPipeTimer <= 0) {
-                boss.shakingPipeTimer = 240 + Math.floor(Math.random() * 120);
-                boss.shakingPipeIndex = Math.floor(Math.random() * 4);
+        // Cutscene & Defeat State Machine (Requirements 12-18)
+        if (boss.catstoneState === 'collapsing') {
+            boss.stateTimer--;
+            shakeTimer = 25; shakeAmt = 8;
+            if (frameCount % 4 === 0) {
+                addParticle(boss.x + Math.random() * boss.w, boss.y + Math.random() * boss.h, '#00CCFF', 3, 5);
+                addParticle(boss.x + Math.random() * boss.w, boss.y + Math.random() * boss.h, '#A09080', 5, 8);
             }
+            if (boss.stateTimer <= 0) {
+                boss.catstoneState = 'final_strike';
+                boss.stateTimer = 90; // Final Strike hazard
+                if (window.audio) audio.playStomp();
+            }
+            return;
         }
 
-        // 4 Ancient Water Pipes in 32x14 Arena (x, y)
+        if (boss.catstoneState === 'final_strike') {
+            boss.stateTimer--;
+            // Final Strike floor hazard (Slam across lower floor)
+            if (boss.stateTimer < 40) {
+                shakeTimer = 30; shakeAmt = 12;
+                if (!cat.dead && cat.y > 300) killCat();
+                if (coopMode && !cat2.dead && cat2.y > 300) killCat2();
+            }
+            if (boss.stateTimer <= 0) {
+                boss.catstoneState = 'broken_wait';
+                boss.stateTimer = 300; // 5-second wait on ground
+            }
+            return;
+        }
+
+        if (boss.catstoneState === 'broken_wait') {
+            boss.stateTimer--;
+            if (boss.stateTimer <= 0) {
+                boss.catstoneState = 'reconstructing';
+                boss.stateTimer = 180; // 3-second floating reconstruction
+                if (window.audio) audio.playPowerUp();
+            }
+            return;
+        }
+
+        if (boss.catstoneState === 'reconstructing') {
+            boss.stateTimer--;
+            if (frameCount % 3 === 0) {
+                addParticle(boss.x + Math.random() * boss.w, boss.y + Math.random() * boss.h, '#00EEFF', 4, 6);
+                addParticle(boss.x + Math.random() * boss.w, boss.y + Math.random() * boss.h, '#FFFFFF', 3, 5);
+            }
+            if (boss.stateTimer <= 0) {
+                boss.catstoneState = 'reconstructed_door';
+                boss.mouthOpenProgress = 0;
+            }
+            return;
+        }
+
+        if (boss.catstoneState === 'reconstructed_door') {
+            if (boss.mouthOpenProgress < 1.0) boss.mouthOpenProgress += 0.02;
+
+            // Player enters mouth doorway into THE TRUE VAULT (Level 38)
+            const mouthCenterX = boss.x + boss.w / 2;
+            const mouthCenterY = boss.y + boss.h - 60;
+            const p1InMouth = (!cat.dead && Math.abs(cat.x + cat.w / 2 - mouthCenterX) < 40 && Math.abs(cat.y + cat.h / 2 - mouthCenterY) < 40);
+            const p2InMouth = (coopMode && !cat2.dead && Math.abs(cat2.x + cat2.w / 2 - mouthCenterX) < 40 && Math.abs(cat2.y + cat2.h / 2 - mouthCenterY) < 40);
+
+            if (p1InMouth || p2InMouth) {
+                if (window.audio) audio.playPowerUp();
+                loadLevel(38); // Enter Level 38: THE TRUE VAULT!
+                loreNotification = {
+                    title: '👑 ENTERED THE TRUE VAULT',
+                    text: 'you have passed, great cat...\nnow you may enter the one place where no cat has steped foot for centures...\nthe TRUE vault awaits...',
+                    timer: 360
+                };
+            }
+            return;
+        }
+
+        // --- ACTIVE BOSS FIGHTING AI ---
+        if (!boss.alive) return;
+
+        // Update Laser Disks (Requirement 8)
+        if (!boss.disk1.active) {
+            boss.disk1.deactivateTimer--;
+            if (boss.disk1.deactivateTimer <= 0) boss.disk1.active = true;
+        }
+        if (!boss.disk2.active) {
+            boss.disk2.deactivateTimer--;
+            if (boss.disk2.deactivateTimer <= 0) boss.disk2.active = true;
+        }
+
+        // Player Deactivates Laser Disk by stomping or touching
+        const p1TouchD1 = (!cat.dead && Math.abs(cat.x + cat.w / 2 - boss.disk1.x) < 32 && Math.abs(cat.y + cat.h / 2 - boss.disk1.y) < 32);
+        const p2TouchD1 = (coopMode && !cat2.dead && Math.abs(cat2.x + cat2.w / 2 - boss.disk1.x) < 32 && Math.abs(cat2.y + cat2.h / 2 - boss.disk1.y) < 32);
+        if (boss.disk1.active && (p1TouchD1 || p2TouchD1)) {
+            boss.disk1.active = false;
+            boss.disk1.deactivateTimer = 900; // 15s
+            if (window.audio) audio.playGlitch();
+            addFloatingText(boss.disk1.x, boss.disk1.y - 10, '⚡ LASER DISK 1 DEACTIVATED! (15s)', '#00CCFF');
+        }
+
+        const p1TouchD2 = (!cat.dead && Math.abs(cat.x + cat.w / 2 - boss.disk2.x) < 32 && Math.abs(cat.y + cat.h / 2 - boss.disk2.y) < 32);
+        const p2TouchD2 = (coopMode && !cat2.dead && Math.abs(cat2.x + cat2.w / 2 - boss.disk2.x) < 32 && Math.abs(cat2.y + cat2.h / 2 - boss.disk2.y) < 32);
+        if (boss.disk2.active && (p1TouchD2 || p2TouchD2)) {
+            boss.disk2.active = false;
+            boss.disk2.deactivateTimer = 900; // 15s
+            if (window.audio) audio.playGlitch();
+            addFloatingText(boss.disk2.x, boss.disk2.y - 10, '⚡ LASER DISK 2 DEACTIVATED! (15s)', '#00CCFF');
+        }
+
+        // Active Pipe Selection & Shaking
+        boss.shakingPipeTimer--;
+        if (boss.shakingPipeTimer <= 0) {
+            boss.shakingPipeTimer = 240 + Math.floor(Math.random() * 120);
+            boss.shakingPipeIndex = Math.floor(Math.random() * 4);
+        }
+
         const pipes = [
             { x: 3 * T, y: 3 * T },
             { x: 26 * T, y: 3 * T },
@@ -4316,22 +4458,20 @@
         ];
         const activePipe = pipes[boss.shakingPipeIndex];
 
-        // Steam/water droplets emitting around active shaking pipe
-        if (boss.alive && frameCount % 6 === 0) {
+        if (frameCount % 6 === 0) {
             addParticle(activePipe.x + 16, activePipe.y + 16, '#00CCFF', 2, 4);
             addParticle(activePipe.x + 16, activePipe.y + 16, '#FFFFFF', 1, 3);
         }
 
-        // Pipe interaction check (stomp top, scratch, fireball, pickaxe, or DOWN key near active pipe)
+        // Player Pipe Hit Interaction
         const p1Hit = (!cat.dead && Math.abs(cat.x + cat.w / 2 - (activePipe.x + 16)) < 48 && Math.abs(cat.y + cat.h / 2 - (activePipe.y + 16)) < 48);
         const p2Hit = (coopMode && !cat2.dead && Math.abs(cat2.x + cat2.w / 2 - (activePipe.x + 16)) < 48 && Math.abs(cat2.y + cat2.h / 2 - (activePipe.y + 16)) < 48);
 
-        if (boss.alive && ((p1Hit && (keys.glide || Math.abs(cat.vx) > 0.1 || scratchTimer > 0)) || (p2Hit && (keys2.glide || Math.abs(cat2.vx) > 0.1 || scratchTimer2 > 0)))) {
+        if ((p1Hit && (keys.glide || Math.abs(cat.vx) > 0.1 || scratchTimer > 0)) || (p2Hit && (keys2.glide || Math.abs(cat2.vx) > 0.1 || scratchTimer2 > 0))) {
             if (!boss.pipeHitCooldown || boss.pipeHitCooldown <= 0) {
                 boss.pipeHitCooldown = 90;
                 if (window.audio) audio.playPowerUp();
                 shakeTimer = 20; shakeAmt = 6;
-                // High-Pressure Water Jet Stream from Pipe to Catstone face
                 boss.waterStreams.push({
                     x: activePipe.x + 16,
                     y: activePipe.y + 16,
@@ -4355,7 +4495,6 @@
             addParticle(curX, curY, '#FFFFFF', 2, 4);
 
             if (ws.progress >= 1) {
-                // Water Impact on Catstone Monstrosity!
                 boss.waterStreams.splice(i, 1);
                 if (boss.alive) {
                     boss.hp--;
@@ -4365,32 +4504,31 @@
                     for (let p = 0; p < 35; p++) {
                         addParticle(ws.targetX + (Math.random() - 0.5) * 60, ws.targetY + (Math.random() - 0.5) * 60, ['#00CCFF', '#FFFFFF', '#88EEFF'][Math.floor(Math.random() * 3)], 5, 8);
                     }
-                    addFloatingText(ws.targetX, ws.targetY - 20, '-1 DA DAMAGE!', '#FFD700');
+                    addFloatingText(ws.targetX, ws.targetY - 20, '-1 DA DAMAGE! (' + boss.hp + ' / 30 DA)', '#FFD700');
 
-                    // Switch shaking pipe
                     boss.shakingPipeIndex = (boss.shakingPipeIndex + 1 + Math.floor(Math.random() * 3)) % 4;
 
-                    // Boss Defeat
+                    // Trigger Collapse Cutscene sequence at 0 DA
                     if (boss.hp <= 0) {
                         boss.alive = false;
-                        boss.deathTimer = 120;
+                        boss.catstoneState = 'collapsing';
+                        boss.stateTimer = 120; // 2s screen shake collapse
                         bossesDefeated++;
-                        score += 10000;
-                        coinCount += 300;
-                        bossPipeSpawned = true;
+                        score += 15000;
+                        coinCount += 500;
                         if (window.audio) audio.playPowerUp();
                     }
                 }
             }
         }
 
-        if (!boss.alive) return;
-
-        // Attack 1: Tracking Lasers (Ground & High)
-        if (boss.laser1) {
+        // Attack 1: Tracking Lasers (Powered by Laser Disks — Requirement 7)
+        // Laser 1: Ground level laser
+        if (boss.disk1 && boss.disk1.active && boss.laser1) {
             if (!boss.laser1.firing) {
                 boss.laser1.trackingTimer--;
-                boss.laser1.targetY += (cat.y + cat.h / 2 - boss.laser1.targetY) * 0.05;
+                const groundTarget = Math.min(360, Math.max(280, cat.y + cat.h / 2));
+                boss.laser1.targetY += (groundTarget - boss.laser1.targetY) * 0.05;
                 if (boss.laser1.trackingTimer <= 0) {
                     boss.laser1.firing = true;
                     boss.laser1.activeTimer = 60;
@@ -4405,12 +4543,37 @@
                 if (coopMode && !cat2.dead && invincibleTimer2 <= 0 && Math.abs(cat2.y + cat2.h / 2 - beamY) < 24) killCat2();
                 if (boss.laser1.activeTimer <= 0) {
                     boss.laser1.firing = false;
-                    boss.laser1.trackingTimer = 240;
+                    boss.laser1.trackingTimer = 180; // 3-second tracking loop
                 }
             }
         }
 
-        // Attack 2: Cat Mines (15 Mines)
+        // Laser 2: Vertical high level laser
+        if (boss.disk2 && boss.disk2.active && boss.laser2) {
+            if (!boss.laser2.firing) {
+                boss.laser2.trackingTimer--;
+                const highTarget = Math.min(220, Math.max(80, cat.y + cat.h / 2));
+                boss.laser2.targetY += (highTarget - boss.laser2.targetY) * 0.05;
+                if (boss.laser2.trackingTimer <= 0) {
+                    boss.laser2.firing = true;
+                    boss.laser2.activeTimer = 60;
+                    boss.laser2.lockedY = boss.laser2.targetY;
+                    shakeTimer = 15; shakeAmt = 5;
+                    if (window.audio) audio.playFireball();
+                }
+            } else {
+                boss.laser2.activeTimer--;
+                const beamY = boss.laser2.lockedY;
+                if (!cat.dead && invincibleTimer <= 0 && Math.abs(cat.y + cat.h / 2 - beamY) < 24) killCat();
+                if (coopMode && !cat2.dead && invincibleTimer2 <= 0 && Math.abs(cat2.y + cat2.h / 2 - beamY) < 24) killCat2();
+                if (boss.laser2.activeTimer <= 0) {
+                    boss.laser2.firing = false;
+                    boss.laser2.trackingTimer = 180; // 3-second tracking loop
+                }
+            }
+        }
+
+        // Attack 2: Flat Disk-Shaped Cat Mines (15 Mines — Requirement 9)
         if (frameCount % 360 === 0) {
             boss.mouthOpenTimer = 60;
             for (let m = 0; m < 15; m++) {
@@ -4427,7 +4590,7 @@
         }
         if (boss.mouthOpenTimer > 0) boss.mouthOpenTimer--;
 
-        // Update Cat Mines
+        // Update Flat Disk-Shaped Cat Mines
         for (let i = boss.catMines.length - 1; i >= 0; i--) {
             const cm = boss.catMines[i];
             cm.timer--;
@@ -4483,65 +4646,120 @@
         if (!boss || !boss.catstone) return;
         const bx = Math.round(boss.x - cam.x), by = Math.round(boss.y - (cam.y || 0));
 
-        // 1. CARVED STONE MONSTROSITY FACE & WALL MACHINERY
+        // 1. TOWERING ANCIENT TALL CAT STATUE WITH CHARGED CATSTONE ENERGY LINES
         ctx.save();
+        const isCollapsed = boss.catstoneState === 'collapsing' || boss.catstoneState === 'final_strike' || boss.catstoneState === 'broken_wait';
+        const isReconstructing = boss.catstoneState === 'reconstructing';
+
         ctx.fillStyle = boss.alive ? (boss.flashTimer > 0 ? '#FF6666' : '#554840') : '#332E2B';
         ctx.strokeStyle = '#221C18';
         ctx.lineWidth = 4;
 
-        // Giant Pointed Ears
-        ctx.beginPath(); ctx.moveTo(bx + 60, by); ctx.lineTo(bx + 140, by - 80); ctx.lineTo(bx + 190, by + 40); ctx.closePath(); ctx.fill(); ctx.stroke();
-        ctx.beginPath(); ctx.moveTo(bx + boss.w - 60, by); ctx.lineTo(bx + boss.w - 140, by - 80); ctx.lineTo(bx + boss.w - 190, by + 40); ctx.closePath(); ctx.fill(); ctx.stroke();
+        // Draw Statue Body (Lower half hidden into wall depths)
+        const drawY = isCollapsed ? by + 120 : by;
+        if (isCollapsed) {
+            // Broken collapsed statue state on ground
+            ctx.fillRect(bx + 40, drawY + 120, boss.w - 80, 80);
+            ctx.strokeRect(bx + 40, drawY + 120, boss.w - 80, 80);
+        } else {
+            // Towering statue upper body (Chest, shoulders, neck, head)
+            ctx.fillRect(bx + 20, drawY + 160, boss.w - 40, boss.h - 140);
+            ctx.strokeRect(bx + 20, drawY + 160, boss.w - 40, boss.h - 140);
 
-        // Main Carved Stone Head Frame
-        ctx.fillRect(bx + 40, by + 20, boss.w - 80, boss.h - 40);
-        ctx.strokeRect(bx + 40, by + 20, boss.w - 80, boss.h - 40);
+            // Carved Stone Paws resting on lower wall structure
+            ctx.fillRect(bx + 40, drawY + boss.h - 40, 90, 40);
+            ctx.fillRect(bx + boss.w - 130, drawY + boss.h - 40, 90, 40);
 
-        // Ancient Machinery Gears Underneath Stone
-        ctx.fillStyle = '#8B4513';
-        ctx.beginPath(); ctx.arc(bx + 120, by + 120, 24, 0, Math.PI * 2); ctx.fill();
-        ctx.beginPath(); ctx.arc(bx + boss.w - 120, by + 120, 24, 0, Math.PI * 2); ctx.fill();
+            // Giant Pointed Cat Ears
+            ctx.beginPath(); ctx.moveTo(bx + 60, drawY); ctx.lineTo(bx + 140, drawY - 80); ctx.lineTo(bx + 190, drawY + 40); ctx.closePath(); ctx.fill(); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(bx + boss.w - 60, drawY); ctx.lineTo(bx + boss.w - 140, drawY - 80); ctx.lineTo(bx + boss.w - 190, drawY + 40); ctx.closePath(); ctx.fill(); ctx.stroke();
 
-        // Mouth (Opens when launching Cat Mines)
-        const mouthH = boss.mouthOpenTimer > 0 ? 50 : 16;
-        ctx.fillStyle = '#110D0A';
-        ctx.fillRect(bx + boss.w / 2 - 80, by + boss.h - 100, 160, mouthH);
-        ctx.strokeStyle = '#FFD700'; ctx.strokeRect(bx + boss.w / 2 - 80, by + boss.h - 100, 160, mouthH);
+            // Head Frame
+            ctx.fillRect(bx + 40, drawY + 20, boss.w - 80, 160);
+            ctx.strokeRect(bx + 40, drawY + 20, boss.w - 80, 160);
+        }
+
+        // CHARGED CATSTONE ENERGY LINES (Blue-ish energy channels running through stone)
+        const energyColor = (isReconstructing || boss.catstoneState === 'reconstructed_door') ? '#00FFFF' : (frameCount % 20 < 10 ? '#00EEFF' : '#00AACC');
+        ctx.strokeStyle = energyColor;
+        ctx.lineWidth = isReconstructing ? 6 : 3;
+        ctx.beginPath();
+        // Energy Channels across statue
+        ctx.moveTo(bx + 60, drawY + 40); ctx.lineTo(bx + 140, drawY + 100); ctx.lineTo(bx + 200, drawY + 180); ctx.lineTo(bx + boss.w / 2, drawY + 220);
+        ctx.moveTo(bx + boss.w - 60, drawY + 40); ctx.lineTo(bx + boss.w - 140, drawY + 100); ctx.lineTo(bx + boss.w - 200, drawY + 180); ctx.lineTo(bx + boss.w / 2, drawY + 220);
+        ctx.stroke();
+
+        // Mouth (Opens wide for Cat Mines or TRUE VAULT doorway)
+        const mouthOpenH = boss.catstoneState === 'reconstructed_door' ? 90 : (boss.mouthOpenTimer > 0 ? 50 : 16);
+        ctx.fillStyle = '#050403';
+        ctx.fillRect(bx + boss.w / 2 - 80, drawY + 110, 160, mouthOpenH);
+        ctx.strokeStyle = '#00FFFF'; ctx.strokeRect(bx + boss.w / 2 - 80, drawY + 110, 160, mouthOpenH);
+
+        if (boss.catstoneState === 'reconstructed_door') {
+            // Portal glow inside open mouth
+            ctx.fillStyle = 'rgba(0, 255, 255, 0.4)';
+            ctx.fillRect(bx + boss.w / 2 - 70, drawY + 120, 140, mouthOpenH - 20);
+            ctx.fillStyle = '#FFD700'; ctx.font = 'bold 9px monospace'; ctx.textAlign = 'center';
+            ctx.fillText('🚪 ENTER TRUE VAULT', bx + boss.w / 2, drawY + 145);
+        }
 
         // Glowing Cat Eyes
-        const eyeColor = !boss.alive ? '#222' : (boss.flashTimer > 0 ? '#FFFFFF' : (frameCount % 20 < 10 ? '#00FFFF' : '#FF00FF'));
+        const eyeColor = !boss.alive && !isReconstructing && boss.catstoneState !== 'reconstructed_door' ? '#222' : (boss.flashTimer > 0 ? '#FFFFFF' : energyColor);
         ctx.fillStyle = eyeColor;
-        ctx.beginPath(); ctx.ellipse(bx + 140, by + 100, 30, 20, -0.2, 0, Math.PI * 2); ctx.fill();
-        ctx.beginPath(); ctx.ellipse(bx + boss.w - 140, by + 100, 30, 20, 0.2, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.ellipse(bx + 140, drawY + 80, 28, 18, -0.2, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.ellipse(bx + boss.w - 140, drawY + 80, 28, 18, 0.2, 0, Math.PI * 2); ctx.fill();
 
         ctx.restore();
 
-        // 2. INTEGRATED WALL HEALTH BAR (PART OF THE VAULT WALL ABOVE MONSTROSITY)
-        const barX = Math.round(boss.x + boss.w / 2 - 200 - cam.x);
-        const barY = Math.round(boss.y - 70 - (cam.y || 0));
+        // 2. ROTATING LASER DISKS (ON STATUE SHOULDERS — Requirement 8)
+        if (boss.alive) {
+            // Laser Disk 1 (Left Shoulder)
+            const d1x = Math.round(boss.disk1.x - cam.x), d1y = Math.round(boss.disk1.y - (cam.y || 0));
+            ctx.save();
+            ctx.fillStyle = boss.disk1.active ? '#00EEFF' : '#333333';
+            ctx.strokeStyle = '#665544'; ctx.lineWidth = 3;
+            ctx.beginPath(); ctx.arc(d1x, d1y, 16, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+            ctx.fillStyle = '#FFF'; ctx.font = 'bold 8px monospace'; ctx.textAlign = 'center';
+            ctx.fillText(boss.disk1.active ? '⚡ DISK 1' : 'OFF', d1x, d1y + 3);
+            ctx.restore();
+
+            // Laser Disk 2 (Right Shoulder)
+            const d2x = Math.round(boss.disk2.x - cam.x), d2y = Math.round(boss.disk2.y - (cam.y || 0));
+            ctx.save();
+            ctx.fillStyle = boss.disk2.active ? '#00EEFF' : '#333333';
+            ctx.strokeStyle = '#665544'; ctx.lineWidth = 3;
+            ctx.beginPath(); ctx.arc(d2x, d2y, 16, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+            ctx.fillStyle = '#FFF'; ctx.font = 'bold 8px monospace'; ctx.textAlign = 'center';
+            ctx.fillText(boss.disk2.active ? '⚡ DISK 2' : 'OFF', d2x, d2y + 3);
+            ctx.restore();
+        }
+
+        // 3. INTEGRATED WALL HEALTH BAR (PART OF VAULT WALL ARCHITECTURE — 30 DA)
+        const barX = Math.round(boss.x + boss.w / 2 - 240 - cam.x);
+        const barY = Math.round(boss.y - 20 - (cam.y || 0));
         ctx.save();
-        ctx.fillStyle = '#3A302A';
-        ctx.strokeStyle = '#665544';
-        ctx.lineWidth = 3;
-        ctx.fillRect(barX - 12, barY - 10, 424, 44);
-        ctx.strokeRect(barX - 12, barY - 10, 424, 44);
+        ctx.fillStyle = '#2A201A';
+        ctx.strokeStyle = '#00CCFF';
+        ctx.lineWidth = 2;
+        ctx.fillRect(barX - 10, barY - 10, 500, 36);
+        ctx.strokeRect(barX - 10, barY - 10, 500, 36);
 
         ctx.fillStyle = '#FFD700';
-        ctx.font = 'bold 10px monospace';
+        ctx.font = 'bold 9px monospace';
         ctx.textAlign = 'center';
-        ctx.fillText('🗿 THE CATSTONE MONSTROSITY 🗿', barX + 200, barY - 14);
+        ctx.fillText('🗿 CATSTONE MONSTROSITY 🗿 (' + boss.hp + ' / 30 DA)', barX + 240, barY - 14);
 
         for (let i = 0; i < boss.maxHp; i++) {
-            const slotX = barX + i * 40;
-            ctx.fillStyle = i < boss.hp ? (frameCount % 10 < 5 ? '#FFD700' : '#00FFFF') : '#111111';
-            ctx.fillRect(slotX, barY, 34, 24);
-            ctx.strokeStyle = '#665544';
-            ctx.strokeRect(slotX, barY, 34, 24);
+            const slotX = barX + i * 16;
+            ctx.fillStyle = i < boss.hp ? (frameCount % 10 < 5 ? '#00EEFF' : '#FFD700') : '#111111';
+            ctx.fillRect(slotX, barY, 13, 16);
+            ctx.strokeStyle = '#443322';
+            ctx.strokeRect(slotX, barY, 13, 16);
         }
         ctx.textAlign = 'left';
         ctx.restore();
 
-        // 3. DRAW WATER STREAMS
+        // 4. DRAW WATER STREAMS
         for (const ws of boss.waterStreams) {
             const curX = ws.x + (ws.targetX - ws.x) * ws.progress - cam.x;
             const curY = ws.y + (ws.targetY - ws.y) * ws.progress - Math.sin(ws.progress * Math.PI) * 60 - (cam.y || 0);
@@ -4549,8 +4767,8 @@
             ctx.beginPath(); ctx.arc(curX, curY, 12, 0, Math.PI * 2); ctx.fill();
         }
 
-        // 4. DRAW TRACKING LASERS
-        if (boss.laser1) {
+        // 5. DRAW TRACKING LASERS
+        if (boss.disk1.active && boss.laser1) {
             const ly = Math.round(boss.laser1.firing ? boss.laser1.lockedY - (cam.y || 0) : boss.laser1.targetY - (cam.y || 0));
             if (boss.laser1.firing) {
                 ctx.fillStyle = 'rgba(0, 255, 255, 0.85)';
@@ -4562,28 +4780,71 @@
                 ctx.lineWidth = 2;
                 ctx.beginPath(); ctx.moveTo(0, ly); ctx.lineTo(W, ly); ctx.stroke();
                 ctx.fillStyle = '#FF0000'; ctx.font = 'bold 8px monospace';
-                ctx.fillText('⚠️ LASER LOCKING...', 10, ly - 4);
+                ctx.fillText('⚠️ LASER 1 LOCKING...', 10, ly - 4);
             }
         }
 
-        // 5. DRAW CAT MINES
-        for (const cm of boss.catMines) {
-            const mx = Math.round(cm.x - cam.x), my = Math.round(cm.y - (cam.y || 0));
-            ctx.fillStyle = '#443830';
-            ctx.beginPath(); ctx.arc(mx, my, 12, 0, Math.PI * 2); ctx.fill();
-            ctx.fillStyle = '#FF4500';
-            ctx.fillRect(mx - 8, my - 14, 4, 6); ctx.fillRect(mx + 4, my - 14, 4, 6);
-            const secsLeft = Math.ceil(cm.timer / 60);
-            ctx.fillStyle = '#FFD700'; ctx.font = 'bold 9px monospace';
-            ctx.fillText(String(secsLeft), mx - 3, my + 3);
+        if (boss.disk2.active && boss.laser2) {
+            const ly = Math.round(boss.laser2.firing ? boss.laser2.lockedY - (cam.y || 0) : boss.laser2.targetY - (cam.y || 0));
+            if (boss.laser2.firing) {
+                ctx.fillStyle = 'rgba(0, 255, 255, 0.85)';
+                ctx.fillRect(0, ly - 20, W, 40);
+                ctx.fillStyle = '#FFFFFF';
+                ctx.fillRect(0, ly - 6, W, 12);
+            } else {
+                ctx.strokeStyle = 'rgba(255, 0, 0, 0.6)';
+                ctx.lineWidth = 2;
+                ctx.beginPath(); ctx.moveTo(0, ly); ctx.lineTo(W, ly); ctx.stroke();
+                ctx.fillStyle = '#FF0000'; ctx.font = 'bold 8px monospace';
+                ctx.fillText('⚠️ LASER 2 LOCKING...', 10, ly - 4);
+            }
         }
 
-        // 6. DRAW RAT MINES
+        // 6. DRAW FLAT DISK-SHAPED CAT MINES (Requirement 9)
+        for (const cm of boss.catMines) {
+            const mx = Math.round(cm.x - cam.x), my = Math.round(cm.y - (cam.y || 0));
+            // Flat disk shape
+            ctx.fillStyle = '#443830';
+            ctx.fillRect(mx - 12, my - 4, 24, 8);
+            ctx.strokeStyle = '#00EEFF'; ctx.strokeRect(mx - 12, my - 4, 24, 8);
+            // Cat ear fins on disk
+            ctx.fillStyle = '#FF4500';
+            ctx.fillRect(mx - 10, my - 8, 4, 4); ctx.fillRect(mx + 6, my - 8, 4, 4);
+            // Fuse countdown number
+            const secsLeft = Math.ceil(cm.timer / 60);
+            ctx.fillStyle = '#FFD700'; ctx.font = 'bold 8px monospace';
+            ctx.fillText(String(secsLeft), mx - 3, my + 2);
+        }
+
+        // 7. DRAW RAT MINES
         for (const rm of boss.ratMines) {
             const rx = Math.round(rm.x - cam.x), ry = Math.round(rm.y - (cam.y || 0));
             ctx.fillStyle = '#8B0000';
             ctx.beginPath(); ctx.arc(rx, ry, 10, 0, Math.PI * 2); ctx.fill();
             ctx.fillStyle = '#FFD700'; ctx.fillRect(rx - 2, ry - 2, 4, 4);
+        }
+
+        // 8. FINAL STRIKE HAZARD WARNING DISPLAY
+        if (boss.catstoneState === 'final_strike' && boss.stateTimer > 50) {
+            ctx.save();
+            ctx.fillStyle = (frameCount % 6 < 3) ? 'rgba(255, 0, 0, 0.4)' : 'rgba(255, 0, 0, 0.15)';
+            ctx.fillRect(0, 320, 1024, 96);
+            ctx.fillStyle = '#FF0000'; ctx.font = 'bold 16px monospace'; ctx.textAlign = 'center';
+            ctx.fillText('⚠️ DANGER: STATUE FINAL STRIKE! GET ON HIGH PLATFORMS! ⚠️', 512, 360);
+            ctx.restore();
+        }
+
+        // 9. DIALOGUE DISPLAY AFTER RECONSTRUCTION (Requirements 17 & 18)
+        if (boss.catstoneState === 'reconstructed_door') {
+            ctx.save();
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.75)';
+            ctx.fillRect(W / 2 - 280, 20, 560, 50);
+            ctx.strokeStyle = '#00FFFF'; ctx.strokeRect(W / 2 - 280, 20, 560, 50);
+            ctx.fillStyle = '#00FFFF'; ctx.font = '9px monospace'; ctx.textAlign = 'center';
+            ctx.fillText('you have passed, great cat...', W / 2, 35);
+            ctx.fillText('now you may enter the one place where no cat has steped foot for centures...', W / 2, 47);
+            ctx.fillText('the TRUE vault awaits...', W / 2, 59);
+            ctx.restore();
         }
     }
 
@@ -6204,6 +6465,14 @@
             return;
         }
 
+        // Vault Interior (Level 36) Green Pipe -> Warps to Catstone Monstrosity Arena (Level 37)
+        if (currentLevel === 36 && (onGreenPipe(cat, keys) || (coopMode && onGreenPipe(cat2, keys2)))) {
+            if (window.audio) audio.playPowerUp();
+            loadLevel(37); // Load Level 37: The Catstone Monstrosity Boss Arena!
+            loreNotification = { title: '🗿 ANCIENT CATSTONE ARENA', text: 'You have entered the secret boss chamber embedded inside the Forgotten Vault wall!', timer: 280 };
+            return;
+        }
+
         // Vault Interior (Level 36) Exit Pipe -> Warps back to Level 2
         if (currentLevel === 36 && (onSilverPipe(cat, keys) || (coopMode && onSilverPipe(cat2, keys2)))) {
             if (window.audio) audio.playPowerUp();
@@ -6213,6 +6482,17 @@
             cat.y = secretReturnY || 300;
             cam.x = Math.max(0, cat.x - W / 3);
             loreNotification = { title: '👑 ESCAPED THE VAULT INTERIOR', text: 'You returned with the 5-Up Mushroom! (Now unlocked in the Shop for 20 Coins!)', timer: 280 };
+            return;
+        }
+
+        // True Vault (Level 38) Exit Pipe -> Warps back to Level 2 with legendary rewards
+        if (currentLevel === 38 && (onSilverPipe(cat, keys) || (coopMode && onSilverPipe(cat2, keys2)))) {
+            if (window.audio) audio.playPowerUp();
+            loadLevel(secretReturnLevel || 1);
+            cat.x = secretReturnX || 2200;
+            cat.y = secretReturnY || 300;
+            cam.x = Math.max(0, cat.x - W / 3);
+            loreNotification = { title: '👑 CONQUERED THE TRUE VAULT!', text: 'You unlocked and explored THE TRUE VAULT! Claimed 25,000 bonus score!', timer: 360 };
             return;
         }
 
