@@ -14,7 +14,7 @@
 <body>
   <div id="game-container">
     <canvas id="gameCanvas" width="800" height="448"></canvas>
-    <div id="version-tag">v3.1.1</div>
+    <div id="version-tag">v3.3.0</div>
     <div id="hud">
       <span id="lives-display">🐱 × 3</span>
       <span id="coin-display">🪙 × 0</span>
@@ -23,6 +23,7 @@
       <span id="level-display">WORLD 1</span>
     </div>
     <div id="overlay" class="visible" onclick="window._startGame()">
+      <button id="btn-lang-toggle" style="position:absolute; top:12px; right:12px; font-family:'Press Start 2P',monospace; font-size:9px; background:rgba(0,0,0,0.8); color:#00FF88; border:2px solid #00FF88; border-radius:4px; padding:6px 10px; cursor:pointer; z-index:100;" onclick="event.stopPropagation(); window._toggleLanguage();">🌐 EN / ES</button>
       <div id="overlay-title">SUPER CAT WORLD</div>
       <div id="overlay-sub">PRESS SPACE OR TAP TO START<br>PRESS 2 FOR CO-OP</div>
       <div id="news-banner">📢 NEWS: Join our Discord to apply for direct playtesting access keys!</div>

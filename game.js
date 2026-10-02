@@ -818,18 +818,115 @@
     let hotbarFlash = -1; // slot index that was just used (for flash effect)
     let hotbarFlashTimer = 0;
     let rescuedKittensCount = 0; // dungeon kittens rescued count
-    // LORE BOOKS SYSTEM
+
+    // LANGUAGE / LOCALIZATION SYSTEM (EN / ES)
+    let currentLang = localStorage.getItem('scw_lang') || 'en';
+
+    const TRANSLATIONS = {
+        en: {
+            title: 'SUPER CAT WORLD',
+            pressStart: 'PRESS SPACE OR TAP TO START\nPRESS 2 FOR CO-OP',
+            newsBanner: '📢 NEWS: Join our Discord to apply for direct playtesting access keys!',
+            btnCoop: '👥 CO-OP',
+            btnOnline: '🌐 ONLINE',
+            btnCodex: '📖 LORE CODEX',
+            lives: '🐱 × ',
+            coins: '🪙 × ',
+            score: 'SCORE: ',
+            world: 'WORLD ',
+            time: '⏱️ ',
+            paused: 'PAUSED',
+            gameOver: 'GAME OVER',
+            youWin: 'YOU WIN!',
+            catstoneDialogue: 'you have passed, great cat...\nnow you may enter the one place where no cat has steped foot for centures...\nthe TRUE vault awaits...',
+            catstoneIntro: '🗿 WHO AWAKENS THE ANCIENT CATSTONE MONSTROSITY?! YOU SHALL NOT ESCAPE THE FORGOTTEN VAULT!',
+            ratKingIntro: 'FEAR ME! I AM THE RAT OVERLORD! PREPARE TO FACE MY ULTIMATE CHARGE... AND ARROWS OF DOOM!',
+            glitchedIntro: 'ERROR 404: REALITY NOT FOUND. I AM THE GLITCHED CORE. PREPARE FOR DELETION.',
+            minerIntro: 'You dare trespass in MY mine?! I\'ve been digging these tunnels for years... and I\'ll bury you in them!',
+            pirateIntro: 'Arr harr harr! Time to walk the plank!',
+            codexTitle: '📖 CAT CODEX — LORE BOOKS',
+            codexUnlocked: 'UNLOCKED: ',
+            codexClose: '  |  B or ESC to close',
+            codexLocked: '🔒 LOCKED LORE BOOK',
+            codexSearch: 'Search Level ',
+            codexFound: 'Found in Level ',
+            shopTitle: '🛒 ANCIENT CAT VAULT SHOP',
+            shopCoins: '🪙 COINS: ',
+            shopControls: '← → / A D to select  |  ENTER to buy  |  S / ESC to close'
+        },
+        es: {
+            title: 'SUPER CAT WORLD',
+            pressStart: 'PRESIONA ESPACIO O TOCA PARA EMPEZAR\nPRESIONA 2 PARA CO-OP',
+            newsBanner: '📢 NOTICIAS: ¡Únete a nuestro Discord para solicitar claves de acceso!',
+            btnCoop: '👥 COOPERATIVO',
+            btnOnline: '🌐 EN LÍNEA',
+            btnCodex: '📖 CÓDICE DE LORE',
+            lives: '🐱 × ',
+            coins: '🪙 × ',
+            score: 'PUNTAJE: ',
+            world: 'MUNDO ',
+            time: '⏱️ ',
+            paused: 'PAUSADO',
+            gameOver: 'FIN DEL JUEGO',
+            youWin: '¡HAS GANADO!',
+            catstoneDialogue: 'has pasado, gran gato...\nahora puedes entrar al único lugar donde ningún gato ha pisado en siglos...\nla bóveda VERDADERA aguarda...',
+            catstoneIntro: '🗿 ¡¿QUIÉN DESPIERTA A LA MONSTRUOSIDAD CATSTONE ANCESTRAL?! ¡NO ESCAPARÁS DE LA BÓVEDA OLVIDADA!',
+            ratKingIntro: '¡TÉMEME! ¡SOY EL REY RATA! PREPÁRATE PARA MI CARGA ULTIMADA... ¡Y FLECHAS DE LA PERDICIÓN!',
+            glitchedIntro: 'ERROR 404: REALIDAD NO ENCONTRADA. SOY EL NÚCLEO GLITCHEADO. PREPÁRATE PARA LA ELIMINACIÓN.',
+            minerIntro: '¡¿Te atreves a entrar en MI mina?! ¡He cavado estos túneles durante años... y te enterraré en ellos!',
+            pirateIntro: '¡Arr harr harr! ¡Hora de caminar por la plancha!',
+            codexTitle: '📖 CÓDICE GATUNO — LIBROS DE LORE',
+            codexUnlocked: 'DESBLOQUEADO: ',
+            codexClose: '  |  B o ESC para cerrar',
+            codexLocked: '🔒 LIBRO DE LORE BLOQUEADO',
+            codexSearch: '¡Busca en el Nivel ',
+            codexFound: 'Encontrado en el Nivel ',
+            shopTitle: '🛒 TIENDA DE LA BÓVEDA GATUNA',
+            shopCoins: '🪙 MONEDAS: ',
+            shopControls: '← → / A D para seleccionar  |  ENTER para comprar  |  S / ESC para cerrar'
+        }
+    };
+
+    function t(key) {
+        return (TRANSLATIONS[currentLang] && TRANSLATIONS[currentLang][key]) || (TRANSLATIONS['en'][key] || key);
+    }
+
+    function updateUIForLanguage() {
+        const titleEl = document.getElementById('overlay-title');
+        const subEl = document.getElementById('overlay-sub');
+        const newsEl = document.getElementById('news-banner');
+        const coopEl = document.getElementById('btn-coop');
+        const onlineEl = document.getElementById('btn-online');
+        const codexEl = document.getElementById('btn-codex');
+        const langBtn = document.getElementById('btn-lang-toggle');
+
+        if (titleEl && state === 'start') titleEl.textContent = t('title');
+        if (subEl && state === 'start') subEl.innerHTML = t('pressStart').replace('\n', '<br>');
+        if (newsEl) newsEl.textContent = t('newsBanner');
+        if (coopEl) coopEl.textContent = t('btnCoop');
+        if (onlineEl) onlineEl.textContent = t('btnOnline');
+        if (codexEl) codexEl.textContent = t('btnCodex');
+        if (langBtn) langBtn.textContent = currentLang === 'en' ? '🌐 EN / ES' : '🌐 ES / EN';
+    }
+
+    window._toggleLanguage = function() {
+        currentLang = currentLang === 'en' ? 'es' : 'en';
+        localStorage.setItem('scw_lang', currentLang);
+        updateUIForLanguage();
+    };
+
+    // LORE BOOKS SYSTEM (WITH EN & ES TRANSLATIONS)
     const LORE_BOOKS = [
-        { id: 1, level: 0, title: 'I. The First Meow', text: 'Long ago, before time had a name, the Great Catnip Tree sprouted in the center of the cosmos. Its roots tapped into ancient wells of magic, and its leaves breathed life into the world, bringing forth the Nine Feline Realms. The Cat Clan built their grand cities in its shade, living in eternal peace and harmony. They guarded the Golden Catnip, a sacred relic keeping their magic alive. But darkness brewed in the lowlands. The Rat King, Miner rat and the pirate rat, jealous of their prosperity, coveted the Golden Catnip\'s power to fuel his dark legion.' },
-        { id: 2, level: 3, title: 'II. Whispers in the Wall', text: 'Following his sudden invasion, the Rat King seized the sacred grounds and constructed his iron fortress directly atop the ancient cat ruins. He forced his subjects to mine the deep mountains, forging iron-tipped spears and heavy armor for his soldiers. He trained legions of archers, positioning them along the high stone ramparts to repel feline scout parties. Whispers echoed in the walls of the castle of hidden passages and dark dungeons where captured kittens were locked away, waiting for a savior.' },
-        { id: 3, level: 4, title: 'III. Secrets of the Throne', text: 'A dusty scroll found in the castle vaults details the secrets of the throne room. When cornered, the Rat King relies on illusion magic, summoning shadow clones to confuse his attackers while hiding behind iron shields. He triggers floor spike traps to catch foes off balance. However, the scroll notes a critical weakness: his crown is heavy, making his head vulnerable. Legend says only well-timed stomps from above can shatter his defense and break his magical barrier.' },
-        { id: 4, level: 7, title: 'IV. Ships in the Sky', text: 'When the Rat King\'s ground fortress fell, his chief naval commander, Pirate Captain Rattail, refused to surrender. Gathering the remaining royal treasures, he fled to the sky islands. There, using floating lumber and sky sails, he constructed an armada of massive wooden warships. He began raiding the trade routes, hoarding thousands of golden sky coins on his vessels. Safe in the clouds, he believed no land-dwelling cat could ever reach his airborne treasury or breach his fleet.' },
-        { id: 5, level: 11, title: 'V. The Sky Captain\'s Vow', text: 'Obsessed with the legends of the clouds, Captain Rattail made a solemn vow to never drop anchor until he caught the Legendary Sky Fish, a mythical creature said to grant infinite wishes. His massive flagship, the Sea-Rat, was custom-built for this hunt, armed with double-deck heavy cannons firing explosive iron balls. To repel agile invaders, he rigged spinning yarn launch pads and flying harpoons across the decks, turning his flagship into a floating fortress of death.' },
-        { id: 6, level: 13, title: 'VI. Crystal Depths', text: 'Beneath the roots of the world lies a network of ancient caves, glowing with giant luminous crystals and flowing rivers of boiling magma. Feline miners once gathered rare gems here, but the heat grew too intense as volcanic fissures opened. The texts warn that the deep caverns are completely impassable without magical protection. Only a hero wearing the Fire Protector aura can walk through the ash storms, withstand the magma hazards, and survive the scorching subterranean beasts.' },
-        { id: 7, level: 22, title: 'VII. The Miner\'s Greed', text: 'Blinded by a thirst for riches, Miner Boss Rattock commanded his workers to dig deeper into the mountain than anyone had ever dared. They breached the ancient volcanic core, triggers earthquakes and mine collapses. Rather than retreating, Rattock weaponized the chaos. He designed high-speed minecarts filled with unstable TNT explosives and rigged the cavern arches to drop crushing boulders on intruders. His greed consumed him, transforming him into a paranoid warden of the dark mines.' },
-        { id: 8, level: 26, title: 'VIII. The Glitched Realm', text: 'At the edge of reality, hidden behind the secret silver pipes, lies a fractured dimension known as the Glitched Lands. In this bizarre realm, the laws of physics break down entirely. Platforms flicker in and out of existence, gravity flips upside down at a moment\'s notice, and reality itself appears corrupted by digital anomalies. The elder cats warned that this frontier is a one-way trip, as the unstable fabric of the realm tears apart any traveler who lacks absolute focus.' },
-        { id: 9, level: 30, title: 'IX. The Glitched Core', text: 'Deep inside the glitched dimension floats the source of all instability: the Glitched Core. It is a sentient, pulsing heart made of corrupted source code and chaotic energy. The Core seeks to rewrite the entire universe in its own image, threatening to dissolve the Nine Feline Realms into static. The ancient prophets wrote that only a hero brave enough to navigate the shifting gravity fields and destroy the Core\'s firewall can permanently stabilize the code, saving reality.' },
-        { id: 10, level: 31, secret: true, title: 'X. The Forgotten Vault', text: 'Deep inside the secret green pipe vault lies an ancient feline sanctuary. The Rat King discovered this lost vault and placed it on total lockdown so no feline could ever harness the powerful artifacts lurking inside.' }
+        { id: 1, level: 0, title: 'I. The First Meow', title_es: 'I. El Primer Maullido', text: 'Long ago, before time had a name, the Great Catnip Tree sprouted in the center of the cosmos. Its roots tapped into ancient wells of magic, and its leaves breathed life into the world, bringing forth the Nine Feline Realms. The Cat Clan built their grand cities in its shade, living in eternal peace and harmony. They guarded the Golden Catnip, a sacred relic keeping their magic alive. But darkness brewed in the lowlands. The Rat King, Miner rat and the pirate rat, jealous of their prosperity, coveted the Golden Catnip\'s power to fuel his dark legion.', text_es: 'Hace mucho tiempo, antes de que el tiempo tuviera nombre, el Gran Árbol Catnip brotó en el centro del cosmos. Sus raíces absorbieron pozos ancestrales de magia y sus hojas dieron vida al mundo, creando los Nueve Reinos Gatunos. El Clan de los Gatos construyó sus grandes ciudades a su sombra, viviendo en paz eterna mientras custodiaban el Catnip Dorado, una reliquia sagrada que mantenía viva su magia. Pero la oscuridad acechaba en las tierras bajas. El Rey Rata, el Rata Minero y el Rata Pirata, celosos de su prosperidad, codiciaban el poder del Catnip Dorado para alimentar su oscura legión.' },
+        { id: 2, level: 3, title: 'II. Whispers in the Wall', title_es: 'II. Susurros en la Muralla', text: 'Following his sudden invasion, the Rat King seized the sacred grounds and constructed his iron fortress directly atop the ancient cat ruins. He forced his subjects to mine the deep mountains, forging iron-tipped spears and heavy armor for his soldiers. He trained legions of archers, positioning them along the high stone ramparts to repel feline scout parties. Whispers echoed in the walls of the castle of hidden passages and dark dungeons where captured kittens were locked away, waiting for a savior.', text_es: 'Tras su repentina invasión, el Rey Rata apoderó las tierras sagradas y construyó su fortaleza de hierro directamente sobre las ruinas gatunas ancestrales. Obligó a sus súbditos a minar las montañas profundas, forjando lanzas de hierro y armaduras pesadas para sus soldados. Entrenó legiones de arqueros en los altos muros para repeler a las patrullas exploradoras de gatos. Los susurros en las murallas hablaban de pasadizos secretos y mazmorras oscuras donde gatitos capturados esperaban a un salvador.' },
+        { id: 3, level: 4, title: 'III. Secrets of the Throne', title_es: 'III. Secretos del Trono', text: 'A dusty scroll found in the castle vaults details the secrets of the throne room. When cornered, the Rat King relies on illusion magic, summoning shadow clones to confuse his attackers while hiding behind iron shields. He triggers floor spike traps to catch foes off balance. However, the scroll notes a critical weakness: his crown is heavy, making his head vulnerable. Legend says only well-timed stomps from above can shatter his defense and break his magical barrier.', text_es: 'Un pergamino empolvado encontrado en las bóvedas del castillo detalla los secretos de la sala del trono. Cuando se ve acorralado, el Rey Rata recurre a la magia de ilusión, invocando clones de sombra para confundir mientras se esconde tras escudos de hierro. Activa trampas de púas en el suelo para desequilibrar. Sin embargo, el pergamino señala una debilidad crítica: su corona es pesada, dejando su cabeza vulnerable. La leyenda dice que solo pisotones precisos desde arriba pueden romper su defensa.' },
+        { id: 4, level: 7, title: 'IV. Ships in the Sky', title_es: 'IV. Barcos en el Cielo', text: 'When the Rat King\'s ground fortress fell, his chief naval commander, Pirate Captain Rattail, refused to surrender. Gathering the remaining royal treasures, he fled to the sky islands. There, using floating lumber and sky sails, he constructed an armada of massive wooden warships. He began raiding the trade routes, hoarding thousands of golden sky coins on his vessels. Safe in the clouds, he believed no land-dwelling cat could ever reach his airborne treasury or breach his fleet.', text_es: 'Cuando la fortaleza terrestre del Rey Rata cayó, su comandante naval, el Capitán Pirata Rata, se negó a rendirse. Reuniendo los tesoros reales restantes, huyó a las islas flotantes del cielo. Usando madera flotante y velas celestes, construyó una armada de buques de guerra de madera. Comenzó a saquear las rutas comerciales, acumulando miles de monedas de oro en sus barcos, creyendo que ningún gato terrestre podría alcanzar su tesoro aéreo.' },
+        { id: 5, level: 11, title: 'V. The Sky Captain\'s Vow', title_es: 'V. El Voto del Capitán Celeste', text: 'Obsessed with the legends of the clouds, Captain Rattail made a solemn vow to never drop anchor until he caught the Legendary Sky Fish, a mythical creature said to grant infinite wishes. His massive flagship, the Sea-Rat, was custom-built for this hunt, armed with double-deck heavy cannons firing explosive iron balls. To repel agile invaders, he rigged spinning yarn launch pads and flying harpoons across the decks, turning his flagship into a floating fortress of death.', text_es: 'Obsesionado con las leyendas de las nubes, el Capitán Rata juró no echar anclas hasta atrapar al Legendario Pez Celeste, una criatura mítica que concede deseos infinitos. Su buque insignia, el Mar-Rata, fue construido especialmente para esta caza, equipado con cañones dobles que disparan balas de hierro explosivas, plataformas giratorias de hilo y arpones voladores.' },
+        { id: 6, level: 13, title: 'VI. Crystal Depths', title_es: 'VI. Profundidades de Cristal', text: 'Beneath the roots of the world lies a network of ancient caves, glowing with giant luminous crystals and flowing rivers of boiling magma. Feline miners once gathered rare gems here, but the heat grew too intense as volcanic fissures opened. The texts warn that the deep caverns are completely impassable without magical protection. Only a hero wearing the Fire Protector aura can walk through the ash storms, withstand the magma hazards, and survive the scorching subterranean beasts.', text_es: 'Bajo las raíces del mundo yace una red de cuevas ancestrales, brillantes con cristales luminosos gigantes y ríos de magma hirviendo. Los mineros gatunos recolectaban gemas raras aquí, pero el calor aumentó a medida que las fisuras volcánicas se abrieron. Los textos advierten que las profundas cavernas son intransitables sin protección mágica. Solo un héroe con el aura Protectora de Fuego puede atravesar las tormentas de ceniza y sobrevivir.' },
+        { id: 7, level: 22, title: 'VII. The Miner\'s Greed', title_es: 'VII. La Codicia del Minero', text: 'Blinded by a thirst for riches, Miner Boss Rattock commanded his workers to dig deeper into the mountain than anyone had ever dared. They breached the ancient volcanic core, triggers earthquakes and mine collapses. Rather than retreating, Rattock weaponized the chaos. He designed high-speed minecarts filled with unstable TNT explosives and rigged the cavern arches to drop crushing boulders on intruders. His greed consumed him, transforming him into a paranoid warden of the dark mines.', text_es: 'Cegado por la sed de riquezas, el Jefe Minero Rattock ordenó a sus trabajadores cavar más profundo en la montaña de lo que nadie jamás se había atrevido. Brecharon el núcleo volcánico ancestral, desatando terremotos y derrumbes. En lugar de retirarse, Rattock armó vagonetas de alta velocidad llenas de explosivos TNT y arregló los arcos de la caverna para soltar rocas sobre los intrusos.' },
+        { id: 8, level: 26, title: 'VIII. The Glitched Realm', title_es: 'VIII. El Reino Glitcheado', text: 'At the edge of reality, hidden behind the secret silver pipes, lies a fractured dimension known as the Glitched Lands. In this bizarre realm, the laws of physics break down entirely. Platforms flicker in and out of existence, gravity flips upside down at a moment\'s notice, and reality itself appears corrupted by digital anomalies. The elder cats warned that this frontier is a one-way trip, as the unstable fabric of the realm tears apart any traveler who lacks absolute focus.', text_es: 'En el borde de la realidad, oculto tras las tuberías de plata secretas, yace una dimensión fracturada conocida como las Tierras Glitcheadas. En este extraño reino, las leyes de la física colapsan por completo. Las plataformas parpadean, la gravedad se invierte en cualquier momento y la realidad misma parece corrompida por anomalías digitales.' },
+        { id: 9, level: 30, title: 'IX. The Glitched Core', title_es: 'IX. El Núcleo Glitcheado', text: 'Deep inside the glitched dimension floats the source of all instability: the Glitched Core. It is a sentient, pulsing heart made of corrupted source code and chaotic energy. The Core seeks to rewrite the entire universe in its own image, threatening to dissolve the Nine Feline Realms into static. The ancient prophets wrote that only a hero brave enough to navigate the shifting gravity fields and destroy the Core\'s firewall can permanently stabilize the code, saving reality.', text_es: 'En lo profundo de la dimensión glitcheada flota la fuente de toda la inestabilidad: el Núcleo Glitcheado. Es un corazón sintiente y palpitante hecho de código fuente corrompido y energía caótica. El Núcleo busca reescribir todo el universo en su propia imagen, amenazando con disolver los Nueve Reinos Gatunos en estática. Solo un héroe capaz de navegar la gravedad cambiante y destruir el cortafuegos del Núcleo puede estabilizar la realidad.' },
+        { id: 10, level: 31, secret: true, title: 'X. The Forgotten Vault', title_es: 'X. La Bóveda Olvidada', text: 'Deep inside the secret green pipe vault lies an ancient feline sanctuary. The Rat King discovered this lost vault and placed it on total lockdown so no feline could ever harness the powerful artifacts lurking inside.', text_es: 'En lo profundo de la bóveda secreta de tuberías verdes yace un santuario gatuno ancestral. El Rey Rata descubrió esta bóveda perdida y la puso en bloqueo total para que ningún gato pudiera jamás aprovechar los poderosos artefactos que acechan en su interior.' }
     ];
     let unlockedLore = JSON.parse(localStorage.getItem('scw_unlocked_lore') || '[]');
     let loreNotification = null; // { title, text, timer }
@@ -951,28 +1048,28 @@
         // Reset dialogue state
         if (isCatstone) {
             bossDialogueActive = true;
-            bossDialogueText = '🗿 WHO AWAKENS THE ANCIENT CATSTONE MONSTROSITY?! YOU SHALL NOT ESCAPE THE FORGOTTEN VAULT!';
+            bossDialogueText = t('catstoneIntro');
             bossDialogueCharIndex = 0;
             bossDialogueTimer = 0;
             bossDialogueDone = false;
             bossDialogueDismissed = false;
         } else if (isRatOverlord) {
             bossDialogueActive = true;
-            bossDialogueText = 'FEAR ME! I AM THE RAT OVERLORD! PREPARE TO FACE MY ULTIMATE CHARGE... AND ARROWS OF DOOM!';
+            bossDialogueText = t('ratKingIntro');
             bossDialogueCharIndex = 0;
             bossDialogueTimer = 0;
             bossDialogueDone = false;
             bossDialogueDismissed = false;
         } else if (isGlitched) {
             bossDialogueActive = true;
-            bossDialogueText = 'ERROR 404: REALITY NOT FOUND. I AM THE GLITCHED CORE. PREPARE FOR DELETION.';
+            bossDialogueText = t('glitchedIntro');
             bossDialogueCharIndex = 0;
             bossDialogueTimer = 0;
             bossDialogueDone = false;
             bossDialogueDismissed = false;
         } else if (isMiner) {
             bossDialogueActive = true;
-            bossDialogueText = 'You dare trespass in MY mine?! I\'ve been digging these tunnels for years... and I\'ll bury you in them!';
+            bossDialogueText = t('minerIntro');
             bossDialogueCharIndex = 0;
             bossDialogueTimer = 0;
             bossDialogueDone = false;
@@ -980,7 +1077,7 @@
         } else if (!isPirate) {
             bossDialogueActive = true;
             const skinName = typeof CAT_SKINS !== 'undefined' ? CAT_SKINS[selectedSkin].name : 'cat';
-            bossDialogueText = 'Well, well, well... if it isn\'t ' + skinName + ' the cat my scouts told me about... NOW YOU DIE.';
+            bossDialogueText = currentLang === 'es' ? ('Vaya, vaya... si no es el gato ' + skinName + ' del que me hablaron mis exploradores... AHORA MUERES.') : ('Well, well, well... if it isn\'t ' + skinName + ' the cat my scouts told me about... NOW YOU DIE.');
             bossDialogueCharIndex = 0;
             bossDialogueTimer = 0;
             bossDialogueDone = false;
@@ -988,7 +1085,7 @@
         } else {
             bossDialogueActive = true;
             const skinName = typeof CAT_SKINS !== 'undefined' ? CAT_SKINS[selectedSkin].name : 'cat';
-            bossDialogueText = 'Arr harr harr! So ' + skinName + ' made it past me rats, did ye? Time to walk the plank!';
+            bossDialogueText = currentLang === 'es' ? ('¡Arr harr harr! Así que ' + skinName + ' logró pasar a mis ratas, ¿eh? ¡Hora de caminar por la plancha!') : ('Arr harr harr! So ' + skinName + ' made it past me rats, did ye? Time to walk the plank!');
             bossDialogueCharIndex = 0;
             bossDialogueTimer = 0;
             bossDialogueDone = false;
@@ -4841,9 +4938,10 @@
             ctx.fillRect(W / 2 - 280, 20, 560, 50);
             ctx.strokeStyle = '#00FFFF'; ctx.strokeRect(W / 2 - 280, 20, 560, 50);
             ctx.fillStyle = '#00FFFF'; ctx.font = '9px monospace'; ctx.textAlign = 'center';
-            ctx.fillText('you have passed, great cat...', W / 2, 35);
-            ctx.fillText('now you may enter the one place where no cat has steped foot for centures...', W / 2, 47);
-            ctx.fillText('the TRUE vault awaits...', W / 2, 59);
+            const lines = t('catstoneDialogue').split('\n');
+            ctx.fillText(lines[0] || '', W / 2, 35);
+            ctx.fillText(lines[1] || '', W / 2, 47);
+            ctx.fillText(lines[2] || '', W / 2, 59);
             ctx.restore();
         }
     }
@@ -9322,12 +9420,17 @@
         const mins = String(Math.floor(elapsedSec / 60)).padStart(2, '0');
         const secs = String(elapsedSec % 60).padStart(2, '0');
         if (timerEl) timerEl.textContent = '⏱️ ' + mins + ':' + secs;
-        scoreEl.textContent = 'SCORE: ' + score;
-        levelEl.textContent = currentLevel === 31 ? 'WORLD 2B' : (currentLevel >= 27 && currentLevel <= 30 ? 'ERR: GLITCH ' + (currentLevel - 26) : (boss ? (boss.pirate ? 'SKY BOSS' : 'BOSS') : (currentLevel >= 23 ? 'MINE ' + (currentLevel - 22) : currentLevel >= 12 ? 'CAVE ' + (currentLevel - 11) : currentLevel >= 6 ? 'SKY ' + (currentLevel - 5) : 'WORLD ' + (currentLevel + 1))));
+        scoreEl.textContent = t('score') + score;
+        const worldName = currentLang === 'es' ? 'MUNDO ' : 'WORLD ';
+        const caveName = currentLang === 'es' ? 'CUEVA ' : 'CAVE ';
+        const skyName = currentLang === 'es' ? 'CIELO ' : 'SKY ';
+        const mineName = currentLang === 'es' ? 'MINA ' : 'MINE ';
+        const bossName = currentLang === 'es' ? 'JEFE' : 'BOSS';
+        levelEl.textContent = currentLevel === 31 ? worldName + '2B' : (currentLevel >= 27 && currentLevel <= 30 ? 'ERR: GLITCH ' + (currentLevel - 26) : (boss ? (boss.pirate ? skyName + bossName : bossName) : (currentLevel >= 23 ? mineName + (currentLevel - 22) : currentLevel >= 12 ? caveName + (currentLevel - 11) : currentLevel >= 6 ? skyName + (currentLevel - 5) : worldName + (currentLevel + 1))));
         // Check game over
-        if (state === 'over') { showOverlay('GAME OVER', 'SCORE: ' + score + '\n\nPRESS SPACE TO RETRY\nPRESS 2 FOR CO-OP'); }
-        if (state === 'levelcomplete') { showOverlay('LEVEL COMPLETE!', 'SCORE: ' + score + '\n\nPRESS SPACE TO CONTINUE'); }
-        if (state === 'win') { showOverlay('YOU WIN! 🎉', 'FINAL SCORE: ' + score + '\n\nPRESS SPACE TO PLAY AGAIN'); }
+        if (state === 'over') { showOverlay(t('gameOver'), t('score') + score + '\n\n' + (currentLang === 'es' ? 'PRESIONA ESPACIO PARA REINTENTAR\nPRESIONA 2 PARA CO-OP' : 'PRESS SPACE TO RETRY\nPRESS 2 FOR CO-OP')); }
+        if (state === 'levelcomplete') { showOverlay(currentLang === 'es' ? '¡NIVEL COMPLETADO!' : 'LEVEL COMPLETE!', t('score') + score + '\n\n' + (currentLang === 'es' ? 'PRESIONA ESPACIO PARA CONTINUAR' : 'PRESS SPACE TO CONTINUE')); }
+        if (state === 'win') { showOverlay(t('youWin') + ' 🎉', (currentLang === 'es' ? 'PUNTAJE FINAL: ' : 'FINAL SCORE: ') + score + '\n\n' + (currentLang === 'es' ? 'PRESIONA ESPACIO PARA JUGAR DE NUEVO' : 'PRESS SPACE TO PLAY AGAIN')); }
     }
 
     // DRAW
@@ -9814,15 +9917,17 @@
         ctx.fillStyle = '#FFD700';
         ctx.font = '14px "Press Start 2P", monospace';
         ctx.textAlign = 'center';
-        ctx.fillText('📖 CAT CODEX — LORE BOOKS', W / 2, 30);
+        ctx.fillText(t('codexTitle'), W / 2, 30);
 
         const unlockedCount = unlockedLore.length;
         ctx.font = '7px "Press Start 2P", monospace';
         ctx.fillStyle = '#AAA';
-        ctx.fillText('← → / A D to select  |  UNLOCKED: ' + unlockedCount + ' / ' + LORE_BOOKS.length + '  |  B or ESC to close', W / 2, 48);
+        ctx.fillText('← → / A D  |  ' + t('codexUnlocked') + unlockedCount + ' / ' + LORE_BOOKS.length + t('codexClose'), W / 2, 48);
 
         const book = LORE_BOOKS[codexSelection];
         const isUnlocked = unlockedLore.includes(book.id);
+        const bTitle = currentLang === 'es' ? (book.title_es || book.title) : book.title;
+        const bText = currentLang === 'es' ? (book.text_es || book.text) : book.text;
 
         // Left list (cards)
         const listX = 16, listY = 64, listW = 210, itemH = 34, gap = 5;
@@ -9830,6 +9935,7 @@
             const iy = listY + idx * (itemH + gap);
             const sel = idx === codexSelection;
             const unl = unlockedLore.includes(b.id);
+            const cardTitle = currentLang === 'es' ? (b.title_es || b.title) : b.title;
 
             ctx.fillStyle = sel ? 'rgba(255,215,0,0.25)' : 'rgba(30,30,50,0.7)';
             ctx.fillRect(listX, iy, listW, itemH);
@@ -9842,7 +9948,7 @@
             ctx.textAlign = 'left';
             ctx.fillStyle = unl ? (sel ? '#FFD700' : '#FFF') : '#666';
             const icon = unl ? '📖' : '🔒';
-            ctx.fillText(icon + ' ' + (unl ? b.title : '??? (Book ' + b.id + ')'), listX + 8, iy + 21);
+            ctx.fillText(icon + ' ' + (unl ? cardTitle : '??? (Book ' + b.id + ')'), listX + 8, iy + 21);
         });
 
         // Right display panel
@@ -9856,11 +9962,11 @@
         ctx.textAlign = 'center';
         ctx.fillStyle = '#FFD700';
         ctx.font = '10px "Press Start 2P", monospace';
-        ctx.fillText(isUnlocked ? book.title : '🔒 LOCKED LORE BOOK', panelX + panelW / 2, panelY + 28);
+        ctx.fillText(isUnlocked ? bTitle : t('codexLocked'), panelX + panelW / 2, panelY + 28);
 
         ctx.font = '6px "Press Start 2P", monospace';
         ctx.fillStyle = '#888';
-        ctx.fillText(isUnlocked ? 'Found in Level ' + (book.level + 1) : 'Search Level ' + (book.level + 1) + ' to unlock!', panelX + panelW / 2, panelY + 44);
+        ctx.fillText(isUnlocked ? (t('codexFound') + (book.level + 1)) : (t('codexSearch') + (book.level + 1) + '!'), panelX + panelW / 2, panelY + 44);
 
         ctx.strokeStyle = 'rgba(255,215,0,0.3)';
         ctx.beginPath(); ctx.moveTo(panelX + 20, panelY + 54); ctx.lineTo(panelX + panelW - 20, panelY + 54); ctx.stroke();
@@ -9869,7 +9975,7 @@
             ctx.fillStyle = '#EEE';
             ctx.font = '9px monospace';
             ctx.textAlign = 'left';
-            const words = book.text.split(' ');
+            const words = bText.split(' ');
             let line = '';
             let lineY = panelY + 74;
             const maxW = panelW - 36;
@@ -9888,8 +9994,8 @@
             ctx.fillStyle = '#777';
             ctx.font = '9px monospace';
             ctx.textAlign = 'center';
-            ctx.fillText('This ancient chapter has not been discovered yet.', panelX + panelW / 2, panelY + 100);
-            ctx.fillText('Explore Level ' + (book.level + 1) + ' to collect this Lore Book!', panelX + panelW / 2, panelY + 120);
+            ctx.fillText(currentLang === 'es' ? 'Este capítulo ancestral no ha sido descubierto aún.' : 'This ancient chapter has not been discovered yet.', panelX + panelW / 2, panelY + 100);
+            ctx.fillText(currentLang === 'es' ? '¡Explora el Nivel ' + (book.level + 1) + ' para recolectarlo!' : 'Explore Level ' + (book.level + 1) + ' to collect this Lore Book!', panelX + panelW / 2, panelY + 120);
         }
 
         ctx.textAlign = 'left';
@@ -9969,6 +10075,7 @@
             ctx.fillText(skin.name, cx + cardW / 2, cy + cardH - 38);
 
             // Status line
+            // Status line
             if (isEquipped) {
                 ctx.fillStyle = '#66FF66';
                 ctx.font = '6px "Press Start 2P", monospace';
@@ -9998,15 +10105,17 @@
         ctx.fillStyle = 'rgba(0,0,0,0.92)';
         ctx.fillRect(0, 0, W, H);
 
+        const isEs = currentLang === 'es';
+
         // Title
         ctx.fillStyle = '#FFD700';
         ctx.font = 'bold 22px "Press Start 2P", monospace';
         ctx.textAlign = 'center';
-        ctx.fillText('🎮 HOW TO PLAY', W / 2, 36);
+        ctx.fillText(isEs ? '🎮 CÓMO JUGAR' : '🎮 HOW TO PLAY', W / 2, 36);
 
         ctx.font = '8px "Press Start 2P", monospace';
         ctx.fillStyle = '#888';
-        ctx.fillText('Press H or ESC to close', W / 2, 54);
+        ctx.fillText(isEs ? 'Presiona H o ESC para cerrar' : 'Press H or ESC to close', W / 2, 54);
 
         // Helper to draw a key badge
         function drawKey(x, y, label, w) {
@@ -10036,17 +10145,17 @@
         ctx.fillStyle = '#00CCFF';
         ctx.font = 'bold 11px monospace';
         ctx.textAlign = 'left';
-        ctx.fillText('PLAYER 1 CONTROLS', col1, y1);
+        ctx.fillText(isEs ? 'CONTROLES JUGADOR 1' : 'PLAYER 1 CONTROLS', col1, y1);
         y1 += 22;
 
-        drawRow(col1, y1, 'A / D', 'Move left / right'); y1 += 26;
-        drawRow(col1, y1, 'W / SPACE', 'Jump (press again for double jump)', 90); y1 += 26;
-        drawRow(col1, y1, 'Q', 'Glide (when purchased)'); y1 += 26;
-        drawRow(col1, y1, 'F / X', 'Scratch attack / Throw shell'); y1 += 26;
-        drawRow(col1, y1, 'E', 'Fireball (need fire power)'); y1 += 26;
-        drawRow(col1, y1, 'R', 'Throw Pickaxe (boomerang)'); y1 += 26;
-        drawRow(col1, y1, '1-5', 'Use inventory items'); y1 += 26;
-        drawRow(col1, y1, 'T', 'Open Cat Closet (skins)'); y1 += 26;
+        drawRow(col1, y1, 'A / D', isEs ? 'Mover izquierda / derecha' : 'Move left / right'); y1 += 26;
+        drawRow(col1, y1, 'W / SPACE', isEs ? 'Saltar (presiona de nuevo para doble salto)' : 'Jump (press again for double jump)', 90); y1 += 26;
+        drawRow(col1, y1, 'Q', isEs ? 'Planear (al comprar)' : 'Glide (when purchased)'); y1 += 26;
+        drawRow(col1, y1, 'F / X', isEs ? 'Ataque rasguño / Lanzar caparazón' : 'Scratch attack / Throw shell'); y1 += 26;
+        drawRow(col1, y1, 'E', isEs ? 'Bola de fuego (con poder de fuego)' : 'Fireball (need fire power)'); y1 += 26;
+        drawRow(col1, y1, 'R', isEs ? 'Lanzar Pico (búmeran)' : 'Throw Pickaxe (boomerang)'); y1 += 26;
+        drawRow(col1, y1, '1-5', isEs ? 'Usar objetos del inventario' : 'Use inventory items'); y1 += 26;
+        drawRow(col1, y1, 'T', isEs ? 'Abrir Ropero Gatuno (aspectos)' : 'Open Cat Closet (skins)'); y1 += 26;
 
         // === COLUMN 2: P2 & System ===
         let y2 = 72;
@@ -10054,42 +10163,42 @@
         ctx.fillStyle = '#FF88CC';
         ctx.font = 'bold 11px monospace';
         ctx.textAlign = 'left';
-        ctx.fillText('CO-OP PLAYER 2', col2, y2);
+        ctx.fillText(isEs ? 'COOPERATIVO JUGADOR 2' : 'CO-OP PLAYER 2', col2, y2);
         y2 += 22;
 
-        drawRow(col2, y2, '← →', 'Move left / right'); y2 += 26;
-        drawRow(col2, y2, '↑', 'Jump (double jump too)'); y2 += 26;
-        drawRow(col2, y2, '↓', 'Glide'); y2 += 26;
-        drawRow(col2, y2, 'O', 'Scratch / Throw shell'); y2 += 26;
-        drawRow(col2, y2, 'P', 'Fireball'); y2 += 26;
-        drawRow(col2, y2, 'I', 'Throw Pickaxe'); y2 += 26;
+        drawRow(col2, y2, '← →', isEs ? 'Mover izquierda / derecha' : 'Move left / right'); y2 += 26;
+        drawRow(col2, y2, '↑', isEs ? 'Saltar (doble salto también)' : 'Jump (double jump too)'); y2 += 26;
+        drawRow(col2, y2, '↓', isEs ? 'Planear' : 'Glide'); y2 += 26;
+        drawRow(col2, y2, 'O', isEs ? 'Rasguño / Lanzar caparazón' : 'Scratch / Throw shell'); y2 += 26;
+        drawRow(col2, y2, 'P', isEs ? 'Bola de fuego' : 'Fireball'); y2 += 26;
+        drawRow(col2, y2, 'I', isEs ? 'Lanzar Pico' : 'Throw Pickaxe'); y2 += 26;
 
         y2 += 10;
         ctx.fillStyle = '#AAFFAA';
         ctx.font = 'bold 11px monospace';
         ctx.textAlign = 'left';
-        ctx.fillText('SYSTEM', col2, y2);
+        ctx.fillText(isEs ? 'SISTEMA' : 'SYSTEM', col2, y2);
         y2 += 22;
 
-        drawRow(col2, y2, 'N', 'Skip to next level'); y2 += 26;
-        drawRow(col2, y2, 'H', 'Toggle this tutorial'); y2 += 26;
+        drawRow(col2, y2, 'N', isEs ? 'Saltar al siguiente nivel' : 'Skip to next level'); y2 += 26;
+        drawRow(col2, y2, 'H', isEs ? 'Alternar este tutorial' : 'Toggle this tutorial'); y2 += 26;
 
         // === TIPS ===
         const tipY = Math.max(y1, y2) + 16;
         ctx.fillStyle = '#FFD700';
         ctx.font = 'bold 11px monospace';
         ctx.textAlign = 'center';
-        ctx.fillText('💡 TIPS', W / 2, tipY);
+        ctx.fillText(isEs ? '💡 CONSEJOS' : '💡 TIPS', W / 2, tipY);
 
         ctx.fillStyle = '#AAA';
         ctx.font = '9px monospace';
-        ctx.fillText('• Jump on enemies to stomp them! Stomp turtles twice to get shells.', W / 2, tipY + 18);
-        ctx.fillText('• Hit ? blocks from below to get coins, power-ups, and sometimes stars!', W / 2, tipY + 32);
-        ctx.fillText('• Between levels, visit the SHOP to buy upgrades with coins.', W / 2, tipY + 46);
-        ctx.fillText('• Watch out for rat archers — they shoot arrows at you!', W / 2, tipY + 60);
+        ctx.fillText(isEs ? '• ¡Salta sobre los enemigos para pisotearlos! Pisotear tortugas dos veces les quita el caparazón.' : '• Jump on enemies to stomp them! Stomp turtles twice to get shells.', W / 2, tipY + 18);
+        ctx.fillText(isEs ? '• Golpea bloques ? desde abajo para obtener monedas, mejoras y estrellas.' : '• Hit ? blocks from below to get coins, power-ups, and sometimes stars!', W / 2, tipY + 32);
+        ctx.fillText(isEs ? '• Entre niveles, visita la TIENDA para comprar mejoras con monedas.' : '• Between levels, visit the SHOP to buy upgrades with coins.', W / 2, tipY + 46);
+        ctx.fillText(isEs ? '• Ten cuidado con los arqueros rata: ¡te dispararán flechas!' : '• Watch out for rat archers — they shoot arrows at you!', W / 2, tipY + 60);
         ctx.fillStyle = '#FF6644';
-        ctx.fillText('👑 RAT KING: Get on platforms when spears rise! Dodge the exploding', W / 2, tipY + 80);
-        ctx.fillText('  dagger and stomp fire rats 3 times to kill them!', W / 2, tipY + 94);
+        ctx.fillText(isEs ? '👑 REY RATA: ¡Sube a plataformas cuando salgan lanzas! Esquiva dagas y' : '👑 RAT KING: Get on platforms when spears rise! Dodge the exploding', W / 2, tipY + 80);
+        ctx.fillText(isEs ? '  ¡pisotea ratas de fuego 3 veces para vencerlas!' : '  dagger and stomp fire rats 3 times to kill them!', W / 2, tipY + 94);
 
         ctx.textAlign = 'left';
         ctx.lineWidth = 1;
