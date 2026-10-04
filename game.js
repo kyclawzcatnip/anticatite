@@ -675,22 +675,73 @@
             "K UUUUUUUUUUUUUUUUUUUUUUUUUUUUUK",
             "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
         ],
-        // Level 38 — THE TRUE VAULT (40x14 INNER SANCTUARY)
+        // Level 38 — THE TRUE VAULT: SECTOR 1 (UPPER HABITATION COMPLEX — 8 ROOMS)
         [
-            "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
-            "K                                      K",
-            "K    CCCCCC  CCCCCC  CCCCCC  CCCCCC    K",
-            "K   UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU   K",
-            "K                                      K",
-            "K  W  C   5   C   L   C   5   C   W    K",
-            "K UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU  K",
-            "K                                      K",
-            "K S   Z   Z   Z   Z   Z   Z   Z   Z  <>K",
-            "K UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU()K",
-            "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
-            "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
-            "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
-            "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
+            "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
+            "K                                                                                                  K",
+            "K    CCCCCC      CCCCCC      CCCCCC      CCCCCC      CCCCCC      CCCCCC      CCCCCC      CCCCCC    K",
+            "K   UUUUUUUU    UUUUUUUU    UUUUUUUU    UUUUUUUU    UUUUUUUU    UUUUUUUU    UUUUUUUU    UUUUUUUU   K",
+            "K                                                                                                  K",
+            "K  W  C   5   C   W   C   5   C   W   C   5   C   W   C   5   C   W   C   5   C   W   C   5   C  L K",
+            "K UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU  K",
+            "K                                                                                                  K",
+            "K S   Z   Z       Z   Z       Z   Z       Z   Z       Z   Z       Z   Z       Z   Z       Z   []   K",
+            "K UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU{}   K",
+            "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
+            "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
+            "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
+            "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
+        ],
+        // Level 39 — THE TRUE VAULT: SECTOR 2 (MACHINE & RESEARCH DEPTHS — 8 ROOMS)
+        [
+            "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
+            "K                                                                                                  K",
+            "K    CCCCCC      CCCCCC      CCCCCC      CCCCCC      CCCCCC      CCCCCC      CCCCCC      CCCCCC    K",
+            "K   UUUUUUUU    UUUUUUUU    UUUUUUUU    UUUUUUUU    UUUUUUUU    UUUUUUUU    UUUUUUUU    UUUUUUUU   K",
+            "K                                                                                                  K",
+            "K  W  C   5   C   W   C   5   C   W   C   5   C   W   C   5   C   W   C   5   C   W   C   5   C  L K",
+            "K UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU  K",
+            "K                                                                                                  K",
+            "K S   Z   Z       Z   Z       Z   Z       Z   Z       Z   Z       Z   Z       Z   Z       Z   []   K",
+            "K UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU{}   K",
+            "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
+            "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
+            "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
+            "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
+        ],
+        // Level 40 — THE TRUE VAULT: SECTOR 3 (SUBTERRANEAN INFRASTRUCTURE — 8 ROOMS)
+        [
+            "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
+            "K                                                                                                  K",
+            "K    CCCCCC      CCCCCC      CCCCCC      CCCCCC      CCCCCC      CCCCCC      CCCCCC      CCCCCC    K",
+            "K   UUUUUUUU    UUUUUUUU    UUUUUUUU    UUUUUUUU    UUUUUUUU    UUUUUUUU    UUUUUUUU    UUUUUUUU   K",
+            "K                                                                                                  K",
+            "K  W  C   5   C   W   C   5   C   W   C   5   C   W   C   5   C   W   C   5   C   W   C   5   C  L K",
+            "K UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU  K",
+            "K                                                                                                  K",
+            "K S   Z   Z       Z   Z       Z   Z       Z   Z       Z   Z       Z   Z       Z   Z       Z   []   K",
+            "K UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU{}   K",
+            "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
+            "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
+            "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
+            "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
+        ],
+        // Level 41 — THE TRUE VAULT: SECTOR 4 (DEEP ARCHIVES & INNER SANCTUARY — 8 ROOMS)
+        [
+            "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
+            "K                                                                                                  K",
+            "K    CCCCCC      CCCCCC      CCCCCC      CCCCCC      CCCCCC      CCCCCC      CCCCCC      CCCCCC    K",
+            "K   UUUUUUUU    UUUUUUUU    UUUUUUUU    UUUUUUUU    UUUUUUUU    UUUUUUUU    UUUUUUUU    UUUUUUUU   K",
+            "K                                                                                                  K",
+            "K  W  C   5   C   W   C   5   C   W   C   5   C   W   C   5   C   W   C   5   C   W   C   5   C  L K",
+            "K UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU  K",
+            "K                                                                                                  K",
+            "K S   Z   Z       Z   Z       Z   Z       Z   Z       Z   Z       Z   Z       Z   Z   B   Z   <>   K",
+            "K UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU()   K",
+            "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
+            "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
+            "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
+            "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
         ]
     ];
 
@@ -698,7 +749,7 @@
     function parseLevel(idx) {
         const raw = LEVEL_DATA[idx];
         const rows = raw.length, cols = raw[0].length;
-        const grid = []; const enemies = []; const coins = []; const oneUps = []; const fiveUps = []; const fireFlowers = []; const checkpoints = []; let spawnX = 2, spawnY = 10; let flagX = 0, flagY = 0;
+        const grid = []; const enemies = []; const coins = []; const oneUps = []; const fiveUps = []; const fireFlowers = []; const checkpoints = []; const inspections = []; let spawnX = 2, spawnY = 10; let flagX = 0, flagY = 0;
         for (let r = 0; r < rows; r++) {
             grid[r] = [];
             for (let c = 0; c < cols; c++) {
@@ -720,7 +771,11 @@
                 else if (ch === 'H') { grid[r][c] = 0; checkpoints.push({ x: c * T, y: r * T, col: c, row: r, active: false }); }
                 else if (ch === 'K') grid[r][c] = 11;
                 else if (ch === 'D') grid[r][c] = 12;
-                else if (ch === 'Z') grid[r][c] = 13; // rare question block
+                else if (ch === 'Z' && idx < 38) grid[r][c] = 13; // rare question block for normal levels
+                else if (ch === 'z' || (ch === 'Z' && idx >= 38)) {
+                    grid[r][c] = 0;
+                    inspections.push({ x: c * T, y: r * T, w: T, h: T, col: c, row: r, cooldown: 0 });
+                }
                 else if (ch === 'M') grid[r][c] = 14; // mineshaft rock
                 else if (ch === '=') grid[r][c] = 15; // mine rails (decorative, not solid)
                 else if (ch === '[') grid[r][c] = 4;  // pipe top-left
@@ -777,7 +832,7 @@
                 }
             }
         }
-        return { grid, rows, cols, enemies, coins, oneUps, fiveUps, fireFlowers, checkpoints, loreBooks, vaultDoors, spawnX, spawnY, flagX, flagY };
+        return { grid, rows, cols, enemies, coins, oneUps, fiveUps, fireFlowers, checkpoints, loreBooks, vaultDoors, inspections, spawnX, spawnY, flagX, flagY };
     }
 
     // GAME STATE
@@ -926,7 +981,8 @@
         { id: 7, level: 22, title: 'VII. The Miner\'s Greed', title_es: 'VII. La Codicia del Minero', text: 'Blinded by a thirst for riches, Miner Boss Rattock commanded his workers to dig deeper into the mountain than anyone had ever dared. They breached the ancient volcanic core, triggers earthquakes and mine collapses. Rather than retreating, Rattock weaponized the chaos. He designed high-speed minecarts filled with unstable TNT explosives and rigged the cavern arches to drop crushing boulders on intruders. His greed consumed him, transforming him into a paranoid warden of the dark mines.', text_es: 'Cegado por la sed de riquezas, el Jefe Minero Rattock ordenó a sus trabajadores cavar más profundo en la montaña de lo que nadie jamás se había atrevido. Brecharon el núcleo volcánico ancestral, desatando terremotos y derrumbes. En lugar de retirarse, Rattock armó vagonetas de alta velocidad llenas de explosivos TNT y arregló los arcos de la caverna para soltar rocas sobre los intrusos.' },
         { id: 8, level: 26, title: 'VIII. The Glitched Realm', title_es: 'VIII. El Reino Glitcheado', text: 'At the edge of reality, hidden behind the secret silver pipes, lies a fractured dimension known as the Glitched Lands. In this bizarre realm, the laws of physics break down entirely. Platforms flicker in and out of existence, gravity flips upside down at a moment\'s notice, and reality itself appears corrupted by digital anomalies. The elder cats warned that this frontier is a one-way trip, as the unstable fabric of the realm tears apart any traveler who lacks absolute focus.', text_es: 'En el borde de la realidad, oculto tras las tuberías de plata secretas, yace una dimensión fracturada conocida como las Tierras Glitcheadas. En este extraño reino, las leyes de la física colapsan por completo. Las plataformas parpadean, la gravedad se invierte en cualquier momento y la realidad misma parece corrompida por anomalías digitales.' },
         { id: 9, level: 30, title: 'IX. The Glitched Core', title_es: 'IX. El Núcleo Glitcheado', text: 'Deep inside the glitched dimension floats the source of all instability: the Glitched Core. It is a sentient, pulsing heart made of corrupted source code and chaotic energy. The Core seeks to rewrite the entire universe in its own image, threatening to dissolve the Nine Feline Realms into static. The ancient prophets wrote that only a hero brave enough to navigate the shifting gravity fields and destroy the Core\'s firewall can permanently stabilize the code, saving reality.', text_es: 'En lo profundo de la dimensión glitcheada flota la fuente de toda la inestabilidad: el Núcleo Glitcheado. Es un corazón sintiente y palpitante hecho de código fuente corrompido y energía caótica. El Núcleo busca reescribir todo el universo en su propia imagen, amenazando con disolver los Nueve Reinos Gatunos en estática. Solo un héroe capaz de navegar la gravedad cambiante y destruir el cortafuegos del Núcleo puede estabilizar la realidad.' },
-        { id: 10, level: 31, secret: true, title: 'X. The Forgotten Vault', title_es: 'X. La Bóveda Olvidada', text: 'Deep inside the secret green pipe vault lies an ancient feline sanctuary. The Rat King discovered this lost vault and placed it on total lockdown so no feline could ever harness the powerful artifacts lurking inside.', text_es: 'En lo profundo de la bóveda secreta de tuberías verdes yace un santuario gatuno ancestral. El Rey Rata descubrió esta bóveda perdida y la puso en bloqueo total para que ningún gato pudiera jamás aprovechar los poderosos artefactos que acechan en su interior.' }
+        { id: 10, level: 31, secret: true, title: 'X. The Forgotten Vault', title_es: 'X. La Bóveda Olvidada', text: 'Deep inside the secret green pipe vault lies an ancient feline sanctuary. The Rat King discovered this lost vault and placed it on total lockdown so no feline could ever harness the powerful artifacts lurking inside.', text_es: 'En lo profundo de la bóveda secreta de tuberías verdes yace un santuario gatuno ancestral. El Rey Rata descubrió esta bóveda perdida y la puso en bloqueo total para que ningún gato pudiera jamás aprovechar los poderosos artefactos que acechan en su interior.' },
+        { id: 11, level: 41, secret: true, title: 'XI. The Vanished Cats', title_es: 'XI. Los Gatos Desaparecidos', text: 'The TRUE VAULT was never built as a tomb. It was a home. Hundreds of cats once lived beneath the world, working, sleeping, eating, studying, and guarding secrets that could never reach the Nine Feline Realms.\n\nThen, one day, they vanished.\n\nNo battle was recorded. No bodies were found. No warning was given.\n\nWhen they vanished, the Vault sealed itself.', text_es: 'La VERDADERA BÓVEDA nunca fue construida como una tumba. Era un hogar. Cientos de gatos vivieron una vez bajo el mundo, trabajando, durmiendo, comiendo, estudiando y custodiando secretos que nunca debían llegar a los Nueve Reinos Gatunos.\n\nLuego, un día, desaparecieron.\n\nNo se registró ninguna batalla. No se encontraron cuerpos. No hubo advertencia.\n\nCuando desaparecieron, la Bóveda se selló a sí misma.' }
     ];
     let unlockedLore = JSON.parse(localStorage.getItem('scw_unlocked_lore') || '[]');
     let loreNotification = null; // { title, text, timer }
@@ -2841,6 +2897,252 @@
                         loadLevel(36); // Enter Level 36: The Vault Interior Chamber!
                         if (window.audio) audio.playPowerUp();
                         loreNotification = { title: '👑 THE INTERIOR OF THE FORGOTTEN VAULT', text: 'You step through the open iron doorway into the inner sanctuary of ancient golden treasures and secret scrolls!', timer: 280 };
+                    }
+                }
+            }
+        });
+    }
+
+    // TRUE VAULT ENVIRONMENTAL INSPECTION SYSTEM (32 ROOMS ACROSS 4 SECTORS)
+    let currentRoomTitle = '';
+    let roomBanner = null; // { title, timer }
+
+    const TRUE_VAULT_INSPECTIONS = [
+        // Sector 1 (Level 38)
+        {
+            level: 38, colMin: 0, colMax: 11,
+            title: '📜 Grand Entrance Archway', title_es: '📜 Arco de la Gran Entrada',
+            text: 'Heavy brass archways carved with ancient feline runes. A seal reads: "Welcome to the Haven of the Nine. Peace to all who tread below."',
+            text_es: 'Arcos pesados de latón tallados con runas gatunas ancestrales. Un sello dice: "Bienvenidos al Refugio de los Nueve. Paz a todos los que pisan abajo."'
+        },
+        {
+            level: 38, colMin: 12, colMax: 23,
+            title: '🏛️ Central Vault Hall', title_es: '🏛️ Gran Bóveda Central',
+            text: 'A majestic central hub with polished marble pillars. Banners of the ancient feline houses hang neatly, unsoiled by time.',
+            text_es: 'Un centro majestuoso con pilares de mármol pulido. Los estandartes de las antiguas casas gatunas cuelgan ordenados e intactos.'
+        },
+        {
+            level: 38, colMin: 24, colMax: 35,
+            title: '🛏️ Dormitory I — Living Quarters', title_es: '🛏️ Dormitorio I — Cuartos de Estar',
+            text: 'An ancient feline bed, neatly made. No signs of struggle. It looks as if the owner stepped away for a moment and never returned.',
+            text_es: 'Una cama gatuna ancestral, pulcramente hecha. Sin signos de lucha. Parece como si el dueño se hubiera alejado un momento y nunca hubiera regresado.'
+        },
+        {
+            level: 38, colMin: 36, colMax: 47,
+            title: '🧶 Dormitory II — Personal Belongings', title_es: '🧶 Dormitorio II — Pertenencias Personales',
+            text: 'Personal items, wool yarn toys, and polished brass collars rest on nightstands. Nothing was packed or taken in a hurry.',
+            text_es: 'Objetos personales, juguetes de lana y collares de latón pulido reposan sobre mesitas de noche. Nada fue empacado ni llevado a prisa.'
+        },
+        {
+            level: 38, colMin: 48, colMax: 59,
+            title: '🕯️ Dormitory III — Elder Quarters', title_es: '🕯️ Dormitorio III — Cuartos de los Ancianos',
+            text: 'Candles on stone pedestals burned down to their bases long ago. A carved wooden cat statue sits quietly by the pillow.',
+            text_es: 'Las velas en los pedestales de piedra se consumieron hace mucho tiempo. Una estatua de gato tallada en madera yace junto a la almohada.'
+        },
+        {
+            level: 38, colMin: 60, colMax: 71,
+            title: '🍲 Mess Hall', title_es: '🍲 Comedor',
+            text: 'Long wooden tables set with clay bowls and metal cups. Water goblets remain filled with calcified mineral deposits.',
+            text_es: 'Mesas largas de madera preparadas con cuencos de barro y copas de metal. Las copas de agua aún conservan depósitos minerales.'
+        },
+        {
+            level: 38, colMin: 72, colMax: 83,
+            title: '🍳 Ancient Kitchen', title_es: '🍳 Cocina Ancestral',
+            text: 'An ancient stone stove with cold iron pots. Dried ingredients sit on the counter, abandoned mid-meal preparation centuries ago.',
+            text_es: 'Una estufa de piedra ancestral con ollas de hierro frías. Ingredientes secos reposan en la encimera, abandonados a medio cocinar hace siglos.'
+        },
+        {
+            level: 38, colMin: 84, colMax: 99,
+            title: '📦 Storage Room I', title_es: '📦 Almacén I',
+            text: 'Crates of dried fish snacks, catnip leaves, and preserved herbs remain stacked neatly to the ceiling. Provisions were plentiful.',
+            text_es: 'Cajas de bocadillos de pescado seco, hojas de catnip y hierbas conservadas permanecen apiladas. Las provisiones eran abundantes.'
+        },
+
+        // Sector 2 (Level 39)
+        {
+            level: 39, colMin: 0, colMax: 11,
+            title: '🏺 Storage Room II — Supply Vault', title_es: '🏺 Almacén II — Bóveda de Suministros',
+            text: 'Heavy ceramic jars sealed with wax. The seal dates back eight centuries. The food stores were never depleted.',
+            text_es: 'Vasijas de cerámica selladas con cera. El sello data de hace ocho siglos. Las reservas de alimento nunca se agotaron.'
+        },
+        {
+            level: 39, colMin: 12, colMax: 23,
+            title: '⚔️ Ancient Armory', title_es: '⚔️ Armería Ancestral',
+            text: 'Weapon racks filled with polished iron spears and feline helmets. Not a single weapon was drawn or damaged in battle.',
+            text_es: 'Armeros llenos de lanzas de hierro pulido y cascos gatunos. Ni una sola arma fue empuñada o dañada en batalla.'
+        },
+        {
+            level: 39, colMin: 24, colMax: 35,
+            title: '🎯 Training Hall', title_es: '🎯 Sala de Entrenamiento',
+            text: 'Wooden sparring posts and agility obstacles. Scratch marks on the training posts show years of dedicated practice.',
+            text_es: 'Postes de madera y obstáculos de agilidad. Marcas de garras en los postes muestran años de práctica dedicada.'
+        },
+        {
+            level: 39, colMin: 36, colMax: 47,
+            title: '📖 Feline Library', title_es: '📖 Biblioteca Gatuna',
+            text: 'An ancient leather-bound logbook left open on a wooden desk. The final entry ends abruptly in middle of a sentence...',
+            text_es: 'Un libro de registro de cuero dejado abierto en un escritorio de madera. La última entrada se interrumpe abruptamente a mitad de una frase...'
+        },
+        {
+            level: 39, colMin: 48, colMax: 59,
+            title: '📜 Grand Archive', title_es: '📜 Gran Archivo',
+            text: 'Wall-to-wall stone scroll shelves. Many historical records remain, but pages detailing the year of disappearance have been cleanly removed.',
+            text_es: 'Estanterías de pergaminos de piedra. Quedan registros históricos, pero las páginas del año de la desaparición fueron retiradas.'
+        },
+        {
+            level: 39, colMin: 60, colMax: 71,
+            title: '⚙️ Artisan Workshop', title_es: '⚙️ Taller Artesanal',
+            text: 'An unfinished mechanical automaton sitting on the workbench. The brass tools are neatly laid beside it in order of size.',
+            text_es: 'Un autómata mecánico inacabado sobre el banco de trabajo. Las herramientas de latón están ordenadamente dispuestas a su lado.'
+        },
+        {
+            level: 39, colMin: 72, colMax: 83,
+            title: '🔥 Subterranean Forge', title_es: '🔥 Forja Subterránea',
+            text: 'An anvil with an unhammered iron ingot resting on top. The coals in the hearth are cold, as if extinguished all at once.',
+            text_es: 'Un yunque con un lingote de hierro sin martillar encima. El carbón está frío, como si se hubiera apagado todo a la vez.'
+        },
+        {
+            level: 39, colMin: 84, colMax: 99,
+            title: '⚙️ Machine Room', title_es: '⚙️ Sala de Máquinas',
+            text: 'Ancient brass gears and conduits still humming softly. The mechanical power grid has been running untouched for centuries.',
+            text_es: 'Engranajes de latón ancestrales y conductos que aún zumban suavemente. La red eléctrica ha estado funcionando intacta durante siglos.'
+        },
+
+        // Sector 3 (Level 40)
+        {
+            level: 40, colMin: 0, colMax: 11,
+            title: '⚡ Power Room Generator', title_es: '⚡ Generador de Energía',
+            text: 'A glowing catnip crystal engine pulsing with golden energy. It continues to power the vault lighting with zero maintenance.',
+            text_es: 'Un motor de cristal de catnip que palpita con energía dorada. Continúa alimentando la iluminación sin mantenimiento.'
+        },
+        {
+            level: 40, colMin: 12, colMax: 23,
+            title: '💧 Subterranean Waterworks', title_es: '💧 Acueductos Subterráneos',
+            text: 'Pure freshwater channels carved into the bedrock. Clean water flows steadily through the complex from deep underground springs.',
+            text_es: 'Canales de agua dulce pura tallados en la roca. El agua limpia fluye constantemente desde manantiales profundos.'
+        },
+        {
+            level: 40, colMin: 24, colMax: 35,
+            title: '🌿 Subterranean Greenhouse', title_es: '🌿 Invernadero Subterráneo',
+            text: 'Ancient luminescent catnip flora growing wild along the stone aqueducts. The self-watering irrigation system is still active.',
+            text_es: 'Flora gatuna luminiscente ancestral creciendo salvaje en los acueductos. El sistema de riego automático sigue activo.'
+        },
+        {
+            level: 40, colMin: 36, colMax: 47,
+            title: '🏥 Medical Room', title_es: '🏥 Sala Médica',
+            text: 'Potions and herb vials aligned on glass shelves. No emergency treatments were ever opened, indicating no disease or attack occurred.',
+            text_es: 'Pociones y frascos de hierbas alineados en estantes de vidrio. Ningún tratamiento fue abierto, indicando que no hubo plaga ni ataque.'
+        },
+        {
+            level: 40, colMin: 48, colMax: 59,
+            title: '🛡️ Guard Barracks', title_es: '🛡️ Cuartel de Guardias',
+            text: 'Shields and armor stand in perfect order beside neatly folded blankets. The guard posted no alarm before vanishing.',
+            text_es: 'Escudos y armaduras permanecen en perfecto orden junto a mantas dobladas. La guardia no dio ninguna alarma antes de desaparecer.'
+        },
+        {
+            level: 40, colMin: 60, colMax: 71,
+            title: '🗺️ Command Room', title_es: '🗺️ Sala de Mando',
+            text: 'A large stone table showing a map of the Nine Feline Realms. Feline markers are placed across all nine realms, but none point here.',
+            text_es: 'Una gran mesa de piedra que muestra un mapa de los Nueve Reinos Gatunos. Los marcadores están en los nueve reinos, pero ninguno apunta aquí.'
+        },
+        {
+            level: 40, colMin: 72, colMax: 83,
+            title: '🔭 Observation Room', title_es: '🔭 Sala de Observación',
+            text: 'Brass periscopes aiming up toward the surface world. Dial readings show the surface was monitored continuously until the sudden end.',
+            text_es: 'Periscopios de latón apuntando a la superficie. Las lecturas muestran que la superficie fue monitoreada hasta el repentino final.'
+        },
+        {
+            level: 40, colMin: 84, colMax: 99,
+            title: '🗿 Catstone Chamber', title_es: '🗿 Bóveda de la Catstone',
+            text: 'Massive stone relief carvings of the ancient Catstone guardian. Inscriptions praise its eternal vigilance over the lower gates.',
+            text_es: 'Grabados en relieve de la antigua Catstone guardiana. Las inscripciones alaban su vigilancia eterna sobre las puertas inferiores.'
+        },
+
+        // Sector 4 (Level 41)
+        {
+            level: 41, colMin: 0, colMax: 11,
+            title: '🔒 Seal Control Room', title_es: '🔒 Sala de Control de Sellos',
+            text: 'Heavy seal levers locked in position. The internal locking mechanisms show the vault was sealed from the INSIDE.',
+            text_es: 'Palancas de sellado pesadas bloqueadas en su posición. Los mecanismos muestran que la bóveda fue sellada desde DENTRO.'
+        },
+        {
+            level: 41, colMin: 12, colMax: 23,
+            title: '📜 Lower Archives', title_es: '📜 Archivos Inferiores',
+            text: 'Ancient stone tablets detailing forbidden history. One tablet reads: "When the Sky aligns, the Gate shall claim all who dwell within..."',
+            text_es: 'Tablillas de piedra ancestrales que detallan historia prohibida. Una tablilla dice: "Cuando el Cielo se alinee, la Puerta reclamará a todos los que habiten dentro..."'
+        },
+        {
+            level: 41, colMin: 24, colMax: 35,
+            title: '🗝️ Forbidden Storage', title_es: '🗝️ Almacén Prohibido',
+            text: 'Reinforced iron vault doors sealed with ancient catnip runes. Whatever was stored here was meant to remain hidden forever.',
+            text_es: 'Puertas de hierro reforzado selladas con runas de catnip. Lo que se guardó aquí debía permanecer oculto para siempre.'
+        },
+        {
+            level: 41, colMin: 36, colMax: 47,
+            title: '🧱 Collapsed Sector', title_es: '🧱 Sector Derrumbado',
+            text: 'Feline pawprints preserved in ancient dust on the floor. Strangely, the prints simply stop in the middle of the corridor, with no prints leading away.',
+            text_es: 'Huellas de patas de gato conservadas en el polvo del suelo. Extrañamente, las huellas se detienen en medio del pasillo, sin huellas de regreso.'
+        },
+        {
+            level: 41, colMin: 48, colMax: 59,
+            title: '⛩️ Ancient Shrine', title_es: '⛩️ Santuario Ancestral',
+            text: 'A quiet shrine honoring the feline ancestors. Offerings of golden yarn balls sit perfectly untouched on stone altars.',
+            text_es: 'Un santuario silencioso que honra a los ancestros gatunos. Las ofrendas de ovillos de oro reposan intactas en los altares.'
+        },
+        {
+            level: 41, colMin: 60, colMax: 71,
+            title: '🛗 Deep Elevator Shaft', title_es: '🛗 Ascensor Profundo',
+            text: 'A massive counterweight elevator shaft descending into uncharted depths below the world.',
+            text_es: 'Un pozo de ascensor con contrapeso que desciende a profundidades no cartografiadas bajo el mundo.'
+        },
+        {
+            level: 41, colMin: 72, colMax: 83,
+            title: '👑 Inner Vault Sanctuary', title_es: '👑 Santuario de la Bóveda Interior',
+            text: 'An imposing ancient seal pedestal glowing with faint golden catnip energy. The records here show hundreds of cats once inhabited this sanctuary—until the night of the Silent Eclipse.',
+            text_es: 'Un pedestal de sello ancestral imponente que brilla con tenue energía catnip dorada. Los registros muestran que cientos de gatos habitaron una vez este santuario—hasta la noche del Eclipse Silencioso.'
+        },
+        {
+            level: 41, colMin: 84, colMax: 99,
+            title: '🌌 Secret Sanctum', title_es: '🌌 Santuario Secreto',
+            text: 'The absolute deepest point of the True Vault. An ancient silver pipe leads back to the surface. The mystery of the vanished cats lives on...',
+            text_es: 'El punto más profundo de la Bóveda Verdadera. Una tubería de plata conduce de regreso a la superficie. El misterio de los gatos desaparecidos perdura...'
+        }
+    ];
+
+    function updateTrueVaultInspections() {
+        if (currentLevel < 38 || currentLevel > 41 || !level) return;
+        
+        // Track room section entry popups
+        const curCol = Math.floor(cat.x / T);
+        const match = TRUE_VAULT_INSPECTIONS.find(m => m.level === currentLevel && curCol >= m.colMin && curCol <= m.colMax);
+        if (match) {
+            const titleStr = (currentLang === 'es') ? match.title_es : match.title;
+            if (titleStr !== currentRoomTitle) {
+                currentRoomTitle = titleStr;
+                roomBanner = { title: titleStr, timer: 150 };
+            }
+        }
+        if (roomBanner && roomBanner.timer > 0) {
+            roomBanner.timer--;
+        }
+
+        if (!level.inspections) return;
+        
+        level.inspections.forEach(ins => {
+            if (ins.cooldown > 0) ins.cooldown--;
+            const p1Near = (!cat.dead && Math.abs((cat.x + cat.w / 2) - (ins.x + ins.w / 2)) < 48 && Math.abs((cat.y + cat.h / 2) - (ins.y + ins.h / 2)) < 48);
+            const p2Near = (coopMode && !cat2.dead && Math.abs((cat2.x + cat2.w / 2) - (ins.x + ins.w / 2)) < 48 && Math.abs((cat2.y + cat2.h / 2) - (ins.y + ins.h / 2)) < 48);
+            
+            if ((p1Near && keys.glide) || (p2Near && keys2.glide)) {
+                if (ins.cooldown <= 0) {
+                    ins.cooldown = 120;
+                    const cCol = Math.floor((ins.x + 16) / T);
+                    const matchLore = TRUE_VAULT_INSPECTIONS.find(m => m.level === currentLevel && cCol >= m.colMin && cCol <= m.colMax);
+                    if (matchLore) {
+                        const titleStr = (currentLang === 'es') ? matchLore.title_es : matchLore.title;
+                        const textStr = (currentLang === 'es') ? matchLore.text_es : matchLore.text;
+                        loreNotification = { title: titleStr, text: textStr, timer: 320 };
+                        if (window.audio) audio.playCoin();
                     }
                 }
             }
@@ -6671,14 +6973,44 @@
             return;
         }
 
-        // True Vault (Level 38) Exit Pipe -> Warps back to Level 2 with legendary rewards
-        if (currentLevel === 38 && (onSilverPipe(cat, keys) || (coopMode && onSilverPipe(cat2, keys2)))) {
+        // True Vault Sector 1 (Level 38) Green Pipe -> Sector 2 (Level 39)
+        if (currentLevel === 38 && (onGreenPipe(cat, keys) || (coopMode && onGreenPipe(cat2, keys2)))) {
             if (window.audio) audio.playPowerUp();
+            loadLevel(39); // Sector 2: Living & Work Quarters
+            loreNotification = { title: '🏛️ TRUE VAULT — SECTOR 2', text: 'You enter Sector 2: The Living & Work Quarters! Armory, Library, and Workshops lie ahead.', timer: 260 };
+            return;
+        }
+
+        // True Vault Sector 2 (Level 39) Green Pipe -> Sector 3 (Level 40)
+        if (currentLevel === 39 && (onGreenPipe(cat, keys) || (coopMode && onGreenPipe(cat2, keys2)))) {
+            if (window.audio) audio.playPowerUp();
+            loadLevel(40); // Sector 3: Infrastructure & Sector Seals
+            loreNotification = { title: '⚡ TRUE VAULT — SECTOR 3', text: 'You enter Sector 3: Infrastructure & Sector Seals! Machinery and waterworks hum around you.', timer: 260 };
+            return;
+        }
+
+        // True Vault Sector 3 (Level 40) Green Pipe -> Sector 4 (Level 41)
+        if (currentLevel === 40 && (onGreenPipe(cat, keys) || (coopMode && onGreenPipe(cat2, keys2)))) {
+            if (window.audio) audio.playPowerUp();
+            loadLevel(41); // Sector 4: Deep Vaults & Inner Sanctuary
+            loreNotification = { title: '📜 TRUE VAULT — SECTOR 4', text: 'You reach Sector 4: The Deep Vaults & Inner Sanctuary! The central mystery of the vanished cats awaits...', timer: 280 };
+            return;
+        }
+
+        // True Vault Sector 4 (Level 41) Silver Pipe Exit -> Return to Surface / World
+        if (currentLevel === 41 && (onSilverPipe(cat, keys) || (coopMode && onSilverPipe(cat2, keys2)))) {
+            if (window.audio) audio.playPowerUp();
+            localStorage.setItem('scw_true_vault_cleared', 'true');
+            if (!unlockedLore.includes(11)) {
+                unlockedLore.push(11);
+                localStorage.setItem('scw_unlocked_lore', JSON.stringify(unlockedLore));
+            }
             loadLevel(secretReturnLevel || 1);
             cat.x = secretReturnX || 2200;
             cat.y = secretReturnY || 300;
             cam.x = Math.max(0, cat.x - W / 3);
-            loreNotification = { title: '👑 CONQUERED THE TRUE VAULT!', text: 'You unlocked and explored THE TRUE VAULT! Claimed 25,000 bonus score!', timer: 360 };
+            loreNotification = { title: '👑 COMPLETED THE TRUE VAULT EXPANSION!', text: 'You explored all 32 chambers of THE TRUE VAULT! Claimed 50,000 bonus score and unlocked Book XI in the Codex!', timer: 360 };
+            score += 50000;
             return;
         }
 
@@ -8177,11 +8509,57 @@
     }
 
     function drawBackground() {
+        if (currentLevel >= 38 && currentLevel <= 41) { drawTrueVaultBackground(); return; }
         if (currentLevel >= 27 && currentLevel <= 30) { drawGlitchedBackground(); return; }
         if (currentLevel >= 23) { drawMineshaftBackground(); return; }
         if (currentLevel >= 12) { drawCaveBackground(); return; }
         if (currentLevel >= 6) { drawSkyIslandBackground(); return; }
         if ((currentLevel >= 3 && currentLevel <= 5) || currentLevel === 31) { drawCastleBackground(); return; }
+
+    function drawTrueVaultBackground() {
+        // Dark deep subterranean obsidian stone gradient
+        const grad = ctx.createLinearGradient(0, 0, 0, H);
+        grad.addColorStop(0, '#06070B'); 
+        grad.addColorStop(0.5, '#0E111A'); 
+        grad.addColorStop(1, '#151926');
+        ctx.fillStyle = grad; 
+        ctx.fillRect(0, 0, W, H);
+
+        // Parallax ancient feline wall blocks
+        ctx.save();
+        ctx.globalAlpha = 0.12;
+        ctx.fillStyle = '#3A4255';
+        for (let r = 0; r < H / 32; r++) {
+            for (let c = 0; c < W / 32 + 2; c++) {
+                const bx = c * 32 - (cam.x * 0.08 % 32), by = r * 32;
+                ctx.fillRect(bx, by, 30, 15);
+                ctx.fillRect(bx + 16, by + 16, 30, 15);
+            }
+        }
+        ctx.restore();
+
+        // Parallax ancient pillars & glowing brass conduits
+        ctx.save();
+        const pillarSpacing = 160;
+        const offset = -cam.x * 0.25;
+        for (let i = -1; i < W / pillarSpacing + 2; i++) {
+            const px = (i * pillarSpacing + (offset % pillarSpacing));
+            // Pillar
+            ctx.fillStyle = '#1A202C';
+            ctx.fillRect(px, 0, 24, H);
+            ctx.fillStyle = '#2A3244';
+            ctx.fillRect(px + 4, 0, 16, H);
+            // Pillar capital & base
+            ctx.fillStyle = '#4A5568';
+            ctx.fillRect(px - 4, 20, 32, 10);
+            ctx.fillRect(px - 4, H - 70, 32, 10);
+            // Glowing energy conduits on pillar
+            const glow = (Math.sin(frameCount * 0.08 + i) * 0.3 + 0.7);
+            ctx.fillStyle = `rgba(255, 215, 0, ${glow * 0.5})`;
+            ctx.fillRect(px + 10, 30, 4, H - 100);
+        }
+        ctx.restore();
+    }
         // Sky
         const grad = ctx.createLinearGradient(0, 0, 0, H);
         grad.addColorStop(0, '#4A90D9'); grad.addColorStop(0.6, '#87CEEB'); grad.addColorStop(1, '#B8E6B8');
@@ -9480,6 +9858,7 @@
         updateExplodingCoins();
         updateLoreBooks();
         updateVaultDoors();
+        updateTrueVaultInspections();
         if (starPowerTimer > 0) starPowerTimer--;
         if (fireProtectTimer > 0) fireProtectTimer--;
         if (magnetTimer > 0) magnetTimer--;
@@ -9711,6 +10090,7 @@
             drawExplodingCoins();
             if (level.loreBooks) level.loreBooks.forEach(drawLoreBook);
             if (level.vaultDoors) level.vaultDoors.forEach(drawVaultDoor);
+            if (level.inspections) level.inspections.forEach(drawInspectionMarker);
             // Checkpoints
             drawCheckpoints();
             // Ship decorations on sky levels
@@ -9789,6 +10169,7 @@
 
             // Hotbar & HUD overlays
             drawHotbar();
+            drawRoomBanner();
             drawLoreNotification();
             // Co-op HP bars
             if (coopMode) drawCoopHP();
@@ -9810,7 +10191,7 @@
             ctx.fillStyle = 'rgba(255, 255, 255, 0.65)';
             ctx.font = '8px "Press Start 2P", monospace';
             ctx.textAlign = 'left';
-            ctx.fillText('v3.1.1', 10, H - 10);
+            ctx.fillText('v3.4.0', 10, H - 10);
             ctx.restore();
 
             // Online mode indicator
@@ -9975,24 +10356,128 @@
         ctx.restore();
     }
 
+    function drawInspectionMarker(ins) {
+        const x = Math.round(ins.x - cam.x), y = Math.round(ins.y);
+        if (x < -32 || x > W + 32) return;
+
+        ctx.save();
+        // Ancient Stone Pedestal
+        ctx.fillStyle = '#3E362F';
+        ctx.fillRect(x + 4, y + 12, 24, 20);
+        ctx.fillStyle = '#5E564F';
+        ctx.fillRect(x + 2, y + 8, 28, 4);
+        ctx.fillStyle = '#2E261F';
+        ctx.fillRect(x + 6, y + 16, 20, 16);
+
+        // Glowing Catnip Seal / Tablet Icon
+        const pulse = Math.sin(frameCount * 0.1 + ins.x) * 0.3 + 0.7;
+        ctx.fillStyle = `rgba(255, 215, 0, ${pulse})`;
+        ctx.fillRect(x + 10, y + 2, 12, 10);
+        ctx.strokeStyle = '#FFD700';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(x + 9, y + 1, 14, 12);
+
+        // Runes / Question Symbol inside icon
+        ctx.fillStyle = '#000';
+        ctx.font = 'bold 8px monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText('Z', x + 16, y + 10);
+
+        // Prompt when player is near
+        const p1Near = (!cat.dead && Math.abs((cat.x + cat.w / 2) - (ins.x + ins.w / 2)) < 48 && Math.abs((cat.y + cat.h / 2) - (ins.y + ins.h / 2)) < 48);
+        const p2Near = (coopMode && !cat2.dead && Math.abs((cat2.x + cat2.w / 2) - (ins.x + ins.w / 2)) < 48 && Math.abs((cat2.y + cat2.h / 2) - (ins.y + ins.h / 2)) < 48);
+        
+        if (p1Near || p2Near) {
+            const promptText = (currentLang === 'es') ? '🩵 ABAJO: Inspeccionar' : '🩵 DOWN: Inspect';
+            ctx.fillStyle = '#FFD700';
+            ctx.font = 'bold 8px monospace';
+            ctx.fillText(promptText, x + 16, y - 6);
+        }
+
+        ctx.restore();
+    }
+
+    function drawRoomBanner() {
+        if (!roomBanner || roomBanner.timer <= 0) return;
+        ctx.save();
+        const alpha = Math.min(1, roomBanner.timer / 30);
+        ctx.globalAlpha = alpha;
+        
+        const bw = 360, bh = 24, bx = (W - bw) / 2, by = 42;
+        ctx.fillStyle = 'rgba(8, 10, 20, 0.88)';
+        ctx.strokeStyle = '#FFD700';
+        ctx.lineWidth = 1.5;
+        ctx.fillRect(bx, by, bw, bh);
+        ctx.strokeRect(bx, by, bw, bh);
+
+        ctx.fillStyle = '#FFD700';
+        ctx.font = 'bold 9px monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText(roomBanner.title, W / 2, by + 16);
+        ctx.restore();
+    }
+
     function drawLoreNotification() {
         if (!loreNotification || loreNotification.timer <= 0) return;
         loreNotification.timer--;
         ctx.save();
-        ctx.fillStyle = 'rgba(10, 10, 25, 0.9)';
+        ctx.fillStyle = 'rgba(10, 10, 25, 0.95)';
         ctx.strokeStyle = '#FFD700';
         ctx.lineWidth = 2;
-        const nw = 380, nh = 40, nx = (W - nw) / 2, ny = 12;
-        ctx.fillRect(nx, ny, nw, nh);
-        ctx.strokeRect(nx, ny, nw, nh);
 
-        ctx.fillStyle = '#FFD700';
-        ctx.font = '8px "Press Start 2P", monospace';
-        ctx.textAlign = 'center';
-        ctx.fillText('📖 LORE BOOK UNLOCKED!', W / 2, ny + 15);
-        ctx.fillStyle = '#FFF';
-        ctx.font = '7px "Press Start 2P", monospace';
-        ctx.fillText(loreNotification.title + ' (Press B for Codex)', W / 2, ny + 30);
+        if (loreNotification.text) {
+            // Detailed Clue / Lore Popup Card
+            const nw = 480, nh = 94, nx = (W - nw) / 2, ny = 12;
+            ctx.fillRect(nx, ny, nw, nh);
+            ctx.strokeRect(nx, ny, nw, nh);
+
+            ctx.fillStyle = '#FFD700';
+            ctx.font = 'bold 9px monospace';
+            ctx.textAlign = 'center';
+            ctx.fillText(loreNotification.title, W / 2, ny + 18);
+
+            ctx.fillStyle = '#E2E8F0';
+            ctx.font = '8px monospace';
+            ctx.textAlign = 'left';
+            
+            // Line wrapper for text
+            const words = loreNotification.text.split(' ');
+            let line = '';
+            let lineY = ny + 36;
+            const maxW = nw - 24;
+            for (let i = 0; i < words.length; i++) {
+                const testLine = line + words[i] + ' ';
+                const metrics = ctx.measureText(testLine);
+                if (metrics.width > maxW && i > 0) {
+                    ctx.fillText(line, nx + 12, lineY);
+                    line = words[i] + ' ';
+                    lineY += 13;
+                } else {
+                    line = testLine;
+                }
+            }
+            if (line) {
+                ctx.fillText(line, nx + 12, lineY);
+            }
+            
+            ctx.fillStyle = '#A0AEC0';
+            ctx.font = 'italic 7px monospace';
+            ctx.textAlign = 'right';
+            ctx.fillText(currentLang === 'es' ? '(Presiona B para el Códice)' : '(Press B for Codex)', nx + nw - 10, ny + nh - 6);
+        } else {
+            // Default compact notification
+            const nw = 380, nh = 40, nx = (W - nw) / 2, ny = 12;
+            ctx.fillRect(nx, ny, nw, nh);
+            ctx.strokeRect(nx, ny, nw, nh);
+
+            ctx.fillStyle = '#FFD700';
+            ctx.font = '8px "Press Start 2P", monospace';
+            ctx.textAlign = 'center';
+            ctx.fillText('📖 LORE BOOK UNLOCKED!', W / 2, ny + 15);
+            ctx.fillStyle = '#FFF';
+            ctx.font = '7px "Press Start 2P", monospace';
+            ctx.fillText(loreNotification.title + ' (Press B for Codex)', W / 2, ny + 30);
+        }
         ctx.restore();
     }
 
