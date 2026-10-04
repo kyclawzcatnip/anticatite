@@ -4743,48 +4743,136 @@
         if (!boss || !boss.catstone) return;
         const bx = Math.round(boss.x - cam.x), by = Math.round(boss.y - (cam.y || 0));
 
-        // 1. TOWERING ANCIENT TALL CAT STATUE WITH CHARGED CATSTONE ENERGY LINES
+        // 1. TOWERING ANCIENT TALL CAT STATUE EMBEDDED IN VAULT WALL
         ctx.save();
         const isCollapsed = boss.catstoneState === 'collapsing' || boss.catstoneState === 'final_strike' || boss.catstoneState === 'broken_wait';
         const isReconstructing = boss.catstoneState === 'reconstructing';
 
-        ctx.fillStyle = boss.alive ? (boss.flashTimer > 0 ? '#FF6666' : '#554840') : '#332E2B';
-        ctx.strokeStyle = '#221C18';
-        ctx.lineWidth = 4;
+        // Vault wall stone colors (matching tile 11 / ancient vault stone)
+        const baseStoneColor = boss.alive ? (boss.flashTimer > 0 ? '#FF6666' : '#3A3A4A') : '#22222E';
+        const darkStoneColor = boss.alive ? '#2B2B3A' : '#1A1A22';
+        const highlightStoneColor = boss.alive ? '#4D4D5E' : '#2F2F3D';
+        const seamColor = '#1C1C26';
 
-        // Draw Statue Body (Lower half hidden into wall depths)
         const drawY = isCollapsed ? by + 120 : by;
+
+        // Ambient Wall Recess Shadow (Blends statue into vault back wall depth)
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.45)';
+        ctx.beginPath();
+        ctx.ellipse(bx + boss.w / 2, drawY + boss.h / 2 + 10, boss.w / 2 + 20, boss.h / 2 + 20, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = baseStoneColor;
+        ctx.strokeStyle = seamColor;
+        ctx.lineWidth = 3;
+
         if (isCollapsed) {
             // Broken collapsed statue state on ground
             ctx.fillRect(bx + 40, drawY + 120, boss.w - 80, 80);
             ctx.strokeRect(bx + 40, drawY + 120, boss.w - 80, 80);
+
+            // Broken stone brick seams
+            ctx.strokeStyle = seamColor;
+            ctx.lineWidth = 2;
+            for (let row = 0; row < 3; row++) {
+                const ry = drawY + 120 + row * 26;
+                ctx.beginPath(); ctx.moveTo(bx + 40, ry); ctx.lineTo(bx + boss.w - 40, ry); ctx.stroke();
+            }
         } else {
-            // Towering statue upper body (Chest, shoulders, neck, head)
+            // Towering statue upper body (Chest, shoulders, neck)
             ctx.fillRect(bx + 20, drawY + 160, boss.w - 40, boss.h - 140);
             ctx.strokeRect(bx + 20, drawY + 160, boss.w - 40, boss.h - 140);
 
+            // Stone Plate Bevel Highlights (Upper Chest / Shoulders)
+            ctx.fillStyle = highlightStoneColor;
+            ctx.fillRect(bx + 26, drawY + 166, boss.w - 52, 12);
+            ctx.fillRect(bx + 26, drawY + 220, boss.w - 52, 12);
+            ctx.fillStyle = baseStoneColor;
+
+            // Staggered Stone Brick Seams across body
+            ctx.strokeStyle = seamColor;
+            ctx.lineWidth = 2;
+            for (let r = 0; r < 4; r++) {
+                const ry = drawY + 175 + r * 30;
+                ctx.beginPath(); ctx.moveTo(bx + 20, ry); ctx.lineTo(bx + boss.w - 20, ry); ctx.stroke();
+                const offset = (r % 2) * 40;
+                for (let c = 0; c < 6; c++) {
+                    const cx = bx + 40 + c * 80 + offset;
+                    if (cx > bx + 20 && cx < bx + boss.w - 20) {
+                        ctx.beginPath(); ctx.moveTo(cx, ry); ctx.lineTo(cx, ry + 30); ctx.stroke();
+                    }
+                }
+            }
+
             // Carved Stone Paws resting on lower wall structure
+            ctx.fillStyle = darkStoneColor;
             ctx.fillRect(bx + 40, drawY + boss.h - 40, 90, 40);
+            ctx.strokeRect(bx + 40, drawY + boss.h - 40, 90, 40);
             ctx.fillRect(bx + boss.w - 130, drawY + boss.h - 40, 90, 40);
+            ctx.strokeRect(bx + boss.w - 130, drawY + boss.h - 40, 90, 40);
+
+            // Paw claw grooves
+            ctx.strokeStyle = seamColor; ctx.lineWidth = 2;
+            ctx.beginPath(); ctx.moveTo(bx + 70, drawY + boss.h - 30); ctx.lineTo(bx + 70, drawY + boss.h); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(bx + 100, drawY + boss.h - 30); ctx.lineTo(bx + 100, drawY + boss.h); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(bx + boss.w - 100, drawY + boss.h - 30); ctx.lineTo(bx + boss.w - 100, drawY + boss.h); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(bx + boss.w - 70, drawY + boss.h - 30); ctx.lineTo(bx + boss.w - 70, drawY + boss.h); ctx.stroke();
 
             // Giant Pointed Cat Ears
-            ctx.beginPath(); ctx.moveTo(bx + 60, drawY); ctx.lineTo(bx + 140, drawY - 80); ctx.lineTo(bx + 190, drawY + 40); ctx.closePath(); ctx.fill(); ctx.stroke();
-            ctx.beginPath(); ctx.moveTo(bx + boss.w - 60, drawY); ctx.lineTo(bx + boss.w - 140, drawY - 80); ctx.lineTo(bx + boss.w - 190, drawY + 40); ctx.closePath(); ctx.fill(); ctx.stroke();
+            ctx.fillStyle = baseStoneColor; ctx.strokeStyle = seamColor; ctx.lineWidth = 3;
+            ctx.beginPath(); ctx.moveTo(bx + 60, drawY + 20); ctx.lineTo(bx + 140, drawY - 80); ctx.lineTo(bx + 190, drawY + 40); ctx.closePath(); ctx.fill(); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(bx + boss.w - 60, drawY + 20); ctx.lineTo(bx + boss.w - 140, drawY - 80); ctx.lineTo(bx + boss.w - 190, drawY + 40); ctx.closePath(); ctx.fill(); ctx.stroke();
+
+            // Inner Ear Shadow Cuts
+            ctx.fillStyle = darkStoneColor;
+            ctx.beginPath(); ctx.moveTo(bx + 85, drawY + 10); ctx.lineTo(bx + 140, drawY - 55); ctx.lineTo(bx + 170, drawY + 30); ctx.closePath(); ctx.fill();
+            ctx.beginPath(); ctx.moveTo(bx + boss.w - 85, drawY + 10); ctx.lineTo(bx + boss.w - 140, drawY - 55); ctx.lineTo(bx + boss.w - 170, drawY + 30); ctx.closePath(); ctx.fill();
 
             // Head Frame
+            ctx.fillStyle = baseStoneColor;
             ctx.fillRect(bx + 40, drawY + 20, boss.w - 80, 160);
             ctx.strokeRect(bx + 40, drawY + 20, boss.w - 80, 160);
+
+            // Head Stone Brick Seams & Cracks
+            ctx.strokeStyle = seamColor; ctx.lineWidth = 2;
+            ctx.beginPath(); ctx.moveTo(bx + 40, drawY + 70); ctx.lineTo(bx + boss.w - 40, drawY + 70); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(bx + 40, drawY + 120); ctx.lineTo(bx + boss.w - 40, drawY + 120); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(bx + 180, drawY + 20); ctx.lineTo(bx + 180, drawY + 70); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(bx + 332, drawY + 20); ctx.lineTo(bx + 332, drawY + 70); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(bx + 256, drawY + 70); ctx.lineTo(bx + 256, drawY + 120); ctx.stroke();
+
+            // Weathered Moss Stains along lower head and paws
+            ctx.fillStyle = 'rgba(40, 70, 50, 0.4)';
+            ctx.fillRect(bx + 40, drawY + 165, 120, 15);
+            ctx.fillRect(bx + boss.w - 160, drawY + 165, 120, 15);
+            ctx.fillRect(bx + 50, drawY + boss.h - 15, 70, 15);
+            ctx.fillRect(bx + boss.w - 120, drawY + boss.h - 15, 70, 15);
         }
 
-        // CHARGED CATSTONE ENERGY LINES (Blue-ish energy channels running through stone)
+        // CHARGED CATSTONE ENERGY LINES (Blue-ish energy channels running through stone channels)
         const energyColor = (isReconstructing || boss.catstoneState === 'reconstructed_door') ? '#00FFFF' : (frameCount % 20 < 10 ? '#00EEFF' : '#00AACC');
-        ctx.strokeStyle = energyColor;
-        ctx.lineWidth = isReconstructing ? 6 : 3;
+
+        // Recessed Dark Energy Channels
+        ctx.strokeStyle = '#121824';
+        ctx.lineWidth = 7;
         ctx.beginPath();
-        // Energy Channels across statue
         ctx.moveTo(bx + 60, drawY + 40); ctx.lineTo(bx + 140, drawY + 100); ctx.lineTo(bx + 200, drawY + 180); ctx.lineTo(bx + boss.w / 2, drawY + 220);
         ctx.moveTo(bx + boss.w - 60, drawY + 40); ctx.lineTo(bx + boss.w - 140, drawY + 100); ctx.lineTo(bx + boss.w - 200, drawY + 180); ctx.lineTo(bx + boss.w / 2, drawY + 220);
         ctx.stroke();
+
+        // Glowing Blue Energy Core Line
+        ctx.strokeStyle = energyColor;
+        ctx.lineWidth = isReconstructing ? 6 : 3;
+        ctx.beginPath();
+        ctx.moveTo(bx + 60, drawY + 40); ctx.lineTo(bx + 140, drawY + 100); ctx.lineTo(bx + 200, drawY + 180); ctx.lineTo(bx + boss.w / 2, drawY + 220);
+        ctx.moveTo(bx + boss.w - 60, drawY + 40); ctx.lineTo(bx + boss.w - 140, drawY + 100); ctx.lineTo(bx + boss.w - 200, drawY + 180); ctx.lineTo(bx + boss.w / 2, drawY + 220);
+        ctx.stroke();
+
+        // Energy Node Glow Joints
+        [ [bx + 140, drawY + 100], [bx + 200, drawY + 180], [bx + boss.w / 2, drawY + 220], [bx + boss.w - 140, drawY + 100], [bx + boss.w - 200, drawY + 180] ].forEach(([nx, ny]) => {
+            ctx.fillStyle = energyColor;
+            ctx.beginPath(); ctx.arc(nx, ny, isReconstructing ? 6 : 4, 0, Math.PI * 2); ctx.fill();
+        });
 
         // Mouth (Opens wide for Cat Mines or TRUE VAULT doorway)
         const mouthOpenH = boss.catstoneState === 'reconstructed_door' ? 90 : (boss.mouthOpenTimer > 0 ? 50 : 16);
